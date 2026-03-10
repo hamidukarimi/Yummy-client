@@ -8,4 +8,5 @@ body {
   background-color: #000000;
   color: #ffffff;
   min-height: 100vh;
+  padding-bottom: 4rem; /* space for bottom nav */
 }

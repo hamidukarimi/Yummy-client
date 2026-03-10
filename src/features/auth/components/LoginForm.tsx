@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 import { loginSchema } from "@/features/auth/schemas/login.schema";
 import type { LoginFormValues } from "@/features/auth/schemas/login.schema";
 import useLogin from "@/features/auth/hooks/useLogin";
@@ -12,6 +13,7 @@ import Alert from "@/components/ui/Alert";
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const LoginForm = () => {
+  const navigate = useNavigate();
   const { login, isPending, isError, error } = useLogin();
 
   const {
@@ -20,6 +22,7 @@ const LoginForm = () => {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+    mode: "onTouched",
   });
 
   const onSubmit = (data: LoginFormValues) => {
@@ -27,19 +30,28 @@ const LoginForm = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-6"
-    >
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-zinc-900">Welcome back</h1>
-        <p className="text-sm text-zinc-500">
-          Sign in to your account to continue
-        </p>
-      </div>
+    <div className="w-full max-w-md flex flex-col gap-6">
+
+      {/* Back Arrow */}
+      <motion.button
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+        onClick={() => navigate(-1)}
+        className="flex items-center text-white w-fit"
+      >
+        <ChevronLeft size={28} />
+      </motion.button>
+
+      {/* Title */}
+      <motion.h1
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
+        className="text-3xl font-bold text-white"
+      >
+        Welcome back
+      </motion.h1>
 
       {/* Error Alert */}
       <Alert
@@ -49,16 +61,18 @@ const LoginForm = () => {
       />
 
       {/* Form */}
-      <form
+      <motion.form
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
         noValidate
+        className="flex flex-col gap-4"
       >
         <Input
           id="email"
           type="email"
-          label="Email"
-          placeholder="you@example.com"
+          placeholder="Enter Your Email"
           autoComplete="email"
           error={errors.email}
           {...register("email")}
@@ -67,34 +81,65 @@ const LoginForm = () => {
         <Input
           id="password"
           type="password"
-          label="Password"
-          placeholder="••••••••"
+          placeholder="Enter Your Password"
           autoComplete="current-password"
           error={errors.password}
           {...register("password")}
         />
 
+        {/* Forgot Password */}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            className="text-sm font-bold text-white hover:text-zinc-300 transition-colors"
+          >
+            forgot password?
+          </button>
+        </div>
+
+        {/* Login Button */}
         <Button
           type="submit"
           fullWidth
           isLoading={isPending}
-          className="mt-2"
         >
-          Sign in
+          Log In
         </Button>
-      </form>
 
-      {/* Footer */}
-      <p className="text-sm text-center text-zinc-500">
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-1">
+          <div className="flex-1 h-px bg-zinc-800" />
+          <span className="text-zinc-500 text-sm">or</span>
+          <div className="flex-1 h-px bg-zinc-800" />
+        </div>
+
+        {/* Social Buttons */}
+        <Button type="button" variant="outline" fullWidth>
+          Login with Google
+        </Button>
+        <Button type="button" variant="outline" fullWidth>
+          Login with Facebook
+        </Button>
+
+      </motion.form>
+
+      {/* Sign Up Link */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="text-sm text-center text-gray-300 font-bold mt-4"
+      >
         Don't have an account?{" "}
         <Link
           to="/register"
-          className="text-indigo-600 font-medium hover:underline"
+          className="text-[#F7C12B] font-bold hover:underline"
         >
-          Create one
+          Sign Up
         </Link>
-      </p>
-    </motion.div>
+      </motion.p>
+
+    </div>
   );
 };
 

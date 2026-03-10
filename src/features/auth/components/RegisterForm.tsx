@@ -204,7 +204,7 @@ const RegisterForm = () => {
               </Button>
 
               {/* Login Link */}
-              <p className="text-sm text-center text-zinc-500 mt-2">
+              <p className="text-sm text-center text-gray-300 mt-2">
                 Already have an account?{" "}
                 <Link
                   to="/login"
