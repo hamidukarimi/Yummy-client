@@ -11,6 +11,7 @@ import RegisterPage from "@/pages/RegisterPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
+import CreatePagePage from "@/pages/CreatePagePage";
 
 const AppRouter = () => {
   return (
@@ -29,6 +30,7 @@ const AppRouter = () => {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/pages/create" element={<CreatePagePage />} />
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />
