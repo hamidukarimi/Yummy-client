@@ -9,7 +9,7 @@ import {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const HIDDEN_ON = ["/login", "/register"];
+const HIDDEN_ON = ["/login", "/register", "/pages/create"];
 
 const NAV_ITEMS = [
   {
@@ -45,7 +45,8 @@ const BottomNav = () => {
   const navigate = useNavigate();
 
   // Hide on blacklisted routes
-  if (HIDDEN_ON.includes(location.pathname)) return null;
+  const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
+  if (HIDDEN_ON.includes(location.pathname) || isPageView) return null;
 
   return (
     <motion.nav

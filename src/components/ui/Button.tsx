@@ -37,7 +37,7 @@ const Button = ({
       disabled={disabled ?? isLoading}
       className={`
         inline-flex items-center justify-center gap-2
-        px-4 py-3 rounded-xl text-sm font-medium
+        px-4 py-3 rounded-xl text-sm font-bold
         transition-colors duration-200 cursor-pointer
         disabled:cursor-not-allowed
         ${variants[variant]}
