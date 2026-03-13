@@ -11,6 +11,7 @@ export const ENDPOINTS = {
   user: {
     me:             `${BASE}/users/me`,
     changePassword: `${BASE}/users/me/password`,
+    followedPages:  "/api/users/me/followed-pages",
   },
   pages: {
     create:   `${BASE}/pages`,

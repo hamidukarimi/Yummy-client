@@ -53,3 +53,11 @@ export const getAllPagesService = async (
   );
   return response.data.data;
 };
+
+
+export const getFollowedPagesService = async (): Promise<ApiPage[]> => {
+  const response = await api.get<ApiResponse<{ pages: ApiPage[] }>>(
+    ENDPOINTS.user.followedPages,
+  );
+  return response.data.data.pages;
+};

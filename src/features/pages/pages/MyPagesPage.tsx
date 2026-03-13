@@ -6,6 +6,7 @@ import useMyPages from "@/features/pages/hooks/useMyPages";
 import useAllPages from "@/features/pages/hooks/useAllPages";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
+import useFollowedPages from "@/features/pages/hooks/useFollowedPages";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ const MyPagesPage = () => {
   const { pages: myPages, isLoading: myLoading, isError: myError } = useMyPages();
   const { pages: allPages, isLoading: allLoading, isError: allError } =
     useAllPages(search, category);
+  const { pages: followedPages, isLoading: followedLoading, isError: followedError } = useFollowedPages();
 
   return (
     <div className="min-h-screen bg-black px-4 pt-5 pb-24 max-w-md mx-auto">
@@ -200,18 +202,58 @@ const MyPagesPage = () => {
 
         {/* ── Followed Pages Tab ── */}
         {tab === "followed" && (
-          <motion.div key="followed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-3 py-16"
-          >
-            <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center mb-2">
-              <span className="text-2xl">🔖</span>
-            </div>
-            <p className="text-white font-semibold text-sm">Coming Soon</p>
-            <p className="text-zinc-500 text-xs text-center">
-              Followed pages will appear here in a future update.
-            </p>
-          </motion.div>
-        )}
+  <motion.div
+    key="followed"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.2 }}
+  >
+    <h2 className="text-white font-bold text-base mb-4">Pages you follow</h2>
+
+    {followedLoading && (
+      <div className="flex justify-center py-10">
+        <Spinner size="md" />
+      </div>
+    )}
+
+    {followedError && (
+      <p className="text-zinc-500 text-sm text-center py-10">
+        Failed to load followed pages.
+      </p>
+    )}
+
+    {!followedLoading && !followedError && followedPages.length === 0 && (
+      <div className="flex flex-col items-center gap-3 py-16">
+        <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center mb-2">
+          <span className="text-2xl">🔖</span>
+        </div>
+        <p className="text-white font-semibold text-sm">No followed pages yet</p>
+        <p className="text-zinc-500 text-xs text-center">
+          Pages you follow will appear here.
+        </p>
+        <button
+          onClick={() => setTab("all")}
+          className="text-[#F7C12B] text-sm font-medium hover:underline mt-1"
+        >
+          Discover pages
+        </button>
+      </div>
+    )}
+
+    {!followedLoading && !followedError && followedPages.length > 0 && (
+      <div className="flex flex-col divide-y divide-zinc-900">
+        {followedPages.map((page) => (
+          <PageItem
+            key={page.id}
+            page={page}
+            onClick={() => navigate(`/pages/${page.slug}`)}
+          />
+        ))}
+      </div>
+    )}
+  </motion.div>
+)}
 
       </AnimatePresence>
     </div>

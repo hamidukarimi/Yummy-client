@@ -34,7 +34,7 @@ const AppRouter = () => {
             </Route>
 
             {/* Page view is public */}
-            <Route path="/my-pages" element={<MyPages />} />
+            <Route path="/pages" element={<MyPages />} />
             <Route path="/pages/:slug" element={<PagePage />} />
 
             <Route path="*" element={<NotFoundPage />} />

@@ -29,7 +29,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",          icon: <Home size={20} />,          path: "/dashboard"  },
-  { label: "My Pages",      icon: <FileText size={20} />,      path: "/my-pages"   },
+  { label: "Pages",      icon: <FileText size={20} />,      path: "/pages"   },
   { label: "Profile",       icon: <User size={20} />,          path: "/profile"    },
   { label: "Notifications", icon: <Bell size={20} />,          path: "/notifications" },
   { label: "Settings",      icon: <Settings size={20} />,      path: "/settings"   },

@@ -106,7 +106,7 @@ const ProfilePage = () => {
         {/* ── Become a Restaurant Banner ── */}
         <motion.div
           variants={itemVariants}
-          onClick={() => navigate("/my-pages")}
+          onClick={() => navigate("/pages")}
           className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-4 flex items-center gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
         >
           <div className="text-4xl">👨‍🍳</div>
