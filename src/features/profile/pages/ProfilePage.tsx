@@ -3,6 +3,7 @@ import { MoreHorizontal, UserCircle } from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Spinner from "@/components/ui/Spinner";
+import { useNavigate } from "react-router-dom";
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ const itemVariants = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const { user, isLoading, isError } = useProfile();
 
   if (isLoading) {
@@ -48,7 +50,6 @@ const ProfilePage = () => {
         animate="visible"
         className="flex flex-col gap-4"
       >
-
         {/* ── Header ── */}
         <motion.div
           variants={itemVariants}
@@ -91,10 +92,7 @@ const ProfilePage = () => {
         </motion.div>
 
         {/* ── Stats Row ── */}
-        <motion.div
-          variants={itemVariants}
-          className="grid grid-cols-2 gap-3"
-        >
+        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
           <div className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1">
             <span className="text-2xl font-bold text-white">12</span>
             <span className="text-sm text-zinc-400">total orders</span>
@@ -108,13 +106,17 @@ const ProfilePage = () => {
         {/* ── Become a Restaurant Banner ── */}
         <motion.div
           variants={itemVariants}
+          onClick={() => navigate("/my-pages")}
           className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-4 flex items-center gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
         >
           <div className="text-4xl">👨‍🍳</div>
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-bold text-white">Become a Restaurant</h3>
+            <h3 className="text-sm font-bold text-white">
+              Become a Restaurant
+            </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              it's easy to start hosting your own restaurant and earn extra income
+              it's easy to start hosting your own restaurant and earn extra
+              income
             </p>
           </div>
         </motion.div>
@@ -123,7 +125,6 @@ const ProfilePage = () => {
         <motion.div variants={itemVariants}>
           <LogoutButton />
         </motion.div>
-
       </motion.div>
     </div>
   );

@@ -81,3 +81,21 @@ export interface CreatePagePayload {
   tags?:        string[];
   workingHours?: WorkingHours;
 }
+
+
+
+
+export interface PaginatedPages {
+  pages:      ApiPage[];
+  total:      number;
+  page:       number;
+  totalPages: number;
+}
+
+
+export interface GetAllPagesParams {
+  page?:     number;
+  limit?:    number;
+  category?: string;
+  search?:   string;
+}

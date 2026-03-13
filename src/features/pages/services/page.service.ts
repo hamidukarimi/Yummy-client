@@ -1,35 +1,55 @@
 import api from "@/api/axios";
 import { ENDPOINTS } from "@/api/endpoints";
 import type { ApiResponse } from "@/types/api.types";
-import type { ApiPage, CreatePagePayload, PageViewData } from "@/features/pages/types/page.types";
+import type {
+  ApiPage,
+  CreatePagePayload,
+  GetAllPagesParams,
+  PageViewData,
+  PaginatedPages,
+} from "@/features/pages/types/page.types";
 
 export const createPageService = async (
-  payload: CreatePagePayload
+  payload: CreatePagePayload,
 ): Promise<ApiPage> => {
   const response = await api.post<ApiResponse<{ page: ApiPage }>>(
     ENDPOINTS.pages.create,
-    payload
+    payload,
   );
   return response.data.data.page;
 };
 
 export const getMyPagesService = async (): Promise<ApiPage[]> => {
   const response = await api.get<ApiResponse<{ pages: ApiPage[] }>>(
-    ENDPOINTS.pages.my
+    ENDPOINTS.pages.my,
   );
   return response.data.data.pages;
 };
 
-export const getPageBySlugService = async (slug: string): Promise<PageViewData> => {
+export const getPageBySlugService = async (
+  slug: string,
+): Promise<PageViewData> => {
   const response = await api.get<ApiResponse<PageViewData>>(
-    ENDPOINTS.pages.bySlug(slug)
+    ENDPOINTS.pages.bySlug(slug),
   );
   return response.data.data;
 };
 
-export const toggleFollowService = async (slug: string): Promise<{ following: boolean }> => {
+export const toggleFollowService = async (
+  slug: string,
+): Promise<{ following: boolean }> => {
   const response = await api.post<ApiResponse<{ following: boolean }>>(
-    ENDPOINTS.pages.follow(slug)
+    ENDPOINTS.pages.follow(slug),
+  );
+  return response.data.data;
+};
+
+export const getAllPagesService = async (
+  params: GetAllPagesParams = {},
+): Promise<PaginatedPages> => {
+  const response = await api.get<ApiResponse<PaginatedPages>>(
+    ENDPOINTS.pages.all,
+    { params },
   );
   return response.data.data;
 };

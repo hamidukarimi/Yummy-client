@@ -13,6 +13,7 @@ import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
 import CreatePagePage from "@/pages/CreatePagePage";
 import PagePage from "@/pages/PagePage";
+import MyPages from "@/pages/MyPagesPage";
 
 const AppRouter = () => {
   return (
@@ -35,6 +36,7 @@ const AppRouter = () => {
             </Route>
 
             {/* Page view is public */}
+            <Route path="/my-pages" element={<MyPages />} />
             <Route path="/pages/:slug" element={<PagePage />} />
 
             <Route path="*" element={<NotFoundPage />} />
