@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import useAuthStore from "@/store/authStore";
 import DashboardCard from "@/features/dashboard/components/DashboardCard";
 import ChangePasswordForm from "@/features/user/components/ChangePasswordForm";
+import DashboardNavbar from "../components/DashboardNavbar";
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
@@ -26,6 +27,9 @@ const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
 
   return (
+      <>
+      <DashboardNavbar />
+
     <motion.div
       variants={containerVariants}
       initial="hidden"
@@ -121,6 +125,7 @@ const DashboardPage = () => {
 
       </div>
     </motion.div>
+      </>
   );
 };
 

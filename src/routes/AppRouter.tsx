@@ -4,7 +4,6 @@ import queryClient from "@/lib/queryClient";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import PublicRoute from "@/components/layout/PublicRoute";
-import Navbar from "@/components/layout/Navbar";
 import BottomNav from "@/components/layout/BottomNav";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -20,7 +19,6 @@ const AppRouter = () => {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Navbar />
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
