@@ -10,6 +10,7 @@ import {
   Settings,
   ShieldCheck,
   X,
+  Plus,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ interface NavItem {
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",          icon: <Home size={20} />,          path: "/dashboard"  },
+  { label: "Create Post",          icon: <Plus size={20} />,          path: "/posts/create"  },
   { label: "Pages",      icon: <FileText size={20} />,      path: "/pages"   },
   { label: "Profile",       icon: <User size={20} />,          path: "/profile"    },
   { label: "Notifications", icon: <Bell size={20} />,          path: "/notifications" },

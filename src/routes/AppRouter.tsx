@@ -13,6 +13,7 @@ import ProfilePage from "@/features/profile/pages/ProfilePage";
 import CreatePagePage from "@/pages/CreatePagePage";
 import PagePage from "@/pages/PagePage";
 import MyPages from "@/pages/MyPagesPage";
+import CreatePost from "@/pages/CreatePostPage";
 
 const AppRouter = () => {
   return (
@@ -31,6 +32,7 @@ const AppRouter = () => {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/pages/create" element={<CreatePagePage />} />
+              <Route path="/posts/create" element={<CreatePost />} />
             </Route>
 
             {/* Page view is public */}

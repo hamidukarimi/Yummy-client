@@ -20,4 +20,18 @@ export const ENDPOINTS = {
     bySlug:   (slug: string) => `${BASE}/pages/${slug}`,
     follow:   (slug: string) => `${BASE}/pages/${slug}/follow`,
   },
+
+  posts: {
+  create:       "/api/posts",
+  my:           "/api/posts/my/posts",
+  byPage:       (pageId: string) => `/api/posts/page/${pageId}`,
+  byId:         (id: string)     => `/api/posts/${id}`,
+  like:         (id: string)     => `/api/posts/${id}/like`,
+  update:       (id: string)     => `/api/posts/${id}`,
+  delete:       (id: string)     => `/api/posts/${id}`,
+  adminPending: "/api/posts/admin/pending",
+  adminReview:  (id: string)     => `/api/posts/admin/${id}/review`,
+},
+
+
 } as const;

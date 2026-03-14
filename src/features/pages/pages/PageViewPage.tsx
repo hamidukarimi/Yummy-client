@@ -1,12 +1,11 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   MapPin,
   Phone,
   Globe,
-  Clock,
-  CheckCircle2,
   Share2,
   Pencil,
   BarChart2,
@@ -16,14 +15,19 @@ import {
 } from "lucide-react";
 import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
+import { getPagePostsService } from "@/features/posts/services/post.service";
+import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
+import PostCard from "@/features/posts/components/PostCard";
 import type {
   WorkingHours,
   WorkingHoursDay,
 } from "@/features/pages/types/page.types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
+
+type PageTab = "posts" | "menu" | "hours";
 
 const DAYS = [
   { key: "monday", label: "Monday" },
@@ -62,33 +66,23 @@ const formatTime = (time: string): string => {
   return `${hour}:${m.toString().padStart(2, "0")} ${period}`;
 };
 
-const getOpenStatus = (
-  workingHours: WorkingHours,
-): {
-  isOpen: boolean;
-  label: string;
-} => {
+const getOpenStatus = (workingHours: WorkingHours) => {
   const dayKey = getCurrentDayKey();
   const today = workingHours[dayKey] as WorkingHoursDay;
-
   if (today.isClosed) return { isOpen: false, label: "Closed today" };
-
   const now = new Date();
   const current = now.getHours() * 60 + now.getMinutes();
   const open = parseTime(today.open);
   const close = parseTime(today.close);
-
   if (current >= open && current < close) {
     return {
       isOpen: true,
       label: `Open now · Closes ${formatTime(today.close)}`,
     };
   }
-
   if (current < open) {
     return { isOpen: false, label: `Opens at ${formatTime(today.open)}` };
   }
-
   return { isOpen: false, label: "Closed now" };
 };
 
@@ -111,10 +105,21 @@ const handleShare = async (name: string, slug: string) => {
 const PageViewPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [tab, setTab] = useState<PageTab>("posts");
+
   const { data, isLoading, isError } = usePage(slug ?? "");
   const { toggleFollow, isPending: isFollowPending } = useFollowPage(
     slug ?? "",
   );
+
+  const pageId = data?.page._id;
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    queryKey: ["posts", "page", pageId],
+    queryFn: () => getPagePostsService(pageId!),
+    enabled: !!pageId,
+  });
+
+  const posts = postsData?.posts ?? [];
 
   if (isLoading) {
     return (
@@ -134,7 +139,6 @@ const PageViewPage = () => {
 
   const { page, followersCount, isFollowing, isOwner } = data;
   const openStatus = getOpenStatus(page.workingHours);
-  const owner = typeof page.owner === "object" ? page.owner : null;
 
   return (
     <div className="min-h-screen bg-black pb-24">
@@ -149,13 +153,10 @@ const PageViewPage = () => {
         ) : (
           <div className="w-full h-full bg-zinc-900" />
         )}
-
-        {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/40" />
 
         {/* Top controls */}
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          {/* Back */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate(-1)}
@@ -164,7 +165,6 @@ const PageViewPage = () => {
             <ChevronLeft size={20} />
           </motion.button>
 
-          {/* Owner: Stats pill */}
           {isOwner && (
             <div className="flex items-center gap-2 bg-black/60 rounded-full px-3 py-1.5">
               <BarChart2 size={14} className="text-white" />
@@ -172,7 +172,6 @@ const PageViewPage = () => {
             </div>
           )}
 
-          {/* Right icons */}
           <div className="flex items-center gap-2">
             {isOwner && (
               <>
@@ -201,10 +200,8 @@ const PageViewPage = () => {
           </div>
         </div>
 
-        {/* Avatar */}
         {/* Avatar + Name row */}
         <div className="absolute -bottom-16 left-4 right-4 flex items-end gap-3">
-          {/* Avatar */}
           <div className="w-32 h-32 rounded-full border-4 border-black bg-zinc-800 overflow-hidden shrink-0">
             {page.avatar ? (
               <img
@@ -219,11 +216,10 @@ const PageViewPage = () => {
             )}
           </div>
 
-          {/* Name & Meta — sits to the right of avatar */}
-          <section className="  relative w-full  bottom-13 ">
-            <div className="  absolute top-0  flex flex-col gap-1 pb-1">
+          <section className="relative w-full bottom-13">
+            <div className="absolute top-0 flex flex-col gap-1 pb-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white leading-tight ">
+                <h1 className="text-2xl font-bold text-white leading-tight">
                   {page.name}
                 </h1>
                 {page.isVerified && (
@@ -247,8 +243,6 @@ const PageViewPage = () => {
 
       {/* ── Body ── */}
       <div className="px-4 pt-22 flex flex-col gap-5 max-w-md mx-auto">
-        {/* ── Name & Meta ── */}
-
         {/* ── Action Buttons ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -258,29 +252,22 @@ const PageViewPage = () => {
         >
           {isOwner ? (
             <>
-              {/* Edit Page */}
               <Button
                 fullWidth
                 onClick={() => navigate(`/pages/${page.slug}/edit`)}
               >
                 Edit Page
               </Button>
-
-              {/* Followers Count */}
               <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
                 <BarChart2 size={15} className="text-zinc-400" />
                 <span className="text-white text-sm font-medium">
                   {followersCount}
                 </span>
               </div>
-
-              {/* Insights — coming soon */}
               <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 opacity-50 cursor-not-allowed">
                 <Bookmark size={15} className="text-zinc-400" />
                 <span className="text-zinc-400 text-sm">Insights</span>
               </div>
-
-              {/* Share */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => void handleShare(page.name, page.slug)}
@@ -291,7 +278,6 @@ const PageViewPage = () => {
             </>
           ) : (
             <>
-              {/* Follow / Unfollow */}
               <Button
                 fullWidth
                 variant={isFollowing ? "outline" : "primary"}
@@ -300,8 +286,6 @@ const PageViewPage = () => {
               >
                 {isFollowing ? "Following" : "Follow"}
               </Button>
-
-              {/* Share */}
               <Button
                 variant="outline"
                 fullWidth
@@ -343,7 +327,6 @@ const PageViewPage = () => {
               </span>
             </div>
           )}
-
           {page.phone && (
             <a
               href={`tel:${page.phone}`}
@@ -355,7 +338,6 @@ const PageViewPage = () => {
               </span>
             </a>
           )}
-
           {page.website && (
             <a
               href={page.website}
@@ -390,72 +372,146 @@ const PageViewPage = () => {
           </motion.div>
         )}
 
-        {/* ── Working Hours ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="flex flex-col gap-3 border-t border-zinc-800 pt-5"
-        >
-          {/* Header */}
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-white" />
-            <h2 className="text-white font-bold text-base">Working Hours</h2>
-          </div>
-
-          {/* Open status */}
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                openStatus.isOpen ? "bg-green-500" : "bg-zinc-600"
+        {/* ── Tabs ── */}
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-0 mt-2">
+          {(["posts", "menu", "hours"] as PageTab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px ${
+                tab === t
+                  ? "border-[#F7C12B] text-[#F7C12B]"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              <div className="w-2 h-2 rounded-full bg-white" />
-            </div>
-            <span
-              className={`text-sm font-semibold ${
-                openStatus.isOpen ? "text-green-400" : "text-zinc-400"
-              }`}
+              {t === "hours"
+                ? "Working Hours"
+                : t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Tab Content ── */}
+        <AnimatePresence mode="wait">
+          {/* ── Posts Tab ── */}
+          {tab === "posts" && (
+            <motion.div
+              key="posts"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-4"
             >
-              {openStatus.label}
-            </span>
-          </div>
+              {postsLoading && (
+                <div className="flex justify-center py-10">
+                  <Spinner size="md" />
+                </div>
+              )}
 
-          {/* Schedule */}
-          <div className="flex flex-col gap-0">
-            {DAYS.map(({ key, label }) => {
-              const day = page.workingHours[key] as WorkingHoursDay;
-              const isToday = key === getCurrentDayKey();
-              const isClosed = day.isClosed;
+              {!postsLoading && posts.length === 0 && (
+                <div className="flex flex-col items-center gap-2 py-12">
+                  <p className="text-zinc-500 text-sm">No posts yet.</p>
+                  {isOwner && (
+                    <button
+                      onClick={() => navigate("/posts/create")}
+                      className="text-[#F7C12B] text-sm hover:underline"
+                    >
+                      Create your first post
+                    </button>
+                  )}
+                </div>
+              )}
 
-              return (
+              {!postsLoading &&
+                posts.map((post) => <PostCard key={post._id} post={post} />)}
+            </motion.div>
+          )}
+
+          {/* ── Menu Tab ── */}
+          {tab === "menu" && (
+            <motion.div
+              key="menu"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col items-center gap-3 py-12"
+            >
+              <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center mb-2">
+                <span className="text-2xl">🍽️</span>
+              </div>
+              <p className="text-white font-semibold text-sm">Coming Soon</p>
+              <p className="text-zinc-500 text-xs text-center">
+                The menu feature will be available in a future update.
+              </p>
+            </motion.div>
+          )}
+
+          {/* ── Working Hours Tab ── */}
+          {tab === "hours" && (
+            <motion.div
+              key="hours"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3"
+            >
+              <div className="flex items-center gap-2">
                 <div
-                  key={key}
-                  className={`flex items-center justify-between py-2.5 border-b border-zinc-900 ${
-                    isToday ? "text-white" : "text-zinc-400"
+                  className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                    openStatus.isOpen ? "bg-green-500" : "bg-zinc-600"
                   }`}
                 >
-                  <span className={`text-sm ${isToday ? "font-semibold" : ""}`}>
-                    {label}
-                  </span>
-                  <span
-                    className={`text-sm ${
-                      isClosed
-                        ? "text-zinc-600"
-                        : isToday
-                          ? "text-[#F7C12B] font-medium"
-                          : ""
-                    }`}
-                  >
-                    {isClosed
-                      ? "Closed"
-                      : `${formatTime(day.open)} - ${formatTime(day.close)}`}
-                  </span>
+                  <div className="w-2 h-2 rounded-full bg-white" />
                 </div>
-              );
-            })}
-          </div>
-        </motion.div>
+                <span
+                  className={`text-sm font-semibold ${
+                    openStatus.isOpen ? "text-green-400" : "text-zinc-400"
+                  }`}
+                >
+                  {openStatus.label}
+                </span>
+              </div>
+
+              <div className="flex flex-col">
+                {DAYS.map(({ key, label }) => {
+                  const day = page.workingHours[key] as WorkingHoursDay;
+                  const isToday = key === getCurrentDayKey();
+                  const isClosed = day.isClosed;
+                  return (
+                    <div
+                      key={key}
+                      className={`flex items-center justify-between py-2.5 border-b border-zinc-900 ${
+                        isToday ? "text-white" : "text-zinc-400"
+                      }`}
+                    >
+                      <span
+                        className={`text-sm ${isToday ? "font-semibold" : ""}`}
+                      >
+                        {label}
+                      </span>
+                      <span
+                        className={`text-sm ${
+                          isClosed
+                            ? "text-zinc-600"
+                            : isToday
+                              ? "text-[#F7C12B] font-medium"
+                              : ""
+                        }`}
+                      >
+                        {isClosed
+                          ? "Closed"
+                          : `${formatTime(day.open)} - ${formatTime(day.close)}`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── Owner FAB ── */}

@@ -9,7 +9,7 @@ import {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const HIDDEN_ON = ["/login", "/register", "/pages/create"];
+const HIDDEN_ON = ["/login", "/register", "/pages/create", "/posts/create"];
 
 const NAV_ITEMS = [
   {
