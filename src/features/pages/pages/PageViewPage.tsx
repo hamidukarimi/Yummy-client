@@ -12,6 +12,7 @@ import {
   Bookmark,
   Eye,
   Check,
+  Search,
 } from "lucide-react";
 import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
@@ -20,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import PostCard from "@/features/posts/components/PostCard";
+import MenuCard from "@/features/posts/components/MenuCard";
 import type {
   WorkingHours,
   WorkingHoursDay,
@@ -106,6 +108,7 @@ const PageViewPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [tab, setTab] = useState<PageTab>("posts");
+  const [menuSearch, setMenuSearch] = useState("");
 
   const { data, isLoading, isError } = usePage(slug ?? "");
   const { toggleFollow, isPending: isFollowPending } = useFollowPage(
@@ -120,6 +123,24 @@ const PageViewPage = () => {
   });
 
   const posts = postsData?.posts ?? [];
+
+  const { data: menuData, isLoading: menuLoading } = useQuery({
+    queryKey: ["posts", "page", pageId, "menu_item"],
+    queryFn: () => getPagePostsService(pageId!, "menu_item"),
+    enabled: !!pageId,
+  });
+
+  const menuItems = menuData?.posts ?? [];
+
+  const filteredMenuItems = menuSearch.trim()
+    ? menuItems.filter((p) =>
+        [p.title, p.content, ...p.tags]
+          .filter(Boolean)
+          .some((field) =>
+            field!.toLowerCase().includes(menuSearch.toLowerCase()),
+          ),
+      )
+    : menuItems;
 
   if (isLoading) {
     return (
@@ -436,15 +457,65 @@ const PageViewPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col items-center gap-3 py-12"
+              className="flex flex-col gap-4"
             >
-              <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center mb-2">
-                <span className="text-2xl">🍽️</span>
-              </div>
-              <p className="text-white font-semibold text-sm">Coming Soon</p>
-              <p className="text-zinc-500 text-xs text-center">
-                The menu feature will be available in a future update.
-              </p>
+              {/* Search */}
+              {menuItems.length > 0 && (
+                <div className="relative">
+                  <Search
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                  />
+                  <input
+                    type="text"
+                    value={menuSearch}
+                    onChange={(e) => setMenuSearch(e.target.value)}
+                    placeholder="Search menu..."
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+                  />
+                </div>
+              )}
+
+              {menuLoading && (
+                <div className="flex justify-center py-10">
+                  <Spinner size="md" />
+                </div>
+              )}
+
+              {!menuLoading && menuItems.length === 0 && (
+                <div className="flex flex-col items-center gap-3 py-12">
+                  <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
+                    <span className="text-2xl">🍽️</span>
+                  </div>
+                  <p className="text-white font-semibold text-sm">
+                    No menu items yet
+                  </p>
+                  {isOwner && (
+                    <button
+                      onClick={() => navigate("/posts/create")}
+                      className="text-[#F7C12B] text-sm hover:underline"
+                    >
+                      Add your first menu item
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!menuLoading &&
+                filteredMenuItems.length === 0 &&
+                menuItems.length > 0 && (
+                  <p className="text-zinc-500 text-sm text-center py-8">
+                    No items match your search.
+                  </p>
+                )}
+
+              {!menuLoading && filteredMenuItems.length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredMenuItems.map((post) => (
+                    <MenuCard key={post._id} post={post} />
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 

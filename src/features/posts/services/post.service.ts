@@ -26,9 +26,11 @@ export const getMyPostsService = async (): Promise<PaginatedPosts> => {
 
 export const getPagePostsService = async (
   pageId: string,
+  type?: string,
 ): Promise<PaginatedPosts> => {
   const response = await api.get<ApiResponse<PaginatedPosts>>(
     ENDPOINTS.posts.byPage(pageId),
+    { params: type ? { type } : {} },
   );
   return response.data.data;
 };
