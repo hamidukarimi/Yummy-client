@@ -1,11 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Home,
-  Mail,
-  Heart,
-  User,
-} from "lucide-react";
+import { Home, Mail, Heart, User } from "lucide-react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -46,8 +41,9 @@ const BottomNav = () => {
 
   // Hide on blacklisted routes
   const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
-  if (HIDDEN_ON.includes(location.pathname) || isPageView) return null;
-
+  const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
+  if (HIDDEN_ON.includes(location.pathname) || isPageView || isPostDetail)
+    return null;
   return (
     <motion.nav
       initial={{ y: 80, opacity: 0 }}

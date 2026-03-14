@@ -34,3 +34,19 @@ export const getPagePostsService = async (
   );
   return response.data.data;
 };
+
+export const getPostByIdService = async (id: string): Promise<ApiPost> => {
+  const response = await api.get<ApiResponse<{ post: ApiPost }>>(
+    ENDPOINTS.posts.byId(id),
+  );
+  return response.data.data.post;
+};
+
+export const toggleLikeService = async (
+  id: string,
+): Promise<{ liked: boolean }> => {
+  const response = await api.post<ApiResponse<{ liked: boolean }>>(
+    ENDPOINTS.posts.like(id),
+  );
+  return response.data.data;
+};
