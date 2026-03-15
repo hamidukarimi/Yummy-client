@@ -14,6 +14,9 @@ import usePost from "@/features/posts/hooks/usePost";
 import useLikePost from "@/features/posts/hooks/useLikePost";
 import useAuth from "@/hooks/useAuth";
 import Spinner from "@/components/ui/Spinner";
+import { MoreHorizontal } from "lucide-react";
+import PostOptionsSheet from "@/features/posts/components/PostOptionsSheet";
+import { deletePostService } from "@/features/posts/services/post.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -48,7 +51,7 @@ const PostDetailPage = () => {
   const navigate = useNavigate();
   //   const { user }     = useAuth();
 
-  const { post, isLoading, isError } = usePost(id ?? "");
+  const { post, isOwner: isPostOwner, isLoading, isError } = usePost(id ?? "");
   const { toggleLike, isPending: isLikePending } = useLikePost(id ?? "");
 
   // ─── Local State ─────────────────────────────────────────────────────────
@@ -58,6 +61,7 @@ const PostDetailPage = () => {
   const [selectedSpice, setSelectedSpice] = useState<string | null>(null);
 
   const { user, restoreSession, isInitializing } = useAuth();
+  const [optionsOpen, setOptionsOpen] = useState(false);
 
   // Restore session on public route if user not loaded
   useEffect(() => {
@@ -232,6 +236,15 @@ const PostDetailPage = () => {
             >
               <Share2 size={16} className="text-zinc-400" />
             </motion.button>
+
+            {/* More Options */}
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={() => setOptionsOpen(true)}
+              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+            >
+              <MoreHorizontal size={16} className="text-zinc-400" />
+            </motion.button>
           </div>
         </div>
 
@@ -343,6 +356,17 @@ const PostDetailPage = () => {
           </span>
         </motion.button>
       </div>
+
+      <PostOptionsSheet
+        isOpen={optionsOpen}
+        onClose={() => setOptionsOpen(false)}
+        postId={post._id}
+        isOwner={isPostOwner}
+        onDelete={async () => {
+          await deletePostService(post._id);
+          navigate(-1);
+        }}
+      />
     </div>
   );
 };

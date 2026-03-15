@@ -6,6 +6,7 @@ import type {
   CreatePostPayload,
   PaginatedPosts,
 } from "@/features/posts/types/post.types";
+import type { PostViewData } from "@/features/posts/hooks/usePost";
 
 export const createPostService = async (
   payload: CreatePostPayload,
@@ -35,11 +36,11 @@ export const getPagePostsService = async (
   return response.data.data;
 };
 
-export const getPostByIdService = async (id: string): Promise<ApiPost> => {
-  const response = await api.get<ApiResponse<{ post: ApiPost }>>(
+export const getPostByIdService = async (id: string): Promise<PostViewData> => {
+  const response = await api.get<ApiResponse<PostViewData>>(
     ENDPOINTS.posts.byId(id),
   );
-  return response.data.data.post;
+  return response.data.data;
 };
 
 export const toggleLikeService = async (
@@ -49,4 +50,8 @@ export const toggleLikeService = async (
     ENDPOINTS.posts.like(id),
   );
   return response.data.data;
+};
+
+export const deletePostService = async (id: string): Promise<void> => {
+  await api.delete(ENDPOINTS.posts.delete(id));
 };
