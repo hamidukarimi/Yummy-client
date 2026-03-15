@@ -5,21 +5,24 @@ import { motion, AnimatePresence } from "framer-motion";
 interface AlertProps {
   message: string;
   type?: "error" | "success" | "warning" | "info";
-  visible: boolean;
+  variant?: "error" | "success" | "warning" | "info";
+  visible?: boolean;
 }
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
 
-const variants: Record<NonNullable<AlertProps["type"]>, string> = {
-  error:   "bg-red-950 border-red-800 text-red-400",
+const variantStyles: Record<string, string> = {
+  error: "bg-red-950 border-red-800 text-red-400",
   success: "bg-green-950 border-green-800 text-green-400",
   warning: "bg-yellow-950 border-yellow-800 text-yellow-400",
-  info:    "bg-blue-950 border-blue-800 text-blue-400",
+  info: "bg-blue-950 border-blue-800 text-blue-400",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const Alert = ({ message, type = "error", visible }: AlertProps) => {
+const Alert = ({ message, type, variant, visible = true }: AlertProps) => {
+  const resolvedType = type ?? variant ?? "error";
+
   return (
     <AnimatePresence>
       {visible && (
@@ -31,7 +34,7 @@ const Alert = ({ message, type = "error", visible }: AlertProps) => {
           role="alert"
           className={`
             w-full px-4 py-3 rounded-xl border text-sm font-medium
-            ${variants[type]}
+            ${variantStyles[resolvedType]}
           `}
         >
           {message}

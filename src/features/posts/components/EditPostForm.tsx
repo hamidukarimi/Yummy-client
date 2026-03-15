@@ -7,15 +7,15 @@ import useEditPost from "@/features/posts/hooks/useEditPost";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
-import type { PostType } from "@/features/posts/types/post.types";
+import type { ApiPost, PostType } from "@/features/posts/types/post.types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const POST_TYPES: { value: PostType; label: string }[] = [
-  { value: "food",         label: "Food"        },
+  { value: "food", label: "Food" },
   { value: "announcement", label: "Announcement" },
-  { value: "promotion",    label: "Promotion"    },
-  { value: "menu_item",    label: "Menu Item"    },
+  { value: "promotion", label: "Promotion" },
+  { value: "menu_item", label: "Menu Item" },
 ];
 
 const PRICE_TYPES: PostType[] = ["food", "promotion", "menu_item"];
@@ -26,38 +26,37 @@ interface EditPostFormProps {
   postId: string;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+interface InnerFormProps {
+  post: ApiPost;
+  postId: string;
+  onSuccess: () => void;
+}
 
-const EditPostForm = ({ postId }: EditPostFormProps) => {
-  const navigate                    = useNavigate();
-  const { post, isLoading, isError } = usePost(postId);
+// ─── Inner Form ───────────────────────────────────────────────────────────────
+
+const InnerForm = ({ post, postId, onSuccess }: InnerFormProps) => {
+  const navigate = useNavigate();
   const { editPost, isPending, error, isSuccess } = useEditPost(postId);
 
-  // ─── Form State ───────────────────────────────────────────────────────────
-  const [postType,  setPostType]  = useState<PostType>("food");
-  const [title,     setTitle]     = useState("");
-  const [content,   setContent]   = useState("");
-  const [imageUrl,  setImageUrl]  = useState("");
-  const [images,    setImages]    = useState<string[]>([]);
-  const [price,     setPrice]     = useState("");
-  const [tagInput,  setTagInput]  = useState("");
-  const [tags,      setTags]      = useState<string[]>([]);
-  const [hydrated,  setHydrated]  = useState(false);
+  const [postType, setPostType] = useState<PostType>(post.type);
+  const [title, setTitle] = useState(post.title ?? "");
+  const [content, setContent] = useState(post.content);
+  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>(post.images ?? []);
+  const [price, setPrice] = useState(
+    post.price !== undefined ? String(post.price) : "",
+  );
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>(post.tags ?? []);
 
-  // ─── Pre-fill form when post loads ───────────────────────────────────────
   useEffect(() => {
-    if (post && !hydrated) {
-      setPostType(post.type);
-      setTitle(post.title ?? "");
-      setContent(post.content);
-      setImages(post.images ?? []);
-      setPrice(post.price !== undefined ? String(post.price) : "");
-      setTags(post.tags ?? []);
-      setHydrated(true);
+    if (isSuccess) {
+      const timer = setTimeout(() => onSuccess(), 1500);
+      return () => clearTimeout(timer);
     }
-  }, [post, hydrated]);
+  }, [isSuccess, onSuccess]);
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // ─── Helpers ────────────────────────────────────────────────────────────
 
   const addImage = () => {
     const trimmed = imageUrl.trim();
@@ -87,47 +86,20 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
 
   const handleSubmit = () => {
     if (!content.trim()) return;
-
-    editPost(
-      {
-        type:    postType,
-        content: content.trim(),
-        ...(title.trim()                       && { title:  title.trim() }),
-        ...(images.length > 0                  && { images }),
-        ...(price && !isNaN(Number(price))     && { price: Number(price) }),
-        ...(tags.length > 0                    && { tags }),
-      },
-      {
-        onSuccess: () => {
-          setTimeout(() => navigate(-1), 1500);
-        },
-      },
-    );
+    editPost({
+      type: postType,
+      content: content.trim(),
+      ...(title.trim() && { title: title.trim() }),
+      ...(images.length > 0 && { images }),
+      ...(price && !isNaN(Number(price)) && { price: Number(price) }),
+      ...(tags.length > 0 && { tags }),
+    });
   };
 
-  // ─── Loading / Error states ───────────────────────────────────────────────
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  if (isError || !post) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-zinc-500 text-sm">Post not found.</p>
-      </div>
-    );
-  }
-
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Render ─────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-black pb-10">
-
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 pt-5 pb-4">
         <motion.button
@@ -137,9 +109,7 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
         >
           <ChevronLeft size={22} />
         </motion.button>
-
         <h1 className="text-[#F7C12B] font-bold text-lg">Edit Post</h1>
-
         <button
           onClick={handleSubmit}
           disabled={isPending || !content.trim()}
@@ -150,19 +120,21 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
       </div>
 
       <div className="px-4 flex flex-col gap-6 max-w-md mx-auto">
-
         {/* ── Error / Success ── */}
         {error && <Alert variant="error" message={error.message} />}
         {isSuccess && (
-          <Alert variant="success" message="Post updated and resubmitted for review!" />
+          <Alert
+            variant="success"
+            message="Post updated and resubmitted for review!"
+          />
         )}
 
         {/* ── Review Warning ── */}
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <AlertCircle size={16} className="text-[#F7C12B] shrink-0 mt-0.5" />
           <p className="text-zinc-400 text-xs leading-relaxed">
-            Editing this post will resubmit it for review. It will be temporarily
-            unpublished until approved again.
+            Editing this post will resubmit it for review. It will be
+            temporarily unpublished until approved again.
           </p>
         </div>
 
@@ -186,13 +158,11 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
           </div>
         </div>
 
-        {/* ── Divider ── */}
         <div className="h-px bg-zinc-900" />
 
         {/* ── Content ── */}
         <div className="flex flex-col gap-3">
           <h2 className="text-white font-bold text-base">Content</h2>
-
           <input
             type="text"
             value={title}
@@ -201,7 +171,6 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
             maxLength={120}
             className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
           />
-
           <div className="relative">
             <textarea
               value={content}
@@ -217,16 +186,16 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
           </div>
         </div>
 
-        {/* ── Divider ── */}
         <div className="h-px bg-zinc-900" />
 
         {/* ── Media ── */}
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-0.5">
             <h2 className="text-white font-bold text-base">Media</h2>
-            <p className="text-zinc-500 text-xs">Image URLs (Add multiple URLs)</p>
+            <p className="text-zinc-500 text-xs">
+              Image URLs (Add multiple URLs)
+            </p>
           </div>
-
           <div className="flex gap-2">
             <input
               type="url"
@@ -244,7 +213,6 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
               Add URL
             </button>
           </div>
-
           {images.length > 0 && (
             <div className="flex flex-col gap-2">
               {images.map((url, index) => (
@@ -256,9 +224,13 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
                     src={url}
                     alt=""
                     className="w-10 h-10 rounded-lg object-cover shrink-0 bg-zinc-800"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
                   />
-                  <span className="text-zinc-400 text-xs truncate flex-1">{url}</span>
+                  <span className="text-zinc-400 text-xs truncate flex-1">
+                    {url}
+                  </span>
                   <button
                     onClick={() => removeImage(url)}
                     className="text-zinc-600 hover:text-red-400 transition-colors shrink-0"
@@ -271,10 +243,9 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
           )}
         </div>
 
-        {/* ── Divider ── */}
         <div className="h-px bg-zinc-900" />
 
-        {/* ── Pricing (conditional) ── */}
+        {/* ── Pricing ── */}
         <AnimatePresence>
           {PRICE_TYPES.includes(postType) && (
             <motion.div
@@ -329,10 +300,12 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
               className="bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none min-w-[100px] flex-1"
             />
           </div>
-          <p className="text-zinc-600 text-xs">Press comma or Enter to add a tag</p>
+          <p className="text-zinc-600 text-xs">
+            Press comma or Enter to add a tag
+          </p>
         </div>
 
-        {/* ── Submit Button ── */}
+        {/* ── Submit ── */}
         <div className="flex flex-col gap-2 pt-2">
           <Button
             fullWidth
@@ -346,9 +319,35 @@ const EditPostForm = ({ postId }: EditPostFormProps) => {
             Editing will resubmit your post for review before publishing.
           </p>
         </div>
-
       </div>
     </div>
+  );
+};
+
+// ─── Outer Component ──────────────────────────────────────────────────────────
+
+const EditPostForm = ({ postId }: EditPostFormProps) => {
+  const navigate = useNavigate();
+  const { post, isLoading, isError } = usePost(postId);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError || !post) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-zinc-500 text-sm">Post not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <InnerForm post={post} postId={postId} onSuccess={() => navigate(-1)} />
   );
 };
 

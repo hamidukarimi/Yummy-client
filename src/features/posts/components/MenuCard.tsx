@@ -45,9 +45,7 @@ const MenuCard = ({ post }: MenuCardProps) => {
 
         {/* Description */}
         {post.title && post.content && (
-          <p className="text-zinc-400 text-xs line-clamp-1">
-            {post.content}
-          </p>
+          <p className="text-zinc-400 text-xs line-clamp-1">{post.content}</p>
         )}
 
         {/* Price */}
