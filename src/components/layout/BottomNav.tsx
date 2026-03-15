@@ -42,7 +42,8 @@ const BottomNav = () => {
   // Hide on blacklisted routes
   const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
-  if (HIDDEN_ON.includes(location.pathname) || isPageView || isPostDetail)
+  const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
+  if (HIDDEN_ON.includes(location.pathname) || isPageView || isPostDetail || isPostEdit) return null;
     return null;
   return (
     <motion.nav

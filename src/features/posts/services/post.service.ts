@@ -4,9 +4,10 @@ import type { ApiResponse } from "@/types/api.types";
 import type {
   ApiPost,
   CreatePostPayload,
+  UpdatePostPayload,
   PaginatedPosts,
 } from "@/features/posts/types/post.types";
-import type { PostViewData } from "@/features/posts/hooks/usePost";
+import type { PostViewData } from "../hooks/usePost";
 
 export const createPostService = async (
   payload: CreatePostPayload,
@@ -54,4 +55,15 @@ export const toggleLikeService = async (
 
 export const deletePostService = async (id: string): Promise<void> => {
   await api.delete(ENDPOINTS.posts.delete(id));
+};
+
+export const updatePostService = async (
+  id: string,
+  payload: UpdatePostPayload,
+): Promise<ApiPost> => {
+  const response = await api.put<ApiResponse<{ post: ApiPost }>>(
+    ENDPOINTS.posts.update(id),
+    payload,
+  );
+  return response.data.data.post;
 };

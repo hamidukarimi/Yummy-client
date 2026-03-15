@@ -15,6 +15,7 @@ import PagePage from "@/pages/PagePage";
 import MyPages from "@/pages/MyPagesPage";
 import CreatePost from "@/pages/CreatePostPage";
 import PostDetail from "@/pages/PostDetailPage";
+import EditPost from "@/pages/EditPostPage";
 
 const AppRouter = () => {
   return (
@@ -34,6 +35,7 @@ const AppRouter = () => {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/pages/create" element={<CreatePagePage />} />
               <Route path="/posts/create" element={<CreatePost />} />
+              <Route path="/posts/:id/edit" element={<EditPost />} />
             </Route>
 
             {/* Page view is public */}
