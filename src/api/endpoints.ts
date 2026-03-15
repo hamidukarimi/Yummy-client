@@ -19,6 +19,7 @@ export const ENDPOINTS = {
     my:       `${BASE}/pages/my`,
     bySlug:   (slug: string) => `${BASE}/pages/${slug}`,
     follow:   (slug: string) => `${BASE}/pages/${slug}/follow`,
+    update: (slug: string) => `/api/pages/${slug}`,
   },
 
   posts: {

@@ -99,3 +99,23 @@ export interface GetAllPagesParams {
   category?: string;
   search?:   string;
 }
+
+
+// Add to page.types.ts
+
+export interface UpdatePagePayload {
+  name?:        string;
+  category?:    string;
+  description?: string;
+  avatar?:      string;
+  coverImage?:  string;
+  tags?:        string[];
+  phone?:       string;
+  website?:     string;
+  location?: {
+    address?: string;
+    city?:    string;
+    country?: string;
+  };
+  workingHours?: WorkingHours;
+}

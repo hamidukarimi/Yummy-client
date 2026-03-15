@@ -7,6 +7,7 @@ import type {
   GetAllPagesParams,
   PageViewData,
   PaginatedPages,
+  UpdatePagePayload,
 } from "@/features/pages/types/page.types";
 
 export const createPageService = async (
@@ -60,4 +61,21 @@ export const getFollowedPagesService = async (): Promise<ApiPage[]> => {
     ENDPOINTS.user.followedPages,
   );
   return response.data.data.pages;
+};
+
+
+
+
+
+
+
+export const updatePageService = async (
+  slug:    string,
+  payload: UpdatePagePayload,
+): Promise<ApiPage> => {
+  const response = await api.put<ApiResponse<{ page: ApiPage }>>(
+    ENDPOINTS.pages.update(slug),
+    payload,
+  );
+  return response.data.data.page;
 };

@@ -43,7 +43,8 @@ const BottomNav = () => {
   const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
   const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
-  if (HIDDEN_ON.includes(location.pathname) || isPageView || isPostDetail || isPostEdit) return null;
+  const isPageEdit = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
+  if (HIDDEN_ON.includes(location.pathname) || isPageView || isPostDetail || isPostEdit || isPageEdit) return null;
     return null;
   return (
     <motion.nav
