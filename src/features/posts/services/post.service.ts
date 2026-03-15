@@ -67,3 +67,15 @@ export const updatePostService = async (
   );
   return response.data.data.post;
 };
+
+
+
+export const getMyPagePostsService = async (
+  pageId: string,
+): Promise<PaginatedPosts> => {
+  const response = await api.get<ApiResponse<PaginatedPosts>>(
+    ENDPOINTS.posts.my,
+    { params: { pageId } },
+  );
+  return response.data.data;
+};

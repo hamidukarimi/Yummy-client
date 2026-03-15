@@ -16,7 +16,10 @@ import {
 } from "lucide-react";
 import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
-import { getPagePostsService } from "@/features/posts/services/post.service";
+import {
+  getPagePostsService,
+  getMyPagePostsService,
+} from "@/features/posts/services/post.service";
 import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
@@ -26,6 +29,8 @@ import type {
   WorkingHours,
   WorkingHoursDay,
 } from "@/features/pages/types/page.types";
+import PendingPostCard from "@/features/posts/components/PendingPostCard";
+
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -130,7 +135,17 @@ const PageViewPage = () => {
     enabled: !!pageId,
   });
 
+  const isOwner = data?.isOwner ?? false;
+  
   const menuItems = menuData?.posts ?? [];
+
+  const { data: pendingData, isLoading: pendingLoading, refetch: refetchPending } = useQuery({
+  queryKey: ["posts", "page", pageId, "pending"],
+  queryFn:  () => getMyPagePostsService(pageId!),
+  enabled:  !!pageId && isOwner,
+});
+
+const pendingPosts = pendingData?.posts.filter((p) => p.status === "pending") ?? [];
 
   const filteredMenuItems = menuSearch.trim()
     ? menuItems.filter((p) =>
@@ -158,7 +173,7 @@ const PageViewPage = () => {
     );
   }
 
-  const { page, followersCount, isFollowing, isOwner } = data;
+  const { page, followersCount, isFollowing } = data;
   const openStatus = getOpenStatus(page.workingHours);
 
   return (
@@ -416,38 +431,64 @@ const PageViewPage = () => {
         <AnimatePresence mode="wait">
           {/* ── Posts Tab ── */}
           {tab === "posts" && (
-            <motion.div
-              key="posts"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col gap-4"
-            >
-              {postsLoading && (
-                <div className="flex justify-center py-10">
-                  <Spinner size="md" />
-                </div>
-              )}
+  <motion.div
+    key="posts"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.2 }}
+    className="flex flex-col gap-4"
+  >
+    {/* ── Pending Posts (owner only) ── */}
+    {isOwner && pendingPosts.length > 0 && (
+      <div className="flex flex-col gap-3">
+        <h3 className="text-zinc-500 text-xs font-semibold uppercase tracking-wide">
+          Pending Review ({pendingPosts.length})
+        </h3>
+        {pendingPosts.map((post) => (
+          <PendingPostCard
+            key={post._id}
+            post={post}
+            onDelete={() => void refetchPending()}
+          />
+        ))}
+        {/* Divider between pending and published */}
+        {posts.length > 0 && (
+          <div className="flex items-center gap-3 my-1">
+            <div className="h-px bg-zinc-800 flex-1" />
+            <span className="text-zinc-600 text-xs">Published</span>
+            <div className="h-px bg-zinc-800 flex-1" />
+          </div>
+        )}
+      </div>
+    )}
 
-              {!postsLoading && posts.length === 0 && (
-                <div className="flex flex-col items-center gap-2 py-12">
-                  <p className="text-zinc-500 text-sm">No posts yet.</p>
-                  {isOwner && (
-                    <button
-                      onClick={() => navigate("/posts/create")}
-                      className="text-[#F7C12B] text-sm hover:underline"
-                    >
-                      Create your first post
-                    </button>
-                  )}
-                </div>
-              )}
+    {/* ── Published Posts ── */}
+    {postsLoading && (
+      <div className="flex justify-center py-10">
+        <Spinner size="md" />
+      </div>
+    )}
 
-              {!postsLoading &&
-                posts.map((post) => <PostCard key={post._id} post={post} />)}
-            </motion.div>
-          )}
+    {!postsLoading && posts.length === 0 && pendingPosts.length === 0 && (
+      <div className="flex flex-col items-center gap-2 py-12">
+        <p className="text-zinc-500 text-sm">No posts yet.</p>
+        {isOwner && (
+          <button
+            onClick={() => navigate("/posts/create")}
+            className="text-[#F7C12B] text-sm hover:underline"
+          >
+            Create your first post
+          </button>
+        )}
+      </div>
+    )}
+
+    {!postsLoading && posts.map((post) => (
+      <PostCard key={post._id} post={post} />
+    ))}
+  </motion.div>
+)}
 
           {/* ── Menu Tab ── */}
           {tab === "menu" && (
