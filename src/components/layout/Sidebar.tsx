@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home,
-  LayoutDashboard,
+  // Home,
+  // LayoutDashboard,
   FileText,
   User,
   Bell,
@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   X,
   Plus,
+  ScrollText,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Create Post",          icon: <Plus size={20} />,          path: "/posts/create"  },
   { label: "Pages",      icon: <FileText size={20} />,      path: "/pages"   },
+  { label: "My Posts",      icon: <ScrollText size={20} />,  path: "/my-posts"     },
   { label: "Profile",       icon: <User size={20} />,          path: "/profile"    },
   { label: "Notifications", icon: <Bell size={20} />,          path: "/notifications" },
   { label: "Settings",      icon: <Settings size={20} />,      path: "/settings"   },
