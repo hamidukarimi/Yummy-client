@@ -67,11 +67,11 @@ src/
 │  │  └─ types/
 │  │     └─ auth.types.ts
 │  │
-│  ├─ dashboard/
+│  ├─ home/
 │  │  ├─ components/
 │  │  │  └─ DashboardCard.tsx
 │  │  └─ pages/
-│  │     └─ DashboardPage.tsx
+│  │     └─ HomePage.tsx
 │  │
 │  └─ user/
 │     ├─ components/
@@ -196,7 +196,7 @@ On logout → token cleared, store cleared, cookie deleted
 
 ## 🔹 Key Architectural Decisions
 
-**Feature-based structure** — each feature (`auth`, `user`, `dashboard`) owns its own components, hooks, services, schemas, and types. Easy to scale, easy to delete.
+**Feature-based structure** — each feature (`auth`, `user`, `home`) owns its own components, hooks, services, schemas, and types. Easy to scale, easy to delete.
 
 **Axios interceptor** — handles token refresh silently. If a request fails with `401`, the interceptor calls `/api/token`, gets a new access token, and retries the original request — all without the user noticing.
 

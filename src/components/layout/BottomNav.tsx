@@ -7,30 +7,10 @@ import { Home, Mail, Heart, User } from "lucide-react";
 const HIDDEN_ON = ["/login", "/register", "/pages/create", "/posts/create", "/search"];
 
 const NAV_ITEMS = [
-  {
-    label: "Home",
-    path: "/dashboard",
-    icon: Home,
-    activeIcon: Home,
-  },
-  {
-    label: "Messages",
-    path: "/messages",
-    icon: Mail,
-    activeIcon: Mail,
-  },
-  {
-    label: "Wishlist",
-    path: "/wishlist",
-    icon: Heart,
-    activeIcon: Heart,
-  },
-  {
-    label: "Profile",
-    path: "/profile",
-    icon: User,
-    activeIcon: User,
-  },
+  { label: "Home",     path: "/",         icon: Home  },
+  { label: "Messages", path: "/messages", icon: Mail  },
+  { label: "Wishlist", path: "/wishlist", icon: Heart },
+  { label: "Profile",  path: "/profile",  icon: User  },
 ] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -39,13 +19,16 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Hide on blacklisted routes
-  const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
+  const isPageView   = /^\/pages\/[^/]+$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
-  const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
-  const isPageEdit = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
-  if (HIDDEN_ON.includes(location.pathname) || isPageView || isPostDetail || isPostEdit || isPageEdit) return null;
-    return null;
+  const isPostEdit   = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
+  const isPageEdit   = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
+
+  if (
+    HIDDEN_ON.includes(location.pathname) ||
+    isPageView || isPostDetail || isPostEdit || isPageEdit
+  ) return null;
+
   return (
     <motion.nav
       initial={{ y: 80, opacity: 0 }}
@@ -55,7 +38,11 @@ const BottomNav = () => {
     >
       <div className="max-w-md mx-auto px-6 h-16 flex items-center justify-between">
         {NAV_ITEMS.map((item) => {
-          const isActive = location.pathname === item.path;
+          // Special case for home — only active on exact "/"
+          const isActive = item.path === "/"
+            ? location.pathname === "/"
+            : location.pathname.startsWith(item.path);
+
           const Icon = item.icon;
 
           return (

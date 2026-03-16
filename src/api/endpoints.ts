@@ -46,5 +46,11 @@ search: {
   pages: "/api/pages",
 },
 
+feed: {
+  explore:  "/api/feed/explore",
+  forYou:   "/api/feed/for-you",
+  tags:     "/api/feed/tags",
+},
+
 
 } as const;

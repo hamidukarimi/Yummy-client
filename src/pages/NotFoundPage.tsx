@@ -21,8 +21,8 @@ const NotFoundPage = () => {
           </p>
         </div>
 
-        <Link to="/dashboard">
-          <Button variant="primary">Go to Dashboard</Button>
+        <Link to="/">
+          <Button variant="primary">Go to Home page</Button>
         </Link>
       </motion.div>
     </div>

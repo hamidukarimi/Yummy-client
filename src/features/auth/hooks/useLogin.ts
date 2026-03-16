@@ -26,7 +26,7 @@ const useLogin = () => {
       }
     },
     onSuccess: () => {
-      navigate("/dashboard");
+      navigate("/");
     },
     onError: (error) => {
       console.error("[useLogin]", error.message);

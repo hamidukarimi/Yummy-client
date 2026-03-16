@@ -26,7 +26,7 @@ const useRegister = () => {
       }
     },
     onSuccess: () => {
-      navigate("/dashboard");
+      navigate("/");
     },
     onError: (error) => {
       console.error("[useRegister]", error.message);

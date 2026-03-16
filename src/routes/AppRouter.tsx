@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "@/lib/queryClient";
 import { AuthProvider } from "@/context/AuthContext";
@@ -8,7 +8,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import NotFoundPage from "@/pages/NotFoundPage";
-import DashboardPage from "@/features/dashboard/pages/DashboardPage";
+import HomePage from "@/features/home/pages/HomePage";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
 import CreatePagePage from "@/pages/CreatePagePage";
 import PagePage from "@/pages/PagePage";
@@ -27,7 +27,7 @@ const AppRouter = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<HomePage />} />
 
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<LoginPage />} />
@@ -35,7 +35,6 @@ const AppRouter = () => {
             </Route>
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/pages/create" element={<CreatePagePage />} />
               <Route path="/posts/create" element={<CreatePost />} />

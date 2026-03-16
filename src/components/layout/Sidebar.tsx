@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   // Home,
-  // LayoutDashboard,
   FileText,
   User,
   Bell,
@@ -12,31 +11,33 @@ import {
   X,
   Plus,
   ScrollText,
+  Home,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface SidebarProps {
-  isOpen:  boolean;
+  isOpen: boolean;
   onClose: () => void;
 }
 
 interface NavItem {
-  label:  string;
-  icon:   React.ReactNode;
-  path:   string;
+  label: string;
+  icon: React.ReactNode;
+  path: string;
 }
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Create Post",          icon: <Plus size={20} />,          path: "/posts/create"  },
-  { label: "Pages",      icon: <FileText size={20} />,      path: "/pages"   },
-  { label: "My Posts",      icon: <ScrollText size={20} />,  path: "/my-posts"     },
-  { label: "Profile",       icon: <User size={20} />,          path: "/profile"    },
-  { label: "Notifications", icon: <Bell size={20} />,          path: "/notifications" },
-  { label: "Settings",      icon: <Settings size={20} />,      path: "/settings"   },
-  { label: "Account",       icon: <ShieldCheck size={20} />,   path: "/account"    },
+  { label: "Home", icon: <Home size={20} />, path: "/" },
+  { label: "Create Post", icon: <Plus size={20} />, path: "/posts/create" },
+  { label: "Pages", icon: <FileText size={20} />, path: "/pages" },
+  { label: "My Posts", icon: <ScrollText size={20} />, path: "/my-posts" },
+  { label: "Profile", icon: <User size={20} />, path: "/profile" },
+  { label: "Notifications", icon: <Bell size={20} />, path: "/notifications" },
+  { label: "Settings", icon: <Settings size={20} />, path: "/settings" },
+  { label: "Account", icon: <ShieldCheck size={20} />, path: "/account" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -48,7 +49,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   // Lock body scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   const handleNavigate = (path: string) => {
@@ -86,7 +89,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <div className="w-8 h-8 rounded-lg bg-[#F7C12B] flex items-center justify-center">
                   <span className="text-black font-black text-sm">Y</span>
                 </div>
-                <span className="text-white font-bold text-lg tracking-tight">Yummy</span>
+                <span className="text-white font-bold text-lg tracking-tight">
+                  Yummy
+                </span>
               </div>
 
               <motion.button
@@ -117,7 +122,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                         : "text-zinc-400 hover:bg-zinc-900/50 hover:text-white"
                     }`}
                   >
-                    <span className={isActive ? "text-[#F7C12B]" : "text-zinc-500"}>
+                    <span
+                      className={isActive ? "text-[#F7C12B]" : "text-zinc-500"}
+                    >
                       {item.icon}
                     </span>
                     <span className="font-medium text-sm">{item.label}</span>

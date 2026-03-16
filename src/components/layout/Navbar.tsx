@@ -19,7 +19,7 @@ const Navbar = () => {
 
         {/* Logo */}
         <Link
-          to={isAuthenticated ? "/dashboard" : "/login"}
+          to={isAuthenticated ? "/" : "/login"}
           className="text-lg font-bold text-[#F7C12B] tracking-tight"
         >
           Yummy
