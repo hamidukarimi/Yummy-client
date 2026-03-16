@@ -41,6 +41,10 @@ notifications: {
   markAllRead: "/api/notifications/read-all",
   delete:     (id: string) => `/api/notifications/${id}`,
 },
+search: {
+  posts: "/api/posts/search",
+  pages: "/api/pages",
+},
 
 
 } as const;

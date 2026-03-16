@@ -4,7 +4,7 @@ import { Home, Mail, Heart, User } from "lucide-react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const HIDDEN_ON = ["/login", "/register", "/pages/create", "/posts/create"];
+const HIDDEN_ON = ["/login", "/register", "/pages/create", "/posts/create", "/search"];
 
 const NAV_ITEMS = [
   {
