@@ -34,5 +34,13 @@ export const ENDPOINTS = {
   adminReview:  (id: string)     => `/api/posts/admin/${id}/review`,
 },
 
+notifications: {
+  all:        "/api/notifications",
+  unreadCount: "/api/notifications/unread-count",
+  markRead:   (id: string) => `/api/notifications/${id}/read`,
+  markAllRead: "/api/notifications/read-all",
+  delete:     (id: string) => `/api/notifications/${id}`,
+},
+
 
 } as const;

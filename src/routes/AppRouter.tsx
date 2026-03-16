@@ -18,6 +18,7 @@ import PostDetail from "@/pages/PostDetailPage";
 import EditPost from "@/pages/EditPostPage";
 import EditPage from "@/pages/EditPagePage";
 import MyPosts from "@/pages/MyPostsPage";
+import Notifications from "@/pages/NotificationsPage";
 
 const AppRouter = () => {
   return (
@@ -40,6 +41,7 @@ const AppRouter = () => {
               <Route path="/posts/:id/edit" element={<EditPost />} />
               <Route path="/pages/:slug/edit" element={<EditPage />} />
               <Route path="/my-posts" element={<MyPosts />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
 
             {/* Page view is public */}
