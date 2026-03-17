@@ -9,6 +9,7 @@ import {
   Minus,
   Plus,
   ShoppingCart,
+  Eye,
 } from "lucide-react";
 import usePost from "@/features/posts/hooks/usePost";
 import useLikePost from "@/features/posts/hooks/useLikePost";
@@ -270,16 +271,25 @@ const PostDetailPage = () => {
         )}
 
         {/* ── Likes + Time ── */}
-        <div className="px-4 flex items-center gap-2">
-          <Heart size={16} className="text-red-500 fill-red-500 shrink-0" />
-          <span className="text-white font-semibold text-sm">
-            {post.likes.length.toLocaleString()} Likes
-          </span>
-          <span className="text-zinc-600">·</span>
-          <span className="text-zinc-500 text-sm">
-            Posted {timeAgo(post.createdAt)}
-          </span>
-        </div>
+       <div className="px-4 flex items-center gap-3">
+  <div className="flex items-center gap-1.5">
+    <Heart size={16} className="text-red-500 fill-red-500 shrink-0" />
+    <span className="text-white font-semibold text-sm">
+      {post.likes.length.toLocaleString()} Likes
+    </span>
+  </div>
+  <span className="text-zinc-600">·</span>
+  <div className="flex items-center gap-1.5">
+    <Eye size={16} className="text-zinc-500 shrink-0" />
+    <span className="text-zinc-500 text-sm">
+      {(post.views ?? 0).toLocaleString()} Views
+    </span>
+  </div>
+  <span className="text-zinc-600">·</span>
+  <span className="text-zinc-500 text-sm">
+    Posted {timeAgo(post.createdAt)}
+  </span>
+</div>
 
         {/* ── Divider ── */}
         <div className="h-px bg-zinc-900 mx-4" />

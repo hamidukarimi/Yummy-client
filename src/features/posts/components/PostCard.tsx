@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, DollarSign, Clock } from "lucide-react";
+import { Heart, DollarSign, Clock, Eye } from "lucide-react";
 import type { ApiPost } from "@/features/posts/types/post.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -16,13 +16,13 @@ const formatPostType = (type: string): string => {
 };
 
 const timeAgo = (dateStr: string): string => {
-  const diff  = Date.now() - new Date(dateStr).getTime();
-  const mins  = Math.floor(diff / 60000);
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
   const hours = Math.floor(mins / 60);
-  const days  = Math.floor(hours / 24);
-  if (days > 0)  return `${days}d ago`;
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days}d ago`;
   if (hours > 0) return `${hours}h ago`;
-  if (mins > 0)  return `${mins}m ago`;
+  if (mins > 0) return `${mins}m ago`;
   return "Just now";
 };
 
@@ -33,7 +33,6 @@ const PostCard = ({ post }: PostCardProps) => {
 
   return (
     <div className="flex flex-col gap-2">
-
       {/* ── Page Author — outside and above card ── */}
       <div className="flex items-center gap-2 px-1">
         <div className="w-7 h-7 rounded-full bg-zinc-800 overflow-hidden border border-zinc-800 shrink-0">
@@ -77,7 +76,6 @@ const PostCard = ({ post }: PostCardProps) => {
 
         {/* ── Content ── */}
         <div className="px-4 py-3 flex flex-col gap-2">
-
           {/* Title */}
           {post.title && (
             <h3 className="text-white font-bold text-base leading-tight">
@@ -94,11 +92,15 @@ const PostCard = ({ post }: PostCardProps) => {
 
           {/* Meta row */}
           <div className="flex items-center gap-4 text-zinc-500 text-xs">
-
             {/* Likes */}
             <div className="flex items-center gap-1">
               <Heart size={12} className="text-[#F7C12B]" />
               <span>{post.likes.length}</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Eye size={12} className="text-zinc-500" />
+              <span>{(post.views ?? 0).toLocaleString()}</span>
             </div>
 
             {/* Price */}
@@ -119,11 +121,9 @@ const PostCard = ({ post }: PostCardProps) => {
               <Clock size={11} />
               <span>{timeAgo(post.createdAt)}</span>
             </div>
-
           </div>
         </div>
       </motion.div>
-
     </div>
   );
 };

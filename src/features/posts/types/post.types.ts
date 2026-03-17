@@ -28,6 +28,7 @@ export interface ApiPost {
   price?: number;
   tags: string[];
   likes: string[];
+  views: number;
   status: PostStatus;
   rejectedReason?: string;
   isPublished: boolean;
