@@ -38,7 +38,7 @@ const BottomSheet = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm"
           />
 
           {/* ── Sheet (mobile) / Modal (desktop) ── */}
@@ -49,12 +49,12 @@ const BottomSheet = ({
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="
-              fixed z-50 bg-zinc-950 border border-zinc-800
-              bottom-0 left-0 right-0 rounded-t-3xl
-              md:bottom-auto md:left-1/2 md:top-1/2
-              md:-translate-x-1/2 md:-translate-y-1/2
-              md:w-96 md:rounded-2xl
-            "
+    fixed z-[70] bg-zinc-950 border border-zinc-800
+    bottom-0 left-0 right-0 rounded-t-3xl
+    md:bottom-auto md:left-1/2 md:top-1/2
+    md:-translate-x-1/2 md:-translate-y-1/2
+    md:w-96 md:rounded-2xl
+  "
           >
             {/* ── Drag Handle ── */}
             <div className="flex justify-center pt-3 pb-1 md:hidden">
