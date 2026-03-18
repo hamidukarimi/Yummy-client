@@ -20,6 +20,7 @@ import EditPage from "@/pages/EditPagePage";
 import MyPosts from "@/pages/MyPostsPage";
 import Notifications from "@/pages/NotificationsPage";
 import Search from "@/pages/SearchPage";
+import DiscoverPages from "@/pages/DiscoverPagesPage";
 
 const AppRouter = () => {
   return (
@@ -49,6 +50,7 @@ const AppRouter = () => {
             <Route path="/pages/:slug" element={<PagePage />} />
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/discover" element={<DiscoverPages />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
