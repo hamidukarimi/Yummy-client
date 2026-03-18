@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import BottomSheet from "@/components/ui/BottomSheet";
 import BottomSheetItem from "@/components/ui/BottomSheetItem";
+import useToggleSave from "@/features/saved/hooks/useToggleSave";
+import useAuth from "@/hooks/useAuth";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +33,9 @@ const PostOptionsSheet = ({
   onDelete,
 }: PostOptionsSheetProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toggleSave, isPending: isSavePending } = useToggleSave(postId);
+  const isSaved = user?.savedPosts?.includes(postId) ?? false;
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(
@@ -42,16 +47,30 @@ const PostOptionsSheet = ({
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      {/* ── Copy Link — everyone ── */}
       <BottomSheetItem
         icon={<Link size={18} />}
         label="Copy link"
         onClick={() => void copyLink()}
       />
 
+      {/* Save post — for everyone */}
+      <BottomSheetItem
+        icon={
+          <Bookmark
+            size={18}
+            className={isSaved ? "fill-[#F7C12B] text-[#F7C12B]" : ""}
+          />
+        }
+        label={isSaved ? "Unsave post" : "Save post"}
+        onClick={() => {
+          toggleSave();
+          onClose();
+        }}
+        disabled={isSavePending}
+      />
+
       {isOwner ? (
         <>
-          {/* ── Pin Post ── */}
           <BottomSheetItem
             icon={<Pin size={18} />}
             label="Pin this post"
@@ -60,8 +79,6 @@ const PostOptionsSheet = ({
             }}
             disabled
           />
-
-          {/* ── Edit Post ── */}
           <BottomSheetItem
             icon={<Pencil size={18} />}
             label="Edit post"
@@ -70,18 +87,6 @@ const PostOptionsSheet = ({
               navigate(`/posts/${postId}/edit`);
             }}
           />
-
-          {/* ── Save Post ── */}
-          <BottomSheetItem
-            icon={<Bookmark size={18} />}
-            label="Save post"
-            onClick={() => {
-              onClose();
-            }}
-            disabled
-          />
-
-          {/* ── Move to Archive ── */}
           <BottomSheetItem
             icon={<Archive size={18} />}
             label="Move to archive"
@@ -90,8 +95,6 @@ const PostOptionsSheet = ({
             }}
             disabled
           />
-
-          {/* ── Delete Post ── */}
           <BottomSheetItem
             icon={<Trash2 size={18} />}
             label="Delete post"
@@ -103,28 +106,15 @@ const PostOptionsSheet = ({
           />
         </>
       ) : (
-        <>
-          {/* ── Save Post ── */}
-          <BottomSheetItem
-            icon={<Bookmark size={18} />}
-            label="Save post"
-            onClick={() => {
-              onClose();
-            }}
-            disabled
-          />
-
-          {/* ── Report Post ── */}
-          <BottomSheetItem
-            icon={<Flag size={18} />}
-            label="Report post"
-            onClick={() => {
-              onClose();
-            }}
-            variant="danger"
-            disabled
-          />
-        </>
+        <BottomSheetItem
+          icon={<Flag size={18} />}
+          label="Report post"
+          onClick={() => {
+            onClose();
+          }}
+          variant="danger"
+          disabled
+        />
       )}
     </BottomSheet>
   );

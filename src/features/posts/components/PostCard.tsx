@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, DollarSign, Clock, Eye } from "lucide-react";
+import { Heart, DollarSign, Clock, Eye, Bookmark } from "lucide-react";
+import useAuth from "@/hooks/useAuth";
+import useToggleSave from "@/features/saved/hooks/useToggleSave";
 import type { ApiPost } from "@/features/posts/types/post.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,27 +32,53 @@ const timeAgo = (dateStr: string): string => {
 
 const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toggleSave, isPending } = useToggleSave(post._id);
+
+  const isSaved = user?.savedPosts?.includes(post._id) ?? false;
 
   return (
     <div className="flex flex-col gap-2">
-      {/* ── Page Author — outside and above card ── */}
-      <div className="flex items-center gap-2 px-1">
-        <div className="w-7 h-7 rounded-full bg-zinc-800 overflow-hidden border border-zinc-800 shrink-0">
-          {post.page.avatar ? (
-            <img
-              src={post.page.avatar}
-              alt={post.page.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white">
-              {post.page.name[0]}
-            </div>
-          )}
+      {/* ── Page Author ── */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-zinc-800 overflow-hidden border border-zinc-800 shrink-0">
+            {post.page.avatar ? (
+              <img
+                src={post.page.avatar}
+                alt={post.page.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white">
+                {post.page.name[0]}
+              </div>
+            )}
+          </div>
+          <span className="text-white text-xs font-semibold">
+            {post.page.name}
+          </span>
         </div>
-        <span className="text-white text-xs font-semibold">
-          {post.page.name}
-        </span>
+
+        {/* Save button */}
+        {user && (
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            disabled={isPending}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSave();
+            }}
+            className="text-zinc-500 hover:text-white transition-colors"
+          >
+            <Bookmark
+              size={16}
+              className={
+                isSaved ? "text-[#F7C12B] fill-[#F7C12B]" : "text-zinc-500"
+              }
+            />
+          </motion.button>
+        )}
       </div>
 
       {/* ── Card ── */}
@@ -76,47 +104,37 @@ const PostCard = ({ post }: PostCardProps) => {
 
         {/* ── Content ── */}
         <div className="px-4 py-3 flex flex-col gap-2">
-          {/* Title */}
           {post.title && (
             <h3 className="text-white font-bold text-base leading-tight">
               {post.title}
             </h3>
           )}
-
-          {/* Content preview — if no title */}
           {!post.title && (
             <p className="text-white font-semibold text-sm leading-snug line-clamp-2">
               {post.content}
             </p>
           )}
 
-          {/* Meta row */}
           <div className="flex items-center gap-4 text-zinc-500 text-xs">
-            {/* Likes */}
             <div className="flex items-center gap-1">
               <Heart size={12} className="text-[#F7C12B]" />
               <span>{post.likes.length}</span>
             </div>
-
-            <div className="flex items-center gap-1">
-              <Eye size={12} className="text-zinc-500" />
-              <span>{(post.views ?? 0).toLocaleString()}</span>
-            </div>
-
-            {/* Price */}
             {post.price !== undefined && (
               <div className="flex items-center gap-1">
                 <DollarSign size={12} />
                 <span>{post.price}</span>
               </div>
             )}
-
-            {/* Type badge */}
+            {post.views !== undefined && (
+              <div className="flex items-center gap-1">
+                <Eye size={12} />
+                <span>{post.views.toLocaleString()}</span>
+              </div>
+            )}
             <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs">
               {formatPostType(post.type)}
             </span>
-
-            {/* Time */}
             <div className="flex items-center gap-1 ml-auto">
               <Clock size={11} />
               <span>{timeAgo(post.createdAt)}</span>

@@ -37,6 +37,7 @@ export interface ApiUser {
   isBlocked: boolean;
   isVerified: boolean;
   isActive: boolean;
+  savedPosts: string[];
   createdAt: string;
   updatedAt: string;
 }

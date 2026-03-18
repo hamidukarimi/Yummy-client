@@ -1,16 +1,22 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Mail, Heart, User } from "lucide-react";
+import { Home, Mail, User, Compass } from "lucide-react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const HIDDEN_ON = ["/login", "/register", "/pages/create", "/posts/create", "/search"];
+const HIDDEN_ON = [
+  "/login",
+  "/register",
+  "/pages/create",
+  "/posts/create",
+  "/search",
+];
 
 const NAV_ITEMS = [
-  { label: "Home",     path: "/",         icon: Home  },
-  { label: "Messages", path: "/messages", icon: Mail  },
-  { label: "Wishlist", path: "/wishlist", icon: Heart },
-  { label: "Profile",  path: "/profile",  icon: User  },
+  { label: "Home", path: "/", icon: Home },
+  { label: "Messages", path: "/messages", icon: Mail },
+  { label: "Discover", path: "/discover", icon: Compass },
+  { label: "Profile", path: "/profile", icon: User },
 ] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -19,15 +25,19 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isPageView   = /^\/pages\/[^/]+$/.test(location.pathname);
+  const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
-  const isPostEdit   = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
-  const isPageEdit   = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
+  const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
+  const isPageEdit = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
 
   if (
     HIDDEN_ON.includes(location.pathname) ||
-    isPageView || isPostDetail || isPostEdit || isPageEdit
-  ) return null;
+    isPageView ||
+    isPostDetail ||
+    isPostEdit ||
+    isPageEdit
+  )
+    return null;
 
   return (
     <motion.nav
@@ -39,9 +49,10 @@ const BottomNav = () => {
       <div className="max-w-md mx-auto px-6 h-16 flex items-center justify-between">
         {NAV_ITEMS.map((item) => {
           // Special case for home — only active on exact "/"
-          const isActive = item.path === "/"
-            ? location.pathname === "/"
-            : location.pathname.startsWith(item.path);
+          const isActive =
+            item.path === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(item.path);
 
           const Icon = item.icon;
 

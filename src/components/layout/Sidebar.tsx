@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  // Home,
+  Home,
   FileText,
   User,
   Bell,
@@ -11,8 +11,7 @@ import {
   X,
   Plus,
   ScrollText,
-  Home,
-  Compass,
+  Bookmark,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,7 +31,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: <Home size={20} />, path: "/" },
-  { label: "Discover",      icon: <Compass size={20} />,     path: "/discover"      },
+  { label: "Saved", icon: <Bookmark size={20} />, path: "/saved" },
   { label: "Create Post", icon: <Plus size={20} />, path: "/posts/create" },
   { label: "Pages", icon: <FileText size={20} />, path: "/pages" },
   { label: "My Posts", icon: <ScrollText size={20} />, path: "/my-posts" },
