@@ -1,18 +1,21 @@
 import { motion } from "framer-motion";
-import { MoreHorizontal, UserCircle } from "lucide-react";
+import { MoreHorizontal, UserCircle, ChevronRight } from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Spinner from "@/components/ui/Spinner";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getMyPagesService } from "@/features/pages/services/page.service";
+import { getMyPostsService } from "@/features/posts/services/post.service";
+import useAuthStore from "@/store/authStore";
+
+import { getFollowedPagesService } from "@/features/pages/services/page.service";
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 
 const itemVariants = {
@@ -24,7 +27,33 @@ const itemVariants = {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const { user: authUser } = useAuthStore();
   const { user, isLoading, isError } = useProfile();
+
+  // ── Real stats ────────────────────────────────────────────────────────────
+  const { data: myPages } = useQuery({
+    queryKey: ["pages", "my"],
+    queryFn: getMyPagesService,
+    enabled: !!user,
+  });
+
+  const { data: myPosts } = useQuery({
+    queryKey: ["posts", "my"],
+    queryFn: getMyPostsService,
+    enabled: !!user,
+  });
+
+  const { data: followedPages } = useQuery({
+    queryKey: ["pages", "followed"],
+    queryFn: getFollowedPagesService,
+    enabled: !!user,
+  });
+
+  const followingCount = followedPages?.length ?? 0;
+
+  const savedCount = authUser?.savedPosts?.length ?? 0;
+  const pagesCount = myPages?.length ?? 0;
+  const postsCount = myPosts?.posts?.length ?? 0;
 
   if (isLoading) {
     return (
@@ -43,7 +72,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black px-4 py-6 max-w-md mx-auto">
+    <div className="min-h-screen bg-black px-4 py-6 max-w-md mx-auto pb-24">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -85,40 +114,95 @@ const ProfilePage = () => {
               {user.firstname} {user.lastname}
             </h2>
             <p className="text-sm text-zinc-400">@{user.username}</p>
-            <p className="text-sm text-zinc-400 mt-1">
-              {user.following.length} Following
-            </p>
+          </div>
+
+          {/* Following count */}
+          <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-zinc-900 border border-zinc-800">
+            <span className="text-white font-bold text-sm">
+              {followingCount}
+            </span>
+            <span className="text-zinc-400 text-sm">Following Pages</span>
           </div>
         </motion.div>
 
         {/* ── Stats Row ── */}
         <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
-          <div className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1">
-            <span className="text-2xl font-bold text-white">12</span>
-            <span className="text-sm text-zinc-400">total orders</span>
-          </div>
-          <div className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1">
-            <span className="text-2xl font-bold text-white">12</span>
-            <span className="text-sm text-zinc-400">bookmarks</span>
+          {/* Saved Posts */}
+          <motion.div
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/saved")}
+            className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1 cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
+            <span className="text-2xl font-bold text-white">{savedCount}</span>
+            <span className="text-sm text-zinc-400">saved posts</span>
+          </motion.div>
+
+          {/* My Pages */}
+          <motion.div
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/my-pages")}
+            className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1 cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
+            <span className="text-2xl font-bold text-white">{pagesCount}</span>
+            <span className="text-sm text-zinc-400">my pages</span>
+          </motion.div>
+
+          {/* My Posts */}
+          <motion.div
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/my-posts")}
+            className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1 cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
+            <span className="text-2xl font-bold text-white">{postsCount}</span>
+            <span className="text-sm text-zinc-400">my posts</span>
+          </motion.div>
+
+          {/* Orders — coming soon */}
+          <div className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1 opacity-50">
+            <span className="text-2xl font-bold text-white">—</span>
+            <span className="text-sm text-zinc-400">orders</span>
           </div>
         </motion.div>
 
-        {/* ── Become a Restaurant Banner ── */}
-        <motion.div
-          variants={itemVariants}
-          onClick={() => navigate("/pages")}
-          className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-4 flex items-center gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
-        >
-          <div className="text-4xl">👨‍🍳</div>
-          <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-bold text-white">
-              Become a Restaurant
-            </h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              it's easy to start hosting your own restaurant and earn extra
-              income
-            </p>
-          </div>
+        {/* ── Quick Links ── */}
+        <motion.div variants={itemVariants} className="flex flex-col gap-2">
+          {/* Discover Pages */}
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/discover")}
+            className="rounded-2xl border border-zinc-800 p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🧭</span>
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold text-white">Discover Pages</h3>
+                <p className="text-xs text-zinc-400">
+                  Find and follow restaurants
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600" />
+          </motion.div>
+
+          {/* Become a Restaurant */}
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/my-pages")}
+            className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">👨‍🍳</span>
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold text-white">
+                  Become a Restaurant
+                </h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Start hosting your own restaurant
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600" />
+          </motion.div>
         </motion.div>
 
         {/* ── Logout ── */}
