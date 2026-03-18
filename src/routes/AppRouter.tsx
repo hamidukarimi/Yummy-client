@@ -22,6 +22,7 @@ import Notifications from "@/pages/NotificationsPage";
 import Search from "@/pages/SearchPage";
 import DiscoverPages from "@/pages/DiscoverPagesPage";
 import Saved from "@/pages/SavedPage";
+import EditProfile from "@/pages/EditProfilePage";
 
 const AppRouter = () => {
   return (
@@ -45,6 +46,7 @@ const AppRouter = () => {
               <Route path="/my-posts" element={<MyPosts />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/saved" element={<Saved />} />
+              <Route path="/profile/edit" element={<EditProfile />} />
             </Route>
 
             {/* Page view is public */}

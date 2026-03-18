@@ -85,7 +85,10 @@ const ProfilePage = () => {
           className="flex items-center justify-between mb-2"
         >
           <h1 className="text-xl font-bold text-white">Profile</h1>
-          <button className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-800 transition-colors">
+          <button
+            onClick={() => navigate("/profile/edit")}
+            className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-800 transition-colors"
+          >
             <MoreHorizontal size={18} />
           </button>
         </motion.div>

@@ -12,6 +12,8 @@ export const ENDPOINTS = {
     me: `${BASE}/users/me`,
     changePassword: `${BASE}/users/me/password`,
     followedPages: "/api/users/me/followed-pages",
+    savedPosts: "/api/users/me/saved",
+    updateProfile: "/api/users/me",
   },
   pages: {
     create: `${BASE}/pages`,

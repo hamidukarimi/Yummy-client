@@ -8,3 +8,24 @@ export const getMyProfileService = async (): Promise<ApiUser> => {
   );
   return response.data.data.user;
 };
+
+
+
+export interface UpdateProfilePayload {
+  firstname?: string;
+  lastname?:  string;
+  username?:  string;
+  avatar?:    string;
+  birthday?:  string;
+  gender?:    "male" | "female" | "other";
+}
+
+export const updateProfileService = async (
+  payload: UpdateProfilePayload,
+): Promise<ApiUser> => {
+  const response = await api.put<ApiResponse<{ user: ApiUser }>>(
+    ENDPOINTS.user.updateProfile,
+    payload,
+  );
+  return response.data.data.user;
+};
