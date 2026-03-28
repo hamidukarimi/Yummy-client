@@ -33,12 +33,12 @@ const ChangePasswordForm = () => {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-6"
+      className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950/40 shadow-[0_0_24px_rgba(0,0,0,0.35)] p-8 flex flex-col gap-6"
     >
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-bold text-zinc-900">Change Password</h2>
-        <p className="text-sm text-zinc-500">
+        <h2 className="text-xl font-bold text-white">Change Password</h2>
+        <p className="text-sm text-zinc-400">
           After changing your password you will be logged out from all devices.
         </p>
       </div>

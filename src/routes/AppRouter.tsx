@@ -23,6 +23,7 @@ import Search from "@/pages/SearchPage";
 import DiscoverPages from "@/pages/DiscoverPagesPage";
 import Saved from "@/pages/SavedPage";
 import EditProfile from "@/pages/EditProfilePage";
+import ChangePassword from "@/pages/ChangePasswordPage";
 
 const AppRouter = () => {
   return (
@@ -47,6 +48,10 @@ const AppRouter = () => {
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/saved" element={<Saved />} />
               <Route path="/profile/edit" element={<EditProfile />} />
+              <Route
+                path="/profile/change-password"
+                element={<ChangePassword />}
+              />
             </Route>
 
             {/* Page view is public */}

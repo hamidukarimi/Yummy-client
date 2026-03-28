@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MoreHorizontal, UserCircle, ChevronRight } from "lucide-react";
+import { MoreHorizontal, UserCircle, ChevronRight, KeyRound } from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Spinner from "@/components/ui/Spinner";
@@ -201,6 +201,24 @@ const ProfilePage = () => {
                 </h3>
                 <p className="text-xs text-zinc-400 leading-relaxed">
                   Start hosting your own restaurant
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600" />
+          </motion.div>
+
+          {/* Change password */}
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/profile/change-password")}
+            className="rounded-2xl border border-zinc-800 p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <KeyRound size={22} className="text-[#F7C12B]" />
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold text-white">Change password</h3>
+                <p className="text-xs text-zinc-400">
+                  Update your sign-in password
                 </p>
               </div>
             </div>

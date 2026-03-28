@@ -191,6 +191,17 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
           </Button>
         </div>
 
+        {/* ── Security ── */}
+        <div className="pt-4 border-t border-zinc-800">
+          <button
+            type="button"
+            onClick={() => navigate("/profile/change-password")}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-[#F7C12B] border border-zinc-700 hover:bg-zinc-900 transition-colors"
+          >
+            Change password
+          </button>
+        </div>
+
       </div>
     </div>
   );
