@@ -24,14 +24,22 @@ import DiscoverPages from "@/pages/DiscoverPagesPage";
 import Saved from "@/pages/SavedPage";
 import EditProfile from "@/pages/EditProfilePage";
 import ChangePassword from "@/pages/ChangePasswordPage";
+import Sidebar from "@/components/layout/Sidebar";
+import useSidebarStore from "@/store/sidebarStore";
 
 const AppRouter = () => {
+  const { isOpen, close } = useSidebarStore();
   return (
+
+
+
+
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <Sidebar isOpen={isOpen} onClose={close} />
           <Routes>
-            <Route path="/" element={<HomePage />} />
+             <Route path="/" element={<HomePage />} />
 
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<LoginPage />} />
@@ -67,6 +75,10 @@ const AppRouter = () => {
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
+
+
+
+
   );
 };
 
