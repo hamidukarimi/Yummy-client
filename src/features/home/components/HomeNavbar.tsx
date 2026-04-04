@@ -37,7 +37,7 @@ const HomeNavbar = () => {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => toggle()}
-              className="w-9 h-9 flex items-center justify-center text-white"
+              className="w-9 h-9 flex items-center justify-center text-white lg:hidden"
             >
               <Menu size={22} />
             </motion.button>
