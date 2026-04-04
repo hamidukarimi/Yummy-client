@@ -62,14 +62,14 @@ const HomeNavbar = () => {
 
           {/* RIGHT (Desktop Icons) */}
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => navigate("/messages")} className="hover:opacity-80 transition-opacity"><Mail size={22} /></button>
-            <button onClick={() => navigate("/posts/create")} className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition">
+            <button onClick={() => navigate("/messages")} className="cursor-pointer hover:opacity-80 transition-opacity"><Mail size={22} /></button>
+            <button onClick={() => navigate("/posts/create")} className="cursor-pointer flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition">
               <PlusCircle size={22} /><span className="text-sm font-medium">Create</span>
             </button>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate("/notifications")}
-              className="relative hover:opacity-80 transition-opacity"
+              className="cursor-pointer relative hover:opacity-80 transition-opacity"
             >
               <Bell size={22} />
               {unreadCount > 0 && (
@@ -80,7 +80,7 @@ const HomeNavbar = () => {
                 </span>
               )}
             </motion.button>
-            <div onClick={() => navigate("/profile")} className="w-9 h-9 rounded-full overflow-hidden border border-gray-600">
+            <div onClick={() => navigate("/profile")} className="cursor-pointer w-9 h-9 rounded-full overflow-hidden border border-gray-600">
                {user?.avatar ? (
                  <img src={user.avatar} alt="profile" className="w-full h-full object-cover" />
                ) : (
