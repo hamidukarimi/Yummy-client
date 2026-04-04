@@ -62,8 +62,8 @@ const HomeNavbar = () => {
 
           {/* RIGHT (Desktop Icons) */}
           <div className="hidden md:flex items-center gap-6">
-            <button className="hover:opacity-80 transition-opacity"><Mail size={22} /></button>
-            <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <button onClick={() => navigate("/messages")} className="hover:opacity-80 transition-opacity"><Mail size={22} /></button>
+            <button onClick={() => navigate("/posts/create")} className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition">
               <PlusCircle size={22} /><span className="text-sm font-medium">Create</span>
             </button>
             <motion.button
@@ -80,9 +80,9 @@ const HomeNavbar = () => {
                 </span>
               )}
             </motion.button>
-            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-600">
-               {user?.avatarUrl ? (
-                 <img src={user.avatarUrl} alt="profile" className="w-full h-full object-cover" />
+            <div onClick={() => navigate("/profile")} className="w-9 h-9 rounded-full overflow-hidden border border-gray-600">
+               {user?.avatar ? (
+                 <img src={user.avatar} alt="profile" className="w-full h-full object-cover" />
                ) : (
                  <div className="w-full h-full bg-blue-900 flex items-center justify-center text-xs">U</div>
                )}
