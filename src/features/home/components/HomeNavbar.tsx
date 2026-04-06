@@ -1,15 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, Bell, Search, Mail, PlusCircle } from "lucide-react"; 
-import Sidebar from "@/components/layout/Sidebar";
+import { Menu, Bell, Search, Mail, PlusCircle } from "lucide-react";
 import useUnreadCount from "@/features/notifications/hooks/useUnreadCount";
 import useAuth from "@/hooks/useAuth";
 import useSidebarStore from "@/store/sidebarStore";
 
 const HomeNavbar = () => {
   const { toggle } = useSidebarStore();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { user, isInitializing, restoreSession } = useAuth();
   const unreadCount = useUnreadCount(!!user);
@@ -22,16 +20,10 @@ const HomeNavbar = () => {
 
   return (
     <>
-      {/* Sidebar with Toggle Logic */}
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* Sidebar is now rendered globally in AppRouter */}
 
       <nav className="bg-black text-white px-4 pt-3 pb-3 md:px-8 md:py-4">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between">
-          
           {/* LEFT */}
           <div className="flex items-center gap-4">
             <motion.button
@@ -62,9 +54,18 @@ const HomeNavbar = () => {
 
           {/* RIGHT (Desktop Icons) */}
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => navigate("/messages")} className="cursor-pointer hover:opacity-80 transition-opacity"><Mail size={22} /></button>
-            <button onClick={() => navigate("/posts/create")} className="cursor-pointer flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition">
-              <PlusCircle size={22} /><span className="text-sm font-medium">Create</span>
+            <button
+              onClick={() => navigate("/messages")}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <Mail size={22} />
+            </button>
+            <button
+              onClick={() => navigate("/posts/create")}
+              className="cursor-pointer flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition"
+            >
+              <PlusCircle size={22} />
+              <span className="text-sm font-medium">Create</span>
             </button>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -80,12 +81,21 @@ const HomeNavbar = () => {
                 </span>
               )}
             </motion.button>
-            <div onClick={() => navigate("/profile")} className="cursor-pointer w-9 h-9 rounded-full overflow-hidden border border-gray-600">
-               {user?.avatar ? (
-                 <img src={user.avatar} alt="profile" className="w-full h-full object-cover" />
-               ) : (
-                 <div className="w-full h-full bg-blue-900 flex items-center justify-center text-xs">U</div>
-               )}
+            <div
+              onClick={() => navigate("/profile")}
+              className="cursor-pointer w-9 h-9 rounded-full overflow-hidden border border-gray-600"
+            >
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-blue-900 flex items-center justify-center text-xs">
+                  U
+                </div>
+              )}
             </div>
           </div>
 
