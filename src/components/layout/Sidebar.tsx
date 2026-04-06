@@ -34,7 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Home",          icon: <Home size={20} />,       path: "/"              },
   { label: "Saved",         icon: <Bookmark size={20} />,   path: "/saved"         },
   { label: "Create Post",   icon: <Plus size={20} />,       path: "/posts/create"  },
-  { label: "Pages",         icon: <FileText size={20} />,   path: "/my-pages"      },
+  { label: "Pages",         icon: <FileText size={20} />,   path: "/pages"      },
   { label: "My Posts",      icon: <ScrollText size={20} />, path: "/my-posts"      },
   { label: "Profile",       icon: <User size={20} />,       path: "/profile"       },
   { label: "Notifications", icon: <Bell size={20} />,       path: "/notifications" },
@@ -189,7 +189,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setDesktopExpanded(false)}
-              className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0"
+              className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0 cursor-pointer"
             >
               <Menu size={16} />
             </motion.button>
@@ -202,7 +202,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setDesktopExpanded(true)}
-              className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+              className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               <Menu size={16} />
             </motion.button>
@@ -222,7 +222,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-colors duration-200 text-left w-full ${
                   isActive
                     ? "bg-zinc-900 text-white"
-                    : "text-zinc-400 hover:bg-zinc-900/50 hover:text-white"
+                    : "text-zinc-400 hover:bg-zinc-900/80 hover:text-white cursor-pointer"
                 }`}
               >
                 <span className={`shrink-0 ${isActive ? "text-[#F7C12B]" : "text-zinc-500"}`}>
