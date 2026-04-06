@@ -88,7 +88,7 @@ const MyPostsPage = () => {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 -mb-px ${
+              className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 -mb-px cursor-pointer ${
                 tab === key
                   ? "border-[#F7C12B] text-[#F7C12B]"
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
@@ -158,7 +158,7 @@ const MyPostsPage = () => {
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setSelectedPost(post)}
-                      className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400"
+                      className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 cursor-pointer"
                     >
                       <span className="text-base leading-none">···</span>
                     </motion.button>

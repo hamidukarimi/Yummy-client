@@ -31,6 +31,7 @@ const BottomSheetItem = ({
         border-b border-zinc-900 last:border-b-0
         transition-colors duration-150
         disabled:opacity-40 disabled:cursor-not-allowed
+        cursor-pointer
         ${
           variant === "danger"
             ? "text-red-400 hover:bg-red-500/10"

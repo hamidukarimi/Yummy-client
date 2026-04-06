@@ -112,7 +112,7 @@ const NotificationItem = ({
             e.stopPropagation();
             setSheetOpen(true);
           }}
-          className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0 mt-0.5"
+          className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0 mt-0.5 cursor-pointer"
         >
           <MoreHorizontal size={18} />
         </motion.button>
@@ -234,7 +234,7 @@ const NotificationsPage = () => {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 shrink-0 ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 shrink-0 cursor-pointer ${
                 active
                   ? "bg-zinc-800 border-zinc-600 text-white"
                   : "bg-transparent border-zinc-800 text-zinc-500 hover:text-white"

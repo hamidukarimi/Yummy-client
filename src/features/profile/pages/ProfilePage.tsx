@@ -143,7 +143,7 @@ const ProfilePage = () => {
           {/* My Pages */}
           <motion.div
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/my-pages")}
+            onClick={() => navigate("/pages")}
             className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-5 flex flex-col gap-1 cursor-pointer hover:bg-zinc-900 transition-colors"
           >
             <span className="text-2xl font-bold text-white">{pagesCount}</span>
@@ -190,7 +190,7 @@ const ProfilePage = () => {
           {/* Become a Restaurant */}
           <motion.div
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/my-pages")}
+            onClick={() => navigate("/pages")}
             className="shadow-md shadow-[rgba(104,104,104,0.25)] rounded-2xl border border-zinc-800 p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-900 transition-colors"
           >
             <div className="flex items-center gap-3">

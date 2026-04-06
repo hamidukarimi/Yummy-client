@@ -69,7 +69,7 @@ const PostCard = ({ post }: PostCardProps) => {
               e.stopPropagation();
               toggleSave();
             }}
-            className="text-zinc-500 hover:text-white transition-colors"
+            className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
           >
             <Bookmark
               size={16}
