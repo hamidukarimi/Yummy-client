@@ -110,7 +110,7 @@ const CreatePostForm = () => {
         <button
           onClick={handleSubmit}
           disabled={isPending || !selectedPageId || !content.trim()}
-          className="text-[#F7C12B] font-semibold text-sm disabled:opacity-40"
+          className="text-[#F7C12B] font-semibold text-sm disabled:opacity-40 cursor-pointer"
         >
           Submit
         </button>
@@ -126,7 +126,7 @@ const CreatePostForm = () => {
 
         {/* ── Select Page ── */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 ">
             <ChevronLeft size={16} className="text-white" />
             <h2 className="text-white font-bold text-base">Select Page</h2>
           </div>
@@ -147,7 +147,7 @@ const CreatePostForm = () => {
             <div className="relative">
               <button
                 onClick={() => setPageDropdownOpen((prev) => !prev)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-zinc-900 border transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-zinc-900 border transition-colors cursor-pointer ${
                   selectedPage
                     ? "border-[#F7C12B]"
                     : "border-zinc-700"
@@ -194,7 +194,7 @@ const CreatePostForm = () => {
                           setSelectedPageId(page._id ?? page.id);
                           setPageDropdownOpen(false);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors cursor-pointer"
                       >
                         <div className="w-8 h-8 rounded-lg bg-zinc-700 overflow-hidden shrink-0">
                           {page.avatar ? (
@@ -226,7 +226,7 @@ const CreatePostForm = () => {
               <button
                 key={value}
                 onClick={() => setPostType(value)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors duration-200 ${
+                className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors duration-200 cursor-pointer ${
                   postType === value
                     ? "bg-[#F7C12B] border-[#F7C12B] text-black"
                     : "bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-zinc-500"
@@ -292,7 +292,7 @@ const CreatePostForm = () => {
             />
             <button
               onClick={addImage}
-              className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-[#F7C12B] text-black text-sm font-semibold shrink-0"
+              className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-[#F7C12B] text-black text-sm font-semibold shrink-0 cursor-pointer"
             >
               <Plus size={15} />
               Add URL

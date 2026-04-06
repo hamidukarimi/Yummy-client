@@ -9,11 +9,8 @@ import Spinner from "@/components/ui/Spinner";
 import useAuth from "@/hooks/useAuth";
 import type { FeedFilter } from "@/features/feed/types/feed.types";
 
-
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
-
-
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -24,7 +21,7 @@ const FeedPage = () => {
   const navigate = useNavigate();
 
   const [activeFilter, setActiveFilter] = useState<FeedFilter>({
-    type:  "all",
+    type: "all",
     label: "Explore",
   });
 
@@ -65,18 +62,17 @@ const FeedPage = () => {
 
   return (
     <div className="flex flex-col">
-
       {/* ── Search bar ── */}
-    <div className="px-4 pb-2 pt-1">
-      <motion.button
-        whileTap={{ scale: 0.99 }}
-        onClick={() => navigate("/search")}
-        className="w-full flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-      >
-        <Search size={16} className="text-zinc-500 shrink-0" />
-        <span className="text-zinc-600 text-sm">Search pages, posts...</span>
-      </motion.button>
-    </div>
+      <div className="px-4 pb-2 pt-1">
+        <motion.button
+          whileTap={{ scale: 0.99 }}
+          onClick={() => navigate("/search")}
+          className="w-full flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 cursor-pointer"
+        >
+          <Search size={16} className="text-zinc-500 shrink-0" />
+          <span className="text-zinc-600 text-sm">Search pages, posts...</span>
+        </motion.button>
+      </div>
 
       {/* ── Feed Tabs ── */}
       <FeedTabs
@@ -87,30 +83,39 @@ const FeedPage = () => {
       />
 
       {/* ── For You empty state (not logged in) ── */}
-      {activeFilter.type === "for-you" && !isAuthenticated && !isInitializing && (
-        <div className="flex flex-col items-center gap-3 py-16 px-4">
-          <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
-            <Sparkles size={24} className="text-zinc-600" />
+      {activeFilter.type === "for-you" &&
+        !isAuthenticated &&
+        !isInitializing && (
+          <div className="flex flex-col items-center gap-3 py-16 px-4">
+            <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
+              <Sparkles size={24} className="text-zinc-600" />
+            </div>
+            <p className="text-white font-semibold text-sm">
+              Sign in to see your feed
+            </p>
+            <p className="text-zinc-500 text-xs text-center">
+              Follow pages to get personalized posts here.
+            </p>
           </div>
-          <p className="text-white font-semibold text-sm">Sign in to see your feed</p>
-          <p className="text-zinc-500 text-xs text-center">
-            Follow pages to get personalized posts here.
-          </p>
-        </div>
-      )}
+        )}
 
       {/* ── For You empty state (logged in but no followed pages) ── */}
-      {activeFilter.type === "for-you" && isAuthenticated && !isLoading && posts.length === 0 && (
-        <div className="flex flex-col items-center gap-3 py-16 px-4">
-          <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
-            <Sparkles size={24} className="text-zinc-600" />
+      {activeFilter.type === "for-you" &&
+        isAuthenticated &&
+        !isLoading &&
+        posts.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-16 px-4">
+            <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
+              <Sparkles size={24} className="text-zinc-600" />
+            </div>
+            <p className="text-white font-semibold text-sm">
+              Your feed is empty
+            </p>
+            <p className="text-zinc-500 text-xs text-center">
+              Follow some pages to see their posts here.
+            </p>
           </div>
-          <p className="text-white font-semibold text-sm">Your feed is empty</p>
-          <p className="text-zinc-500 text-xs text-center">
-            Follow some pages to see their posts here.
-          </p>
-        </div>
-      )}
+        )}
 
       {/* ── Loading ── */}
       {isLoading && (
@@ -148,7 +153,6 @@ const FeedPage = () => {
       <div ref={loaderRef} className="flex justify-center py-4">
         {isFetchingNextPage && <Spinner size="sm" />}
       </div>
-
     </div>
   );
 };

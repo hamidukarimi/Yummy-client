@@ -46,7 +46,7 @@ const PageItem = ({
     animate={{ opacity: 1, y: 0 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="w-full flex items-center gap-4 py-3 text-left"
+    className="w-full flex items-center gap-4 py-3 text-left cursor-pointer"
   >
     <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
       {page.avatar ? (
@@ -116,7 +116,7 @@ const MyPagesPage = () => {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 ${
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 cursor-pointer ${
               tab === t
                 ? "bg-zinc-800 border-zinc-600 text-white"
                 : "bg-transparent border-zinc-800 text-zinc-500 hover:text-white"
@@ -234,7 +234,7 @@ const MyPagesPage = () => {
                   <button
                     key={cat}
                     onClick={() => setCategory(val)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors duration-200 shrink-0 ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors duration-200 shrink-0 cursor-pointer ${
                       isActive
                         ? "bg-[#F7C12B] border-[#F7C12B] text-black"
                         : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white"

@@ -48,7 +48,7 @@ const FeedTabs = ({
             key={`${filter.type}-${filter.value ?? ""}`}
             whileTap={{ scale: 0.95 }}
             onClick={() => onFilterChange(filter)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap border transition-colors duration-200 shrink-0 ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap border transition-colors duration-200 shrink-0 cursor-pointer ${
               isActive
                 ? "bg-[#F7C12B] border-[#F7C12B] text-black"
                 : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white"
