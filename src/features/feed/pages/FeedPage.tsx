@@ -140,7 +140,7 @@ const FeedPage = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col gap-5 px-4 pt-2 pb-4"
+            className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-y-9 lg:mt-3 px-4 pt-2 pb-4"
           >
             {posts.map((post) => (
               <PostCard key={post._id} post={post} />
