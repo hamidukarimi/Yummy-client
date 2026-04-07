@@ -12,10 +12,12 @@ import {
   Plus,
   ScrollText,
   Bookmark,
+  Menu,
 } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
+  onOpen: () => void; // Added to trigger opening from the mini-sidebar
   onClose: () => void;
 }
 
@@ -37,12 +39,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Account", icon: <ShieldCheck size={20} />, path: "/account" },
 ];
 
-const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Only lock scroll on mobile/tablet when sidebar is open
     if (window.innerWidth < 1024) {
       document.body.style.overflow = isOpen ? "hidden" : "";
     }
@@ -60,15 +61,20 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     <>
       {/* ── Desktop Mini Sidebar (Visible only on lg+) ── */}
       <aside className="hidden lg:flex fixed left-0 top-0 h-full w-20 bg-black border-r border-zinc-900 flex-col items-center py-8 z-30">
-        <div className="w-10 h-10 rounded-lg bg-[#F7C12B] flex items-center justify-center mb-10">
-          <span className="text-black font-black text-lg">Y</span>
-        </div>
-        <nav className="flex flex-col gap-4">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={onOpen} // This now triggers the full sidebar
+          className="w-9 h-9 flex items-center justify-center text-white cursor-pointer hover:bg-zinc-900 rounded-lg transition-colors"
+        >
+          <Menu size={22} />
+        </motion.button>
+        
+        <nav className="flex flex-col gap-4 mt-8">
           {NAV_ITEMS.slice(0, 6).map((item) => (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`p-3 rounded-xl transition-all ${
+              className={`p-3 rounded-xl transition-all cursor-pointer ${
                 location.pathname === item.path
                   ? "bg-zinc-900 text-[#F7C12B]"
                   : "text-zinc-500 hover:bg-zinc-900"
@@ -83,7 +89,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* ── Overlay: Darker 50% for LG, Blur for Mobile ── */}
+            {/* ── Overlay ── */}
             <motion.div
               key="overlay"
               initial={{ opacity: 0 }}
@@ -113,7 +119,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400"
+                  className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 cursor-pointer"
                 >
                   <X size={16} />
                 </button>
@@ -129,10 +135,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
                       onClick={() => handleNavigate(item.path)}
-                      className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-left w-full ${
+                      className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-left w-full cursor-pointer ${
                         isActive
                           ? "bg-zinc-900 text-white"
-                          : "text-zinc-400 hover:text-white"
+                          : "text-zinc-400 hover:bg-zinc-900 transition-colors"
                       }`}
                     >
                       <span

@@ -5,6 +5,7 @@ import { Menu, Bell, Search, Mail, PlusCircle } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
 import useUnreadCount from "@/features/notifications/hooks/useUnreadCount";
 import useAuth from "@/hooks/useAuth";
+import logo from "../../../assets/yummy-logo.png";
 
 const HomeNavbar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,28 +21,30 @@ const HomeNavbar = () => {
 
   return (
     <>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* 1. Pass the onOpen prop here to allow Sidebar to open itself from the mini-state */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onOpen={() => setSidebarOpen(true)}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      {/* Wrapper: Black background for the full width.
-         Mobile: uses your original px-4 pt-3 pb-3.
-         Desktop (md:): Adds a container to match your design image.
-      */}
+      {/* Wrapper: Black background for the full width */}
       <nav className="bg-black text-white px-4 pt-3 pb-3 md:px-8 md:py-3">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between">
-          {/* LEFT: Menu + Logo (Logo hidden on mobile) */}
-          <div className="flex items-center gap-4">
+          {/* LEFT: Menu + Logo */}
+          <div className="flex items-center gap-2">
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => setSidebarOpen(true)}
-              className="w-9 h-9 flex items-center justify-center text-white"
+              onClick={() => setSidebarOpen(true)} // This handles the mobile/navbar menu button
+              className="w-9 h-9 flex lg:hidden items-center justify-center text-white cursor-pointer"
             >
               <Menu size={22} />
             </motion.button>
 
-            {/* "Yummy" Text: ONLY visible on md: and up to match your image */}
-            <span className="hidden md:block text-2xl font-bold tracking-tight">
-              Yummy
-            </span>
+            {/* "Yummy" Text: ONLY visible on md: and up */}
+            <div className="hidden md:flex items-center justify-center ">
+              <img src={logo} alt="Yummy Logo" className="w-24 " />
+            </div>
           </div>
 
           {/* CENTER: Search Bar (ONLY visible on md: and up) */}
@@ -62,14 +65,14 @@ const HomeNavbar = () => {
           <div className="hidden md:flex items-center gap-6">
             <button
               onClick={() => navigate("/messages")}
-              className="hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity cursor-pointer"
             >
               <Mail size={22} />
             </button>
 
             <button
               onClick={() => navigate("/posts/create")}
-              className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition"
+              className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition cursor-pointer"
             >
               <PlusCircle size={22} />
               <span className="text-sm font-medium">Create</span>
@@ -90,11 +93,10 @@ const HomeNavbar = () => {
               )}
             </motion.button>
 
-            {/* Profile Avatar as seen in your design */}
-
+            {/* Profile Avatar */}
             <div
               onClick={() => navigate("/profile")}
-              className="w-9 h-9 rounded-full overflow-hidden border border-gray-600"
+              className="w-9 h-9 rounded-full overflow-hidden border border-gray-600 cursor-pointer hover:border-[#F7C12B] transition-colors"
             >
               {user?.avatar ? (
                 <img
@@ -104,19 +106,18 @@ const HomeNavbar = () => {
                 />
               ) : (
                 <div className="w-full h-full bg-blue-900 flex items-center justify-center">
-                  <span className="text-xs">🐘</span>{" "}
-                  {/* Using elephant emoji as placeholder for the logo in your img */}
+                  <span className="text-xs">🐘</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* MOBILE RIGHT: Notification Icon (Your original mobile layout) */}
+          {/* MOBILE RIGHT: Notification Icon */}
           <div className="md:hidden">
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate("/notifications")}
-              className="w-9 h-9 flex items-center justify-center text-white relative"
+              className="w-9 h-9 flex items-center justify-center text-white relative cursor-pointer"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
