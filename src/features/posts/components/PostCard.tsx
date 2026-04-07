@@ -88,7 +88,7 @@ const PostCard = ({ post }: PostCardProps) => {
         className="bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-900 cursor-pointer"
       >
         {/* ── Image ── */}
-        <div className="w-full h-52">
+        <div className="w-full h-52 md:h-56">
           {post.images.length > 0 ? (
             <img
               src={post.images[0]}

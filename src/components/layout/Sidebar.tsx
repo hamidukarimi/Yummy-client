@@ -14,6 +14,8 @@ import {
   Bookmark,
   Menu,
 } from "lucide-react";
+import logo from "../../assets/yummy-logo.png";
+
 
 interface SidebarProps {
   isOpen: boolean;
@@ -64,7 +66,7 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={onOpen} // This now triggers the full sidebar
-          className="w-9 h-9 flex items-center justify-center text-white cursor-pointer hover:bg-zinc-900 rounded-lg transition-colors"
+          className="w-9 h-9 flex items-center justify-center text-white cursor-pointer hover:bg-zinc-800 rounded-lg transition-colors"
         >
           <Menu size={22} />
         </motion.button>
@@ -76,8 +78,8 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
               onClick={() => navigate(item.path)}
               className={`p-3 rounded-xl transition-all cursor-pointer ${
                 location.pathname === item.path
-                  ? "bg-zinc-900 text-[#F7C12B]"
-                  : "text-zinc-500 hover:bg-zinc-900"
+                  ? "bg-zinc-800 text-[#F7C12B]"
+                  : "text-zinc-500 hover:bg-zinc-800"
               }`}
             >
               {item.icon}
@@ -110,12 +112,11 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
             >
               <div className="flex items-center justify-between px-5 pt-12 pb-8">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#F7C12B] flex items-center justify-center">
-                    <span className="text-black font-black text-sm">Y</span>
-                  </div>
-                  <span className="text-white font-bold text-lg tracking-tight">
-                    Yummy
-                  </span>
+                
+                  {/* "Yummy" Text: ONLY visible on md: and up */}
+            <div className="flex items-center justify-center ">
+              <img src={logo} alt="Yummy Logo" className="w-24 " />
+            </div>
                 </div>
                 <button
                   onClick={onClose}

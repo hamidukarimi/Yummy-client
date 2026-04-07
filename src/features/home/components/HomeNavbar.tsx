@@ -48,7 +48,7 @@ const HomeNavbar = () => {
           </div>
 
           {/* CENTER: Search Bar (ONLY visible on md: and up) */}
-          <div className="hidden md:flex flex-grow max-w-2xl mx-10">
+          <div className="hidden lg:flex flex-grow max-w-2xl mx-10">
             <div className="relative w-full">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <Search size={18} className="text-gray-400" />
@@ -72,7 +72,7 @@ const HomeNavbar = () => {
 
             <button
               onClick={() => navigate("/posts/create")}
-              className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/10 transition cursor-pointer"
+              className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/12 transition cursor-pointer"
             >
               <PlusCircle size={22} />
               <span className="text-sm font-medium">Create</span>
