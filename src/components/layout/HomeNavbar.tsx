@@ -1,23 +1,50 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Menu, Bell, Search, Mail, PlusCircle } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
 import useUnreadCount from "@/features/notifications/hooks/useUnreadCount";
 import useAuth from "@/hooks/useAuth";
-import logo from "../../../assets/yummy-logo.png";
+import logo from "../../assets/yummy-logo.png";
+import { useLocation } from "react-router-dom";
+
+
+const HIDDEN_ON = [
+  "/login",
+  "/register",
+  "/pages/create",
+  "/posts/create",
+  "/search",
+];
 
 const HomeNavbar = () => {
+  const location = useLocation();
+  
+
+  const isPageEdit   = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
+  const isPostEdit   = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
+  const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
+  const isPageView   = /^\/pages\/[^/]+$/.test(location.pathname);
+
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const hasAttempted = useRef(false);
   const { user, isInitializing, restoreSession } = useAuth();
   const unreadCount = useUnreadCount(!!user);
 
-  useEffect(() => {
-    if (!user && !isInitializing) {
+   useEffect(() => {
+    if (!hasAttempted.current && !user && !isInitializing) {
+      hasAttempted.current = true;
       void restoreSession();
     }
   }, [user, isInitializing, restoreSession]);
+
+
+   if (
+    HIDDEN_ON.includes(location.pathname) ||
+    isPageEdit || isPostEdit || isPostDetail || isPageView
+  ) return null;
 
   return (
     <>
@@ -29,7 +56,7 @@ const HomeNavbar = () => {
       />
 
       {/* Wrapper: Black background for the full width */}
-      <nav className="bg-black text-white px-4 pt-3 pb-3 md:px-8 md:py-3">
+      <nav className=" bg-black text-white px-4 pt-3 pb-3 md:px-8 md:py-3">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between">
           {/* LEFT: Menu + Logo */}
           <div className="flex items-center gap-2">

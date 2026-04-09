@@ -24,12 +24,17 @@ import DiscoverPages from "@/pages/DiscoverPagesPage";
 import Saved from "@/pages/SavedPage";
 import EditProfile from "@/pages/EditProfilePage";
 import ChangePassword from "@/pages/ChangePasswordPage";
+import HomeNavbar from "@/components/layout/HomeNavbar";
 
 const AppRouter = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+         <div className="sticky top-0 z-40 bg-black border-b border-zinc-900 lg:ml-[80px]">
+        <HomeNavbar />
+      </div>
+
           <Routes>
             <Route path="/" element={<HomePage />} />
 

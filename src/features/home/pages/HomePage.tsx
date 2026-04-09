@@ -1,4 +1,4 @@
-import HomeNavbar from "@/features/home/components/HomeNavbar";
+import HomeNavbar from "@/components/layout/HomeNavbar";
 import FeedPage from "@/features/feed/pages/FeedPage";
 
 const HomePage = () => {
