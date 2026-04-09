@@ -19,13 +19,13 @@ const SavedPage = () => {
   }, [user, isInitializing, restoreSession]);
 
   return (
-    <div className="min-h-screen bg-black pb-24 max-w-md mx-auto">
+    <div className="min-h-screen bg-black pb-24  mx-auto">
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
-          className="text-white"
+          className="text-white cursor-pointer hover:bg-zinc-900 rounded-full md:p-2 transition-all"
         >
           <ChevronLeft size={22} />
         </motion.button>
@@ -70,7 +70,7 @@ const SavedPage = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col gap-5"
+            className="flex flex-col   md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-y-9 lg:mt-3"
           >
             {posts.map((post) => (
               <PostCard key={post._id} post={post} />
