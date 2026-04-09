@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bookmark, ChevronLeft } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import useSavedPosts from "@/features/saved/hooks/useSavedPosts";
 import PostCard from "@/features/posts/components/PostCard";
 import Spinner from "@/components/ui/Spinner";
@@ -21,7 +21,7 @@ const SavedPage = () => {
   return (
     <div className="min-h-screen bg-black pb-24  mx-auto">
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 pt-5 pb-4">
+      {/* <div className="flex items-center gap-3 px-4 pt-5 pb-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
@@ -30,7 +30,7 @@ const SavedPage = () => {
           <ChevronLeft size={22} />
         </motion.button>
         <h1 className="text-lg font-bold text-white">Saved Posts</h1>
-      </div>
+      </div> */}
 
       {/* ── Content ── */}
       <div className="px-4">
