@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import useMyPages from "@/features/pages/hooks/useMyPages";
 import useAllPages from "@/features/pages/hooks/useAllPages";
 import Spinner from "@/components/ui/Spinner";
@@ -115,17 +115,6 @@ const MyPagesPage = () => {
 
   return (
     <div className="min-h-screen bg-black px-4 pt-5 pb-24  mx-auto">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 mb-6">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate(-1)}
-          className="text-white cursor-pointer hover:bg-zinc-900 rounded-full md:p-2 transition-all"
-        >
-          <ChevronLeft size={22} />
-        </motion.button>
-        <h1 className="text-lg font-bold text-white">Pages</h1>
-      </div>
 
       {/* ── Tabs ── */}
       <div className="flex items-center gap-2 mb-5">
