@@ -46,31 +46,48 @@ const PageItem = ({
     animate={{ opacity: 1, y: 0 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="w-full flex items-center gap-4 py-3 text-left cursor-pointer"
+    className="w-full flex items-center gap-4 py-3 text-left cursor-pointer 
+               md:flex-col md:bg-zinc-900 md:rounded-xl md:overflow-hidden"
   >
-    <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
-      {page.avatar ? (
+    {/* Cover image only for md+ screens */}
+    {page.coverImage && (
+      <div className="hidden md:block w-full h-32 md:h-40 bg-zinc-800 overflow-hidden">
         <img
-          src={page.avatar}
-          alt={page.name}
+          src={page.coverImage}
+          alt={`${page.name} cover`}
           className="w-full h-full object-cover"
         />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-lg font-bold text-white bg-zinc-700">
-          {page.name[0]}
-        </div>
-      )}
-    </div>
-    <div className="flex flex-col gap-0.5 min-w-0">
-      <span className="text-white font-semibold text-sm truncate">
-        {page.name}
-      </span>
-      <span className="text-zinc-500 text-xs truncate">
-        {page.description ?? page.category}
-      </span>
+      </div>
+    )}
+
+    {/* Avatar + name + description */}
+    <div className="flex items-center gap-4 w-full md:p-3">
+      <div className="w-12 h-12 rounded-xl md:rounded-full bg-zinc-800 overflow-hidden shrink-0">
+        {page.avatar ? (
+          <img
+            src={page.avatar}
+            alt={page.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-lg font-bold text-white bg-zinc-700">
+            {page.name[0]}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-white font-semibold text-sm truncate">
+          {page.name}
+        </span>
+        <span className="text-zinc-500 text-xs truncate">
+          {page.description ?? page.category}
+        </span>
+      </div>
     </div>
   </motion.button>
 );
+
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -97,13 +114,13 @@ const MyPagesPage = () => {
   } = useFollowedPages();
 
   return (
-    <div className="min-h-screen bg-black px-4 pt-5 pb-24 max-w-md mx-auto">
+    <div className="min-h-screen bg-black px-4 pt-5 pb-24  mx-auto">
       {/* ── Header ── */}
       <div className="flex items-center gap-3 mb-6">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
-          className="text-white"
+          className="text-white cursor-pointer hover:bg-zinc-900 rounded-full md:p-2 transition-all"
         >
           <ChevronLeft size={22} />
         </motion.button>
@@ -147,7 +164,7 @@ const MyPagesPage = () => {
               </h2>
               <button
                 onClick={() => navigate("/pages/create")}
-                className="text-[#F7C12B] text-sm font-medium hover:underline"
+                className="text-[#F7C12B] text-sm font-medium hover:underline cursor-pointer"
               >
                 + New
               </button>
@@ -179,7 +196,7 @@ const MyPagesPage = () => {
             )}
 
             {!myLoading && !myError && myPages.length > 0 && (
-              <div className="flex flex-col divide-y divide-zinc-900">
+              <div className="flex flex-col md:gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 divide-y divide-zinc-900">
                 {myPages.map((page) => (
                   <PageItem
                     key={page.id}
@@ -265,7 +282,7 @@ const MyPagesPage = () => {
             )}
 
             {!allLoading && !allError && allPages.length > 0 && (
-              <div className="flex flex-col divide-y divide-zinc-900">
+              <div className="flex flex-col md:gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 divide-y divide-zinc-900">
                 {allPages.map((page) => (
                   <PageItem
                     key={page.id}
@@ -326,7 +343,7 @@ const MyPagesPage = () => {
               )}
 
             {!followedLoading && !followedError && followedPages.length > 0 && (
-              <div className="flex flex-col divide-y divide-zinc-900">
+              <div className="flex flex-col md:gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 divide-y">
                 {followedPages.map((page) => (
                   <PageItem
                     key={page.id}
