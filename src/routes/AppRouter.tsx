@@ -3,10 +3,16 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "@/lib/queryClient";
 import { AuthProvider } from "@/context/AuthContext";
 import {
-  CreatePostModalProvider,
   useCreatePostModal,
+  useCreatePageModal,
+  CreatePostModalProvider,
+  CreatePageModalProvider,
 } from "@/context/CreatePostModalContext";
+
+
+
 import CreatePostModal from "@/components/layout/CreatePostModal";
+import CreatePageModal from "@/components/layout/CreatePageModal";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import PublicRoute from "@/components/layout/PublicRoute";
 import BottomNav from "@/components/layout/BottomNav";
@@ -36,11 +42,17 @@ const CreatePostModalLayer = () => {
   return <CreatePostModal isOpen={isOpen} onClose={closeModal} />;
 };
 
+const CreatePageModalLayer = () => {
+  const { isOpen, closeModal } = useCreatePageModal();
+  return <CreatePageModal isOpen={isOpen} onClose={closeModal} />;
+};
+
 const AppRouter = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <CreatePostModalProvider>
+          <CreatePageModalProvider>
           <AuthProvider>
             <div className="sticky top-0 z-40 bg-black border-b border-zinc-900 lg:ml-[80px]">
               <HomeNavbar />
@@ -81,7 +93,10 @@ const AppRouter = () => {
             </Routes>
             <BottomNav />
           </AuthProvider>
-          <CreatePostModalLayer />
+           <CreatePostModalLayer />
+            <CreatePageModalLayer />
+
+         </CreatePageModalProvider>
         </CreatePostModalProvider>
       </QueryClientProvider>
     </BrowserRouter>

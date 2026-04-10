@@ -34,33 +34,40 @@ const CATEGORIES = [
 ];
 
 const DAYS = [
-  { key: "monday",    label: "Monday" },
-  { key: "tuesday",   label: "Tuesday" },
+  { key: "monday", label: "Monday" },
+  { key: "tuesday", label: "Tuesday" },
   { key: "wednesday", label: "Wednesday" },
-  { key: "thursday",  label: "Thursday" },
-  { key: "friday",    label: "Friday" },
-  { key: "saturday",  label: "Saturday" },
-  { key: "sunday",    label: "Sunday" },
+  { key: "thursday", label: "Thursday" },
+  { key: "friday", label: "Friday" },
+  { key: "saturday", label: "Saturday" },
+  { key: "sunday", label: "Sunday" },
 ] as const;
 
-const DEFAULT_WORKING_HOURS = DAYS.reduce((acc, { key }) => {
-  acc[key] = { open: "10:00", close: "20:00", isClosed: false };
-  return acc;
-}, {} as CreatePageFormValues["workingHours"] & object);
+const DEFAULT_WORKING_HOURS = DAYS.reduce(
+  (acc, { key }) => {
+    acc[key] = { open: "10:00", close: "20:00", isClosed: false };
+    return acc;
+  },
+  {} as CreatePageFormValues["workingHours"] & object,
+);
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
 const slideVariants = {
   enterFromRight: { x: "100%", opacity: 0 },
-  enterFromLeft:  { x: "-100%", opacity: 0 },
-  center:         { x: 0, opacity: 1 },
-  exitToLeft:     { x: "-100%", opacity: 0 },
-  exitToRight:    { x: "100%", opacity: 0 },
+  enterFromLeft: { x: "-100%", opacity: 0 },
+  center: { x: 0, opacity: 1 },
+  exitToLeft: { x: "-100%", opacity: 0 },
+  exitToRight: { x: "100%", opacity: 0 },
 };
+
+interface CreatePageFormProps {
+  onClose?: () => void;
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const CreatePageForm = () => {
+const CreatePageForm = ({ onClose }: CreatePageFormProps) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
@@ -80,7 +87,7 @@ const CreatePageForm = () => {
     resolver: zodResolver(createPageSchema),
     mode: "onTouched",
     defaultValues: {
-      tags:         [],
+      tags: [],
       workingHours: DEFAULT_WORKING_HOURS,
     },
   });
@@ -105,24 +112,51 @@ const CreatePageForm = () => {
     setStep((s) => s - 1);
   };
 
-  const handleCancel = () => navigate(-1);
+  const handleCancel = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+
+    navigate(-1);
+  };
 
   // ─── Tags ─────────────────────────────────────────────────────────
 
-  const handleTagInput = useCallback((value: string) => {
-    if (value.endsWith(",")) {
-      const newTag = value.slice(0, -1).trim();
-      if (newTag && !tags.includes(newTag)) {
-        setValue("tags", [...tags, newTag]);
+  const handleTagInput = useCallback(
+    (value: string) => {
+      if (value.endsWith(",")) {
+        const newTag = value.slice(0, -1).trim();
+        if (newTag && !tags.includes(newTag)) {
+          setValue("tags", [...tags, newTag]);
+        }
+        setTagInput("");
+      } else {
+        setTagInput(value);
       }
-      setTagInput("");
-    } else {
-      setTagInput(value);
-    }
-  }, [tags, setValue]);
+    },
+    [tags, setValue],
+  );
 
   const removeTag = (tag: string) => {
-    setValue("tags", tags.filter((t) => t !== tag));
+    setValue(
+      "tags",
+      tags.filter((t) => t !== tag),
+    );
+  };
+
+  const handleClose = () => {
+    // Run the step condition first
+    if (step === 1) {
+      handleCancel();
+      if (onClose) {
+        onClose();
+      }
+    } else {
+      goBack();
+    }
+
+    // Then call onClose if provided
   };
 
   // ─── Submit ───────────────────────────────────────────────────────
@@ -137,8 +171,8 @@ const CreatePageForm = () => {
       ...data,
       tags: finalTags,
       // Clean empty optional strings
-      ...(data.website   === "" && { website:   undefined }),
-      ...(data.avatar    === "" && { avatar:    undefined }),
+      ...(data.website === "" && { website: undefined }),
+      ...(data.avatar === "" && { avatar: undefined }),
       ...(data.coverImage === "" && { coverImage: undefined }),
     };
 
@@ -147,11 +181,10 @@ const CreatePageForm = () => {
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col min-h-screen bg-black px-5 pt-5 pb-24">
-
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-8">
         <button
-          onClick={step === 1 ? handleCancel : goBack}
+          onClick={handleClose}
           className="flex items-center gap-1 text-white"
         >
           <ChevronLeft size={20} />
@@ -187,21 +220,31 @@ const CreatePageForm = () => {
       {/* ── Form ── */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex-1">
         <AnimatePresence mode="wait" initial={false}>
-
           {/* ────────── Step 1 — Basic Info ────────── */}
           {step === 1 && (
             <motion.div
               key="step1"
-              initial={direction === "forward" ? slideVariants.enterFromRight : slideVariants.enterFromLeft}
+              initial={
+                direction === "forward"
+                  ? slideVariants.enterFromRight
+                  : slideVariants.enterFromLeft
+              }
               animate={slideVariants.center}
-              exit={direction === "forward" ? slideVariants.exitToLeft : slideVariants.exitToRight}
+              exit={
+                direction === "forward"
+                  ? slideVariants.exitToLeft
+                  : slideVariants.exitToRight
+              }
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex flex-col gap-5"
             >
               <div className="flex flex-col gap-1 mb-2">
-                <h1 className="text-2xl font-bold text-white">Get started with a Page</h1>
+                <h1 className="text-2xl font-bold text-white">
+                  Get started with a Page
+                </h1>
                 <p className="text-sm text-zinc-400 leading-relaxed">
-                  Create a page for your restaurant and start reaching customers.
+                  Create a page for your restaurant and start reaching
+                  customers.
                 </p>
               </div>
 
@@ -219,13 +262,19 @@ const CreatePageForm = () => {
                   {...register("category")}
                   className="w-full px-4 py-3 rounded-xl text-sm border border-zinc-700 bg-transparent text-white outline-none focus:border-[#F7C12B] focus:ring-2 focus:ring-[#F7C12B]/20 transition-colors duration-200"
                 >
-                  <option value="" className="bg-zinc-900">Page category</option>
+                  <option value="" className="bg-zinc-900">
+                    Page category
+                  </option>
                   {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat} className="bg-zinc-900">{cat}</option>
+                    <option key={cat} value={cat} className="bg-zinc-900">
+                      {cat}
+                    </option>
                   ))}
                 </select>
                 {errors.category && (
-                  <p className="text-xs text-red-400">{errors.category.message}</p>
+                  <p className="text-xs text-red-400">
+                    {errors.category.message}
+                  </p>
                 )}
               </div>
 
@@ -247,9 +296,17 @@ const CreatePageForm = () => {
           {step === 2 && (
             <motion.div
               key="step2"
-              initial={direction === "forward" ? slideVariants.enterFromRight : slideVariants.enterFromLeft}
+              initial={
+                direction === "forward"
+                  ? slideVariants.enterFromRight
+                  : slideVariants.enterFromLeft
+              }
               animate={slideVariants.center}
-              exit={direction === "forward" ? slideVariants.exitToLeft : slideVariants.exitToRight}
+              exit={
+                direction === "forward"
+                  ? slideVariants.exitToLeft
+                  : slideVariants.exitToRight
+              }
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex flex-col gap-4"
             >
@@ -278,7 +335,12 @@ const CreatePageForm = () => {
               />
 
               <div className="flex gap-3 mt-2">
-                <Button type="button" variant="outline" fullWidth onClick={goBack}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  onClick={goBack}
+                >
                   Back
                 </Button>
                 <Button type="button" fullWidth onClick={goNext}>
@@ -292,9 +354,17 @@ const CreatePageForm = () => {
           {step === 3 && (
             <motion.div
               key="step3"
-              initial={direction === "forward" ? slideVariants.enterFromRight : slideVariants.enterFromLeft}
+              initial={
+                direction === "forward"
+                  ? slideVariants.enterFromRight
+                  : slideVariants.enterFromLeft
+              }
               animate={slideVariants.center}
-              exit={direction === "forward" ? slideVariants.exitToLeft : slideVariants.exitToRight}
+              exit={
+                direction === "forward"
+                  ? slideVariants.exitToLeft
+                  : slideVariants.exitToRight
+              }
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex flex-col gap-4"
             >
@@ -346,7 +416,12 @@ const CreatePageForm = () => {
               </div>
 
               <div className="flex gap-3 mt-2">
-                <Button type="button" variant="outline" fullWidth onClick={goBack}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  onClick={goBack}
+                >
                   Back
                 </Button>
                 <Button type="button" fullWidth onClick={goNext}>
@@ -360,15 +435,27 @@ const CreatePageForm = () => {
           {step === 4 && (
             <motion.div
               key="step4"
-              initial={direction === "forward" ? slideVariants.enterFromRight : slideVariants.enterFromLeft}
+              initial={
+                direction === "forward"
+                  ? slideVariants.enterFromRight
+                  : slideVariants.enterFromLeft
+              }
               animate={slideVariants.center}
-              exit={direction === "forward" ? slideVariants.exitToLeft : slideVariants.exitToRight}
+              exit={
+                direction === "forward"
+                  ? slideVariants.exitToLeft
+                  : slideVariants.exitToRight
+              }
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex flex-col gap-5"
             >
               <div className="flex flex-col gap-1 mb-2">
-                <h2 className="text-2xl font-bold text-white">Set Your Working Hours</h2>
-                <p className="text-sm text-zinc-400">Configure your restaurant's opening hours</p>
+                <h2 className="text-2xl font-bold text-white">
+                  Set Your Working Hours
+                </h2>
+                <p className="text-sm text-zinc-400">
+                  Configure your restaurant's opening hours
+                </p>
               </div>
 
               <div className="flex flex-col gap-0">
@@ -378,7 +465,11 @@ const CreatePageForm = () => {
                     control={control}
                     name={`workingHours.${key}`}
                     render={({ field }) => {
-                      const value = field.value ?? { open: "10:00", close: "20:00", isClosed: false };
+                      const value = field.value ?? {
+                        open: "10:00",
+                        close: "20:00",
+                        isClosed: false,
+                      };
                       return (
                         <div className="flex items-center gap-3 py-4 border-b border-zinc-800">
                           {/* Day Label */}
@@ -393,7 +484,12 @@ const CreatePageForm = () => {
                               type="time"
                               value={value.open}
                               disabled={value.isClosed}
-                              onChange={(e) => field.onChange({ ...value, open: e.target.value })}
+                              onChange={(e) =>
+                                field.onChange({
+                                  ...value,
+                                  open: e.target.value,
+                                })
+                              }
                               className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white text-xs outline-none focus:border-[#F7C12B] disabled:opacity-30 w-24"
                             />
                           </div>
@@ -405,16 +501,23 @@ const CreatePageForm = () => {
                               type="time"
                               value={value.close}
                               disabled={value.isClosed}
-                              onChange={(e) => field.onChange({ ...value, close: e.target.value })}
+                              onChange={(e) =>
+                                field.onChange({
+                                  ...value,
+                                  close: e.target.value,
+                                })
+                              }
                               className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white text-xs outline-none focus:border-[#F7C12B] disabled:opacity-30 w-24"
                             />
                           </div>
 
                           {/* Toggle */}
                           <Toggle
-  checked={!value.isClosed}
-  onChange={(isOpen) => field.onChange({ ...value, isClosed: !isOpen })}
-/>
+                            checked={!value.isClosed}
+                            onChange={(isOpen) =>
+                              field.onChange({ ...value, isClosed: !isOpen })
+                            }
+                          />
                         </div>
                       );
                     }}
@@ -423,7 +526,12 @@ const CreatePageForm = () => {
               </div>
 
               <div className="flex gap-3 mt-2">
-                <Button type="button" variant="outline" fullWidth onClick={goBack}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  onClick={goBack}
+                >
                   Back
                 </Button>
                 <Button type="submit" fullWidth isLoading={isPending}>
@@ -432,7 +540,6 @@ const CreatePageForm = () => {
               </div>
             </motion.div>
           )}
-
         </AnimatePresence>
       </form>
     </div>

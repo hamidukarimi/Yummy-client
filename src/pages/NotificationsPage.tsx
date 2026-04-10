@@ -1,7 +1,11 @@
 import NotificationsPage from "@/features/notifications/pages/NotificationsPage";
 
 const Notifications = () => {
-  return <NotificationsPage />;
+  return (
+    <div className="lg:ml-[82px]">
+      <NotificationsPage />
+    </div>
+  );
 };
 
 export default Notifications;

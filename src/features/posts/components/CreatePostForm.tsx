@@ -120,7 +120,7 @@ const CreatePostForm = ({ onClose }: CreatePostFormProps) => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={handleClose}
-          className="text-white"
+          className="text-white cursor-pointer hover:bg-zinc-900 rounded-full md:p-2 transition-all"
         >
           <ChevronLeft size={22} />
         </motion.button>
@@ -136,7 +136,7 @@ const CreatePostForm = ({ onClose }: CreatePostFormProps) => {
         </button>
       </div>
 
-      <div className="px-4 flex flex-col gap-6 max-w-md mx-auto">
+      <div className="px-4 flex flex-col gap-6  mx-auto">
         {/* ── Error / Success ── */}
         {error && <Alert variant="error" message={error.message} />}
         {isSuccess && (

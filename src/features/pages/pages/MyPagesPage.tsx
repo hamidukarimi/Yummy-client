@@ -7,6 +7,7 @@ import useAllPages from "@/features/pages/hooks/useAllPages";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
 import useFollowedPages from "@/features/pages/hooks/useFollowedPages";
+import { useCreatePageModal } from "@/context/CreatePostModalContext";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -97,6 +98,8 @@ const MyPagesPage = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
+  const { openModal } = useCreatePageModal();
+
   const {
     pages: myPages,
     isLoading: myLoading,
@@ -112,6 +115,15 @@ const MyPagesPage = () => {
     isLoading: followedLoading,
     isError: followedError,
   } = useFollowedPages();
+
+
+    const handleCreatePage = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      openModal();
+      return;
+    }
+    navigate("/pages/create");
+  };
 
   return (
     <div className="min-h-screen bg-black px-4 pt-5 pb-24  mx-auto">
@@ -152,7 +164,7 @@ const MyPagesPage = () => {
                 Pages you manage
               </h2>
               <button
-                onClick={() => navigate("/pages/create")}
+                onClick={handleCreatePage}
                 className="text-[#F7C12B] text-sm font-medium hover:underline cursor-pointer"
               >
                 + New
@@ -176,7 +188,7 @@ const MyPagesPage = () => {
                   You don't have any pages yet.
                 </p>
                 <button
-                  onClick={() => navigate("/pages/create")}
+                  onClick={handleCreatePage}
                   className="text-[#F7C12B] text-sm font-medium hover:underline"
                 >
                   Create your first page

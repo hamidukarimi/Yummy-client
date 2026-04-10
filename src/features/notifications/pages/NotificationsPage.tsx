@@ -199,7 +199,7 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-24 max-w-md mx-auto">
+    <div className="min-h-screen bg-black pb-24  mx-auto">
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 pt-5 pb-4">
         <div className="flex items-center gap-3">
