@@ -76,7 +76,7 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
       <aside className="hidden lg:flex fixed left-0 top-0 h-full w-20 bg-black border-r border-zinc-900 flex-col items-center py-8 z-30">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={onOpen} // This now triggers the full sidebar
+          onClick={onOpen}
           className="w-9 h-9 flex items-center justify-center text-white cursor-pointer hover:bg-zinc-800 rounded-lg transition-colors"
         >
           <Menu size={22} />
@@ -86,7 +86,8 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
           {NAV_ITEMS.slice(0, 6).map((item) => (
             <button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              // CHANGE THIS LINE:
+              onClick={() => handleNavigate(item.path)}
               className={`p-3 rounded-xl transition-all cursor-pointer ${
                 location.pathname === item.path
                   ? "bg-zinc-800 text-[#F7C12B]"
