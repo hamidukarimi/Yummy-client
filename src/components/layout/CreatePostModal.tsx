@@ -24,12 +24,12 @@ const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-4 top-10 z-50 mx-auto w-[min(920px,calc(100%-2rem))] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-3xl border border-zinc-900 bg-black shadow-2xl"
+            className="fixed inset-x-4 top-10 z-50 mx-auto max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl border border-zinc-900 bg-black shadow-2xl custom-scrollbar"
           >
             <div className="relative">
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <span className="sr-only">Close create post</span>✕
               </button>

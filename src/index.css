@@ -22,3 +22,35 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+
+
+
+/* Thin gray scrollbar, hidden until hover */
+.custom-scrollbar {
+  scrollbar-width: thin;              /* Firefox */
+  scrollbar-color: #3131318d transparent; /* thumb color + track color */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;                         /* thin scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #6b7280;          /* Tailwind gray-500 */
+  border-radius: 9999px;
+}
+
+/* Hide scrollbar by default */
+.custom-scrollbar::-webkit-scrollbar {
+  opacity: 0;
+}
+
+/* Show on hover */
+.custom-scrollbar:hover::-webkit-scrollbar {
+  opacity: 1;
+}

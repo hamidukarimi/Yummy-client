@@ -130,7 +130,7 @@ const CreatePostForm = ({ onClose }: CreatePostFormProps) => {
         <button
           onClick={handleSubmit}
           disabled={isPending || !selectedPageId || !content.trim()}
-          className="text-[#F7C12B] font-semibold text-sm disabled:opacity-40 cursor-pointer"
+          className="text-[#F7C12B] font-semibold text-sm disabled:opacity-40 lg:mr-12 cursor-pointer"
         >
           Submit
         </button>
@@ -149,7 +149,6 @@ const CreatePostForm = ({ onClose }: CreatePostFormProps) => {
         {/* ── Select Page ── */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-1.5 ">
-            <ChevronLeft size={16} className="text-white" />
             <h2 className="text-white font-bold text-base">Select Page</h2>
           </div>
 

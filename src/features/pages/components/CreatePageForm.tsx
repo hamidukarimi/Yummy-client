@@ -185,14 +185,14 @@ const CreatePageForm = ({ onClose }: CreatePageFormProps) => {
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={handleClose}
-          className="flex items-center gap-1 text-white"
+          className="flex items-center gap-1 text-white cursor-pointer"
         >
           <ChevronLeft size={20} />
           <span className="text-sm font-medium">Create Page</span>
         </button>
         <button
           onClick={handleCancel}
-          className="text-[#F7C12B] text-sm font-medium"
+          className="text-[#F7C12B] text-sm font-medium cursor-pointer"
         >
           Cancel
         </button>
