@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCreatePostModal } from "@/context/CreatePostModalContext";
 import {
   Home,
   FileText,
@@ -15,7 +16,6 @@ import {
   Menu,
 } from "lucide-react";
 import logo from "../../assets/yummy-logo.png";
-
 
 interface SidebarProps {
   isOpen: boolean;
@@ -44,6 +44,22 @@ const NAV_ITEMS: NavItem[] = [
 const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { openModal } = useCreatePostModal();
+
+  const handleNavigate = (path: string) => {
+    if (
+      path === "/posts/create" &&
+      typeof window !== "undefined" &&
+      window.innerWidth >= 1024
+    ) {
+      onClose();
+      openModal();
+      return;
+    }
+
+    onClose();
+    setTimeout(() => navigate(path), 200);
+  };
 
   useEffect(() => {
     if (window.innerWidth < 1024) {
@@ -53,11 +69,6 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
-
-  const handleNavigate = (path: string) => {
-    onClose();
-    setTimeout(() => navigate(path), 200);
-  };
 
   return (
     <>
@@ -70,7 +81,7 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
         >
           <Menu size={22} />
         </motion.button>
-        
+
         <nav className="flex flex-col gap-4 mt-8">
           {NAV_ITEMS.slice(0, 6).map((item) => (
             <button
@@ -112,11 +123,10 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
             >
               <div className="flex items-center justify-between px-5 pt-12 pb-8">
                 <div className="flex items-center gap-2.5">
-                
                   {/* "Yummy" Text: ONLY visible on md: and up */}
-            <div className="flex items-center justify-center ">
-              <img src={logo} alt="Yummy Logo" className="w-24 " />
-            </div>
+                  <div className="flex items-center justify-center ">
+                    <img src={logo} alt="Yummy Logo" className="w-24 " />
+                  </div>
                 </div>
                 <button
                   onClick={onClose}

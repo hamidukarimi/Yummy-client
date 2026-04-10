@@ -11,18 +11,22 @@ import type { PostType } from "@/features/posts/types/post.types";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const POST_TYPES: { value: PostType; label: string }[] = [
-  { value: "food",         label: "Food"        },
+  { value: "food", label: "Food" },
   { value: "announcement", label: "Announcement" },
-  { value: "promotion",    label: "Promotion"    },
-  { value: "menu_item",    label: "Menu Item"    },
+  { value: "promotion", label: "Promotion" },
+  { value: "menu_item", label: "Menu Item" },
 ];
 
 const PRICE_TYPES: PostType[] = ["food", "promotion", "menu_item"];
 
+interface CreatePostFormProps {
+  onClose?: () => void;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const CreatePostForm = () => {
-  const navigate                    = useNavigate();
+const CreatePostForm = ({ onClose }: CreatePostFormProps) => {
+  const navigate = useNavigate();
   const { pages, isLoading: pagesLoading } = useMyPages();
   const { createPost, isPending, error, isSuccess } = useCreatePost();
 
@@ -30,18 +34,20 @@ const CreatePostForm = () => {
 
   const [selectedPageId, setSelectedPageId] = useState("");
   const [pageDropdownOpen, setPageDropdownOpen] = useState(false);
-  const [postType, setPostType]         = useState<PostType>("food");
-  const [title, setTitle]               = useState("");
-  const [content, setContent]           = useState("");
-  const [imageUrl, setImageUrl]         = useState("");
-  const [images, setImages]             = useState<string[]>([]);
-  const [price, setPrice]               = useState("");
-  const [tagInput, setTagInput]         = useState("");
-  const [tags, setTags]                 = useState<string[]>([]);
+  const [postType, setPostType] = useState<PostType>("food");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [price, setPrice] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  const selectedPage = pages.find((p) => p._id === selectedPageId || p.id === selectedPageId);
+  const selectedPage = pages.find(
+    (p) => p._id === selectedPageId || p.id === selectedPageId,
+  );
 
   const addImage = () => {
     const trimmed = imageUrl.trim();
@@ -69,22 +75,37 @@ const CreatePostForm = () => {
     setTags((prev) => prev.filter((t) => t !== tag));
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+
+    navigate(-1);
+  };
+
   const handleSubmit = () => {
     if (!selectedPageId || !content.trim()) return;
 
     createPost(
       {
-        page:    selectedPageId,
-        type:    postType,
+        page: selectedPageId,
+        type: postType,
         content: content.trim(),
-        ...(title.trim()           && { title:  title.trim() }),
-        ...(images.length > 0      && { images }),
+        ...(title.trim() && { title: title.trim() }),
+        ...(images.length > 0 && { images }),
         ...(price && !isNaN(Number(price)) && { price: Number(price) }),
-        ...(tags.length > 0        && { tags }),
+        ...(tags.length > 0 && { tags }),
       },
       {
         onSuccess: () => {
-          setTimeout(() => navigate(-1), 1500);
+          setTimeout(() => {
+            if (onClose) {
+              onClose();
+            } else {
+              navigate(-1);
+            }
+          }, 1500);
         },
       },
     );
@@ -94,12 +115,11 @@ const CreatePostForm = () => {
 
   return (
     <div className="min-h-screen bg-black pb-10">
-
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 pt-5 pb-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => navigate(-1)}
+          onClick={handleClose}
           className="text-white"
         >
           <ChevronLeft size={22} />
@@ -117,11 +137,13 @@ const CreatePostForm = () => {
       </div>
 
       <div className="px-4 flex flex-col gap-6 max-w-md mx-auto">
-
         {/* ── Error / Success ── */}
         {error && <Alert variant="error" message={error.message} />}
         {isSuccess && (
-          <Alert variant="success" message="Post submitted for review successfully!" />
+          <Alert
+            variant="success"
+            message="Post submitted for review successfully!"
+          />
         )}
 
         {/* ── Select Page ── */}
@@ -135,7 +157,9 @@ const CreatePostForm = () => {
             <div className="h-14 rounded-xl bg-zinc-900 animate-pulse" />
           ) : pages.length === 0 ? (
             <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-center">
-              <p className="text-zinc-500 text-sm">You don't have any pages yet.</p>
+              <p className="text-zinc-500 text-sm">
+                You don't have any pages yet.
+              </p>
               <button
                 onClick={() => navigate("/pages/create")}
                 className="text-[#F7C12B] text-sm mt-1 hover:underline"
@@ -148,16 +172,18 @@ const CreatePostForm = () => {
               <button
                 onClick={() => setPageDropdownOpen((prev) => !prev)}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-zinc-900 border transition-colors cursor-pointer ${
-                  selectedPage
-                    ? "border-[#F7C12B]"
-                    : "border-zinc-700"
+                  selectedPage ? "border-[#F7C12B]" : "border-zinc-700"
                 }`}
               >
                 {selectedPage ? (
                   <>
                     <div className="w-8 h-8 rounded-lg bg-zinc-700 overflow-hidden shrink-0">
                       {selectedPage.avatar ? (
-                        <img src={selectedPage.avatar} alt={selectedPage.name} className="w-full h-full object-cover" />
+                        <img
+                          src={selectedPage.avatar}
+                          alt={selectedPage.name}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white">
                           {selectedPage.name[0]}
@@ -169,7 +195,9 @@ const CreatePostForm = () => {
                     </span>
                   </>
                 ) : (
-                  <span className="text-zinc-500 text-sm flex-1 text-left">Select a page...</span>
+                  <span className="text-zinc-500 text-sm flex-1 text-left">
+                    Select a page...
+                  </span>
                 )}
                 <ChevronDown
                   size={18}
@@ -198,7 +226,11 @@ const CreatePostForm = () => {
                       >
                         <div className="w-8 h-8 rounded-lg bg-zinc-700 overflow-hidden shrink-0">
                           {page.avatar ? (
-                            <img src={page.avatar} alt={page.name} className="w-full h-full object-cover" />
+                            <img
+                              src={page.avatar}
+                              alt={page.name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white">
                               {page.name[0]}
@@ -278,7 +310,9 @@ const CreatePostForm = () => {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-0.5">
             <h2 className="text-white font-bold text-base">Media</h2>
-            <p className="text-zinc-500 text-xs">Image URLs (Add multiple URLs)</p>
+            <p className="text-zinc-500 text-xs">
+              Image URLs (Add multiple URLs)
+            </p>
           </div>
 
           <div className="flex gap-2">
@@ -311,10 +345,17 @@ const CreatePostForm = () => {
                     src={url}
                     alt=""
                     className="w-10 h-10 rounded-lg object-cover shrink-0 bg-zinc-800"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
                   />
-                  <span className="text-zinc-400 text-xs truncate flex-1">{url}</span>
-                  <button onClick={() => removeImage(url)} className="text-zinc-600 hover:text-red-400 transition-colors shrink-0">
+                  <span className="text-zinc-400 text-xs truncate flex-1">
+                    {url}
+                  </span>
+                  <button
+                    onClick={() => removeImage(url)}
+                    className="text-zinc-600 hover:text-red-400 transition-colors shrink-0"
+                  >
                     <X size={14} />
                   </button>
                 </div>
@@ -364,7 +405,10 @@ const CreatePostForm = () => {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs"
               >
                 {tag}
-                <button onClick={() => removeTag(tag)} className="text-zinc-500 hover:text-white">
+                <button
+                  onClick={() => removeTag(tag)}
+                  className="text-zinc-500 hover:text-white"
+                >
                   <X size={11} />
                 </button>
               </span>
@@ -378,7 +422,9 @@ const CreatePostForm = () => {
               className="bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none min-w-[100px] flex-1"
             />
           </div>
-          <p className="text-zinc-600 text-xs">Press comma or Enter to add a tag</p>
+          <p className="text-zinc-600 text-xs">
+            Press comma or Enter to add a tag
+          </p>
         </div>
 
         {/* ── Submit Button ── */}
@@ -395,7 +441,6 @@ const CreatePostForm = () => {
             Your post will be reviewed by our team before publishing.
           </p>
         </div>
-
       </div>
     </div>
   );

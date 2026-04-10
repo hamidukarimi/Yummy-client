@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Menu, Bell, Search, Mail, PlusCircle } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
+import { useCreatePostModal } from "@/context/CreatePostModalContext";
 import useUnreadCount from "@/features/notifications/hooks/useUnreadCount";
 import useAuth from "@/hooks/useAuth";
 import logo from "../../assets/yummy-logo.png";
 import { useLocation } from "react-router-dom";
-
 
 const HIDDEN_ON = [
   "/login",
@@ -19,32 +19,42 @@ const HIDDEN_ON = [
 
 const HomeNavbar = () => {
   const location = useLocation();
-  
 
-  const isPageEdit   = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
-  const isPostEdit   = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
+  const isPageEdit = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
+  const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
-  const isPageView   = /^\/pages\/[^/]+$/.test(location.pathname);
+  const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
 
-  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const hasAttempted = useRef(false);
   const { user, isInitializing, restoreSession } = useAuth();
+  const { openModal } = useCreatePostModal();
   const unreadCount = useUnreadCount(!!user);
 
-   useEffect(() => {
+  const handleCreatePost = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      openModal();
+      return;
+    }
+    navigate("/posts/create");
+  };
+
+  useEffect(() => {
     if (!hasAttempted.current && !user && !isInitializing) {
       hasAttempted.current = true;
       void restoreSession();
     }
   }, [user, isInitializing, restoreSession]);
 
-
-   if (
+  if (
     HIDDEN_ON.includes(location.pathname) ||
-    isPageEdit || isPostEdit || isPostDetail || isPageView
-  ) return null;
+    isPageEdit ||
+    isPostEdit ||
+    isPostDetail ||
+    isPageView
+  )
+    return null;
 
   return (
     <>
@@ -98,7 +108,7 @@ const HomeNavbar = () => {
             </button>
 
             <button
-              onClick={() => navigate("/posts/create")}
+              onClick={handleCreatePost}
               className="flex items-center gap-2 p-1.5 rounded-sm hover:bg-white/12 transition cursor-pointer"
             >
               <PlusCircle size={22} />

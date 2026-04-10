@@ -5,6 +5,7 @@ import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
 import useMyPosts from "@/features/posts/hooks/useMyPosts";
 import { deletePostService } from "@/features/posts/services/post.service";
 import PostCard from "@/features/posts/components/PostCard";
+import { useCreatePostModal } from "@/context/CreatePostModalContext";
 import BottomSheet from "@/components/ui/BottomSheet";
 import BottomSheetItem from "@/components/ui/BottomSheetItem";
 import Spinner from "@/components/ui/Spinner";
@@ -18,19 +19,21 @@ type Tab = "pending" | "approved" | "rejected";
 
 const StatusBadge = ({ status }: { status: PostStatus }) => {
   const styles: Record<PostStatus, string> = {
-    pending:  "bg-yellow-500/15 border-yellow-500/30 text-yellow-400",
+    pending: "bg-yellow-500/15 border-yellow-500/30 text-yellow-400",
     approved: "bg-green-500/15 border-green-500/30 text-green-400",
     rejected: "bg-red-500/15 border-red-500/30 text-red-400",
   };
 
   const labels: Record<PostStatus, string> = {
-    pending:  "Pending Review",
+    pending: "Pending Review",
     approved: "Published",
     rejected: "Rejected",
   };
 
   return (
-    <span className={`px-2.5 py-1 rounded-full border text-xs font-semibold ${styles[status]}`}>
+    <span
+      className={`px-2.5 py-1 rounded-full border text-xs font-semibold ${styles[status]}`}
+    >
       {labels[status]}
     </span>
   );
@@ -39,16 +42,25 @@ const StatusBadge = ({ status }: { status: PostStatus }) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const MyPostsPage = () => {
-  const navigate                    = useNavigate();
+  const navigate = useNavigate();
+  const { openModal } = useCreatePostModal();
   const { posts, isLoading, isError, refetch } = useMyPosts();
-  const [tab, setTab]               = useState<Tab>("approved");
+  const [tab, setTab] = useState<Tab>("approved");
   const [selectedPost, setSelectedPost] = useState<ApiPost | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleCreatePost = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      openModal();
+      return;
+    }
+    navigate("/posts/create");
+  };
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "approved", label: "Published" },
-    { key: "pending",  label: "Pending"   },
-    { key: "rejected", label: "Rejected"  },
+    { key: "pending", label: "Pending" },
+    { key: "rejected", label: "Rejected" },
   ];
 
   const filteredPosts = posts.filter((p) => p.status === tab);
@@ -67,7 +79,6 @@ const MyPostsPage = () => {
 
   return (
     <div className="min-h-screen bg-black pb-24  mx-auto">
-
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4">
         <motion.button
@@ -96,9 +107,13 @@ const MyPostsPage = () => {
             >
               {label}
               {count > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  tab === key ? "bg-[#F7C12B] text-black" : "bg-zinc-800 text-zinc-400"
-                }`}>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    tab === key
+                      ? "bg-[#F7C12B] text-black"
+                      : "bg-zinc-800 text-zinc-400"
+                  }`}
+                >
                   {count}
                 </span>
               )}
@@ -135,12 +150,12 @@ const MyPostsPage = () => {
                 <div className="flex flex-col items-center gap-3 py-16">
                   <p className="text-zinc-500 text-sm">
                     {tab === "approved" && "No published posts yet."}
-                    {tab === "pending"  && "No posts pending review."}
+                    {tab === "pending" && "No posts pending review."}
                     {tab === "rejected" && "No rejected posts."}
                   </p>
                   {tab !== "rejected" && (
                     <button
-                      onClick={() => navigate("/posts/create")}
+                      onClick={handleCreatePost}
                       className="text-[#F7C12B] text-sm hover:underline cursor-pointer"
                     >
                       Create a post
@@ -150,36 +165,34 @@ const MyPostsPage = () => {
               )}
 
               <div className="md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 lg:gap-y-9 lg:mt-3">
-
                 {filteredPosts.map((post) => (
-                <div key={post._id} className="flex flex-col gap-2">
-
-                  {/* ── Status badge + three dots ── */}
-                  <div className="flex items-center justify-between px-1">
-                    <StatusBadge status={post.status} />
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setSelectedPost(post)}
-                      className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 cursor-pointer"
-                    >
-                      <span className="text-base leading-none">···</span>
-                    </motion.button>
-                  </div>
-
-                  {/* ── Rejected reason ── */}
-                  {post.status === "rejected" && post.rejectedReason && (
-                    <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
-                      <p className="text-red-400 text-xs leading-relaxed">
-                        <span className="font-semibold">Reason: </span>
-                        {post.rejectedReason}
-                      </p>
+                  <div key={post._id} className="flex flex-col gap-2">
+                    {/* ── Status badge + three dots ── */}
+                    <div className="flex items-center justify-between px-1">
+                      <StatusBadge status={post.status} />
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setSelectedPost(post)}
+                        className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 cursor-pointer"
+                      >
+                        <span className="text-base leading-none">···</span>
+                      </motion.button>
                     </div>
-                  )}
 
-                  {/* ── Post Card ── */}
-                  <PostCard post={post} />
-                </div>
-              ))}
+                    {/* ── Rejected reason ── */}
+                    {post.status === "rejected" && post.rejectedReason && (
+                      <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
+                        <p className="text-red-400 text-xs leading-relaxed">
+                          <span className="font-semibold">Reason: </span>
+                          {post.rejectedReason}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* ── Post Card ── */}
+                    <PostCard post={post} />
+                  </div>
+                ))}
               </div>
             </motion.div>
           )}
@@ -208,7 +221,6 @@ const MyPostsPage = () => {
           disabled={isDeleting}
         />
       </BottomSheet>
-
     </div>
   );
 };
