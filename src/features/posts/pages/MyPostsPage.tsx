@@ -66,7 +66,7 @@ const MyPostsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-24 max-w-md mx-auto">
+    <div className="min-h-screen bg-black pb-24  mx-auto">
 
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4">
@@ -129,7 +129,7 @@ const MyPostsPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col gap-6"
+              className="flex flex-col gap-6      "
             >
               {filteredPosts.length === 0 && (
                 <div className="flex flex-col items-center gap-3 py-16">
@@ -141,7 +141,7 @@ const MyPostsPage = () => {
                   {tab !== "rejected" && (
                     <button
                       onClick={() => navigate("/posts/create")}
-                      className="text-[#F7C12B] text-sm hover:underline"
+                      className="text-[#F7C12B] text-sm hover:underline cursor-pointer"
                     >
                       Create a post
                     </button>
@@ -149,7 +149,9 @@ const MyPostsPage = () => {
                 </div>
               )}
 
-              {filteredPosts.map((post) => (
+              <div className="md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 lg:gap-y-9 lg:mt-3">
+
+                {filteredPosts.map((post) => (
                 <div key={post._id} className="flex flex-col gap-2">
 
                   {/* ── Status badge + three dots ── */}
@@ -178,6 +180,7 @@ const MyPostsPage = () => {
                   <PostCard post={post} />
                 </div>
               ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
