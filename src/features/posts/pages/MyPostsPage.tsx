@@ -79,17 +79,6 @@ const MyPostsPage = () => {
 
   return (
     <div className="min-h-screen bg-black pb-24  mx-auto">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 pt-5 pb-4">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate(-1)}
-          className="text-white"
-        >
-          <ChevronLeft size={22} />
-        </motion.button>
-        <h1 className="text-lg font-bold text-white">My Posts</h1>
-      </div>
 
       {/* ── Tabs ── */}
       <div className="flex items-center border-b border-zinc-800 px-4">
