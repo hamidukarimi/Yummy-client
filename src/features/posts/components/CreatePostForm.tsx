@@ -161,7 +161,7 @@ const CreatePostForm = ({ onClose }: CreatePostFormProps) => {
               </p>
               <button
                 onClick={() => navigate("/pages/create")}
-                className="text-[#F7C12B] text-sm mt-1 hover:underline"
+                className="text-[#F7C12B] text-sm mt-1 hover:underline cursor-pointer"
               >
                 Create a page first
               </button>

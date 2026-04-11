@@ -83,7 +83,7 @@ const ProfilePage = () => {
           <h1 className="text-2xl font-bold text-white lg:text-3xl">Profile</h1>
           <button
             onClick={() => navigate("/profile/edit")}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-800 transition-all hover:scale-105"
+            className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-800 transition-all hover:scale-105 cursor-pointer"
           >
             <MoreHorizontal size={20} />
           </button>

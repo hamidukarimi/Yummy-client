@@ -189,7 +189,7 @@ const MyPagesPage = () => {
                 </p>
                 <button
                   onClick={handleCreatePage}
-                  className="text-[#F7C12B] text-sm font-medium hover:underline"
+                  className="text-[#F7C12B] text-sm font-medium hover:underline cursor-pointer"
                 >
                   Create your first page
                 </button>
