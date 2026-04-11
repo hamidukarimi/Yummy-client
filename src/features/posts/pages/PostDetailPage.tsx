@@ -220,7 +220,7 @@ const PostDetailPage = () => {
               whileTap={{ scale: 0.85 }}
               disabled={isLikePending || isInitializing}
               onClick={() => toggleLike()}
-              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center cursor-pointer"
             >
               <Heart
                 size={16}
@@ -233,7 +233,7 @@ const PostDetailPage = () => {
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => void handleShare(post.title ?? pageName, post._id)}
-              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center cursor-pointer"
             >
               <Share2 size={16} className="text-zinc-400" />
             </motion.button>
@@ -242,7 +242,7 @@ const PostDetailPage = () => {
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => setOptionsOpen(true)}
-              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center cursor-pointer"
             >
               <MoreHorizontal size={16} className="text-zinc-400" />
             </motion.button>
@@ -271,25 +271,25 @@ const PostDetailPage = () => {
         )}
 
         {/* ── Likes + Time ── */}
-       <div className="px-4 flex items-center gap-3">
-  <div className="flex items-center gap-1.5">
-    <Heart size={16} className="text-red-500 fill-red-500 shrink-0" />
-    <span className="text-white font-semibold text-sm">
-      {post.likes.length.toLocaleString()} Likes
-    </span>
-  </div>
-  <span className="text-zinc-600">·</span>
-  <div className="flex items-center gap-1.5">
-    <Eye size={16} className="text-zinc-500 shrink-0" />
-    <span className="text-zinc-500 text-sm">
-      {(post.views ?? 0).toLocaleString()} Views
-    </span>
-  </div>
-  <span className="text-zinc-600">·</span>
-  <span className="text-zinc-500 text-sm">
-    Posted {timeAgo(post.createdAt)}
-  </span>
-</div>
+        <div className="px-4 flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Heart size={16} className="text-red-500 fill-red-500 shrink-0" />
+            <span className="text-white font-semibold text-sm">
+              {post.likes.length.toLocaleString()} Likes
+            </span>
+          </div>
+          <span className="text-zinc-600">·</span>
+          <div className="flex items-center gap-1.5">
+            <Eye size={16} className="text-zinc-500 shrink-0" />
+            <span className="text-zinc-500 text-sm">
+              {(post.views ?? 0).toLocaleString()} Views
+            </span>
+          </div>
+          <span className="text-zinc-600">·</span>
+          <span className="text-zinc-500 text-sm">
+            Posted {timeAgo(post.createdAt)}
+          </span>
+        </div>
 
         {/* ── Divider ── */}
         <div className="h-px bg-zinc-900 mx-4" />
@@ -316,7 +316,7 @@ const PostDetailPage = () => {
                 onClick={() =>
                   setSelectedSpice(selectedSpice === option ? null : option)
                 }
-                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors duration-200 ${
+                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors duration-200 cursor-pointer ${
                   selectedSpice === option
                     ? "bg-[#F7C12B] border-[#F7C12B] text-black"
                     : "bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500"
@@ -336,7 +336,7 @@ const PostDetailPage = () => {
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="text-white"
+            className="text-white cursor-pointer"
           >
             <Minus size={14} />
           </motion.button>
@@ -346,7 +346,7 @@ const PostDetailPage = () => {
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={() => setQuantity((q) => q + 1)}
-            className="text-white"
+            className="text-white cursor-pointer"
           >
             <Plus size={14} />
           </motion.button>
@@ -355,7 +355,7 @@ const PostDetailPage = () => {
         {/* Add to order button */}
         <motion.button
           whileTap={{ scale: 0.98 }}
-          className="flex-1 bg-[#F7C12B] rounded-xl py-3 flex items-center justify-center gap-2"
+          className="flex-1 bg-[#F7C12B] rounded-xl py-3 flex items-center justify-center gap-2 cursor-pointer"
         >
           <ShoppingCart size={16} className="text-black" />
           <span className="text-black font-bold text-sm">
