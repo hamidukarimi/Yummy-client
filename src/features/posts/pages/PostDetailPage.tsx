@@ -186,7 +186,7 @@ const PostDetailPage = () => {
         </div>
 
         {/* ── RIGHT: Details & Scrollable Content ── */}
-        <div className="w-full md:w-1/2 lg:w-[40%] md:h-full md:overflow-y-auto no-scrollbar md:bg-black">
+        <div className="w-full md:w-1/2 lg:w-[40%] md:h-full md:overflow-y-auto custom-scrollbar md:bg-black">
           <div className="flex flex-col gap-5 mx-auto py-5 md:py-10">
             
             {/* Mobile Header */}
