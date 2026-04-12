@@ -167,7 +167,7 @@ const PostDetailPage = () => {
                   <button
                     key={i}
                     onClick={() => setImageIndex(i)}
-                    className={`flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 ${
+                    className={`flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                       i === imageIndex
                         ? "border-[#F7C12B] scale-105"
                         : "border-transparent hover:border-zinc-700"
@@ -305,7 +305,7 @@ const PostDetailPage = () => {
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={() => void handleShare(post.title ?? "", post._id)}
-                  className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+                  className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center "
                 >
                   <Share2 size={16} className="text-zinc-400" />
                 </motion.button>
@@ -324,7 +324,7 @@ const PostDetailPage = () => {
             <div className="hidden md:flex px-4 gap-6">
               <button
                 onClick={() => toggleLike()}
-                className="flex items-center gap-2 text-zinc-400 hover:text-red-500 transition-colors"
+                className="flex items-center gap-2 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
               >
                 <Heart size={24} className={isLiked ? "text-red-500 fill-red-500" : ""} />
                 <span className="font-bold">{post.likes.length.toLocaleString()}</span>
