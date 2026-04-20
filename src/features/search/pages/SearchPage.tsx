@@ -80,7 +80,7 @@ const SearchPage = () => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
-          className="text-white shrink-0"
+          className="text-white shrink-0 cursor-pointer hover:bg-zinc-900 rounded-full md:p-2 transition-all"
         >
           <ChevronLeft size={22} />
         </motion.button>
