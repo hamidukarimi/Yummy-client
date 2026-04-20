@@ -19,7 +19,7 @@ const PageResultItem = ({ page, onClick }: { page: ApiPage; onClick: () => void 
     animate={{ opacity: 1, y: 0 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="w-full flex items-center gap-4 py-3 text-left border-b border-zinc-900 last:border-b-0"
+    className="w-full flex items-center gap-4 py-3 text-left border-b border-zinc-900 last:border-b-0 cursor-pointer"
   >
     <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
       {page.avatar ? (
@@ -101,7 +101,7 @@ const SearchPage = () => {
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -115,7 +115,7 @@ const SearchPage = () => {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-3 text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px ${
+            className={`px-4 py-3 text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px cursor-pointer ${
               tab === t
                 ? "border-[#F7C12B] text-[#F7C12B]"
                 : "border-transparent text-zinc-500 hover:text-zinc-300"
