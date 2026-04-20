@@ -70,10 +70,13 @@ const SearchPage = () => {
   const results   = tab === "pages" ? pages : posts;
 
   return (
-    <div className="min-h-screen bg-black pb-24 max-w-md mx-auto">
+  <div className="min-h-screen bg-black pb-24">
+
+    {/* Centered container */}
+    <div className="max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto">
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 pt-5 pb-4">
+      <div className="flex items-center gap-3 px-4 pt-5 pb-4 lg:px-6 lg:pt-8 sticky top-0 bg-black z-10">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
@@ -82,7 +85,6 @@ const SearchPage = () => {
           <ChevronLeft size={22} />
         </motion.button>
 
-        {/* Search input */}
         <div className="relative flex-1">
           <Search
             size={16}
@@ -94,7 +96,7 @@ const SearchPage = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search pages, posts..."
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 lg:py-3 lg:text-base"
           />
           {query && (
             <button
@@ -108,32 +110,32 @@ const SearchPage = () => {
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex items-center border-b border-zinc-800 px-4">
+      <div className="flex items-center border-b border-zinc-800 px-4 lg:px-6">
         {(["pages", "posts"] as SearchTab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px ${
+            className={`px-4 py-3 text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px ${
               tab === t
                 ? "border-[#F7C12B] text-[#F7C12B]"
                 : "border-transparent text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {t}
           </button>
         ))}
       </div>
 
       {/* ── Content ── */}
-      <div className="px-4 pt-5">
+      <div className="px-4 pt-5 lg:px-6 lg:pt-8">
 
-        {/* No query yet */}
+        {/* Empty state */}
         {!hasQuery && (
-          <div className="flex flex-col items-center gap-3 py-16">
+          <div className="flex flex-col items-center gap-3 py-20">
             <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
               <Search size={24} className="text-zinc-600" />
             </div>
-            <p className="text-zinc-500 text-sm">
+            <p className="text-zinc-500 text-sm lg:text-base">
               Search for {tab === "pages" ? "restaurants and pages" : "posts and food"}
             </p>
           </div>
@@ -141,15 +143,15 @@ const SearchPage = () => {
 
         {/* Loading */}
         {hasQuery && isLoading && (
-          <div className="flex justify-center py-16">
+          <div className="flex justify-center py-20">
             <Spinner size="md" />
           </div>
         )}
 
         {/* No results */}
         {hasQuery && !isLoading && results.length === 0 && (
-          <div className="flex flex-col items-center gap-3 py-16">
-            <p className="text-zinc-500 text-sm">
+          <div className="flex flex-col items-center gap-3 py-20">
+            <p className="text-zinc-500 text-sm lg:text-base">
               No {tab} found for "{debouncedQuery}"
             </p>
           </div>
@@ -165,7 +167,8 @@ const SearchPage = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Pages results */}
+
+              {/* Pages → list stays single column (better UX) */}
               {tab === "pages" && (
                 <div className="flex flex-col">
                   {pages.map((page) => (
@@ -178,20 +181,23 @@ const SearchPage = () => {
                 </div>
               )}
 
-              {/* Posts results */}
+              {/* Posts → grid on larger screens */}
               {tab === "posts" && (
-                <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {posts.map((post) => (
                     <PostCard key={post._id} post={post} />
                   ))}
                 </div>
               )}
+
             </motion.div>
           )}
         </AnimatePresence>
+
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default SearchPage;
