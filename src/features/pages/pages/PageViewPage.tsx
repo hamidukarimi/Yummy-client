@@ -567,7 +567,7 @@ const PageViewPage = () => {
                 )}
 
               {!menuLoading && filteredMenuItems.length > 0 && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                   {filteredMenuItems.map((post) => (
                     <MenuCard key={post._id} post={post} />
                   ))}
