@@ -94,7 +94,7 @@ const PageItem = ({
 
 const MyPagesPage = () => {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("all");
+  const [tab, setTab] = useState<Tab>("my");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
@@ -129,12 +129,12 @@ const MyPagesPage = () => {
     <div className="min-h-screen bg-black px-4 pt-5 pb-24  mx-auto">
 
       {/* ── Tabs ── */}
-      <div className="flex items-center gap-2 mb-5">
-        {(["all", "my", "followed"] as Tab[]).map((t) => (
+      <div className="flex items-center gap-2 mb-5 overflow-x-auto ">
+        {(["my", "all", "followed"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 cursor-pointer text-nowrap ${
               tab === t
                 ? "bg-zinc-800 border-zinc-600 text-white"
                 : "bg-transparent border-zinc-800 text-zinc-500 hover:text-white"
@@ -143,6 +143,14 @@ const MyPagesPage = () => {
             {t === "my" ? "My Pages" : t === "all" ? "All Pages" : "Followed"}
           </button>
         ))}
+
+
+         <button
+            onClick={() => navigate("/pages/create")}
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 cursor-pointer border-[#f7c12bb3] text-zinc-300 hover:text-white text-nowrap`}
+          >
+            Create New Page
+          </button>
       </div>
 
       {/* ── Divider ── */}

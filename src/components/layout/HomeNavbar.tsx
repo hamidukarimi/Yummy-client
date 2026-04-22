@@ -21,9 +21,17 @@ const HomeNavbar = () => {
   const location = useLocation();
 
   const isPageEdit = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
+  // Search input state and handler
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearch = () => {
+    if (searchValue.trim()) {
+      navigate(`/search`, { state: { query: searchValue } });
+    }
+  };
   const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
-  const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
+  // const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -51,7 +59,7 @@ const HomeNavbar = () => {
     HIDDEN_ON.includes(location.pathname) ||
     isPageEdit ||
     isPostEdit ||
-    isPostDetail 
+    isPostDetail
   )
     return null;
 
@@ -82,21 +90,36 @@ const HomeNavbar = () => {
               <img src={logo} alt="Yummy Logo" className="w-24 " />
             </div>
           </div>
-
-          {/* CENTER: Search Bar (ONLY visible on md: and up) */}
+          {/* CENTER: Search Bar */}
           <div className="hidden lg:flex flex-grow max-w-2xl mx-10">
-            <div className="relative w-full">
+            <div className="relative w-full flex items-center">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <Search size={18} className="text-gray-400" />
               </div>
               <input
                 type="text"
                 placeholder="Search Yummy..."
-                className="w-full bg-transparent border border-[#F7C12B] rounded-full py-2 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-[#F7C12B]"
+                className="w-full bg-transparent border border-[#F7C12B] rounded-full py-2 pl-12 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-[#F7C12B]"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchValue.trim()) {
+                    handleSearch();
+                  }
+                }}
               />
+              {/* <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#F7C12B] text-black rounded-full px-3 py-1 font-semibold text-xs hover:bg-yellow-400 transition"
+                onClick={handleSearch}
+                aria-label="Search"
+                type="button"
+                disabled={!searchValue.trim()}
+              >
+                Search
+              </button> */}
             </div>
-          </div>
-
+          </div>{" "}
+          {/* Added this closing div */}
           {/* RIGHT: Desktop Icons (Hidden on mobile) */}
           <div className="hidden md:flex items-center gap-6">
             <button
@@ -147,7 +170,6 @@ const HomeNavbar = () => {
               )}
             </div>
           </div>
-
           {/* MOBILE RIGHT: Notification Icon */}
           <div className="md:hidden">
             <motion.button
