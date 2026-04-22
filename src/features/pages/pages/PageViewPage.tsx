@@ -191,7 +191,7 @@ const PageViewPage = () => {
   const openStatus = getOpenStatus(page.workingHours);
 
   return (
-    <div className="min-h-screen bg-black pb-24">
+    <div className="min-h-screen bg-black pb-24 ">
       {/* ── Cover Image ── */}
       <div className="relative w-full h-56">
         {page.coverImage ? (
@@ -292,7 +292,7 @@ const PageViewPage = () => {
       </div>
 
       {/* ── Body ── */}
-      <div className="px-4 pt-22 flex flex-col gap-5 max-w-md mx-auto">
+      <div className="px-4 pt-22 flex flex-col gap-5  mx-auto">
         {/* ── Action Buttons ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -451,7 +451,7 @@ const PageViewPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col gap-4"
+              className="   "
             >
               {/* ── Pending Posts (owner only) ── */}
               {isOwner && pendingPosts.length > 0 && (
@@ -499,9 +499,10 @@ const PageViewPage = () => {
                     )}
                   </div>
                 )}
-
-              {!postsLoading &&
-                posts.map((post) => <PostCard key={post._id} post={post} />)}
+              <div className="flex flex-col  gap-5     md:grid md:grid-cols-2 lg:grid-cols-3  lg:gap-y-9">
+                {!postsLoading &&
+                  posts.map((post) => <PostCard key={post._id} post={post} />)}
+              </div>
             </motion.div>
           )}
 

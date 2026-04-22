@@ -51,8 +51,7 @@ const HomeNavbar = () => {
     HIDDEN_ON.includes(location.pathname) ||
     isPageEdit ||
     isPostEdit ||
-    isPostDetail ||
-    isPageView
+    isPostDetail 
   )
     return null;
 

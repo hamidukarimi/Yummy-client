@@ -32,7 +32,7 @@ const BottomNav = () => {
 
   if (
     HIDDEN_ON.includes(location.pathname) ||
-    isPageView ||
+    // isPageView ||
     isPostDetail ||
     isPostEdit ||
     isPageEdit
