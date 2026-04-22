@@ -10,14 +10,14 @@ import type { ApiPost } from "@/features/posts/types/post.types";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PendingPostCardProps {
-  post:     ApiPost;
+  post: ApiPost;
   onDelete: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const PendingPostCard = ({ post, onDelete }: PendingPostCardProps) => {
-  const navigate             = useNavigate();
+  const navigate = useNavigate();
   const [optionsOpen, setOptionsOpen] = useState(false);
 
   const handleDelete = async () => {
@@ -28,7 +28,6 @@ const PendingPostCard = ({ post, onDelete }: PendingPostCardProps) => {
   return (
     <>
       <div className="relative rounded-2xl overflow-hidden border border-zinc-800">
-
         {/* ── Image or placeholder ── */}
         <div className="w-full h-48 bg-zinc-900">
           {post.images.length > 0 ? (
@@ -50,14 +49,16 @@ const PendingPostCard = ({ post, onDelete }: PendingPostCardProps) => {
         {/* ── Pending badge ── */}
         <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/30">
           <Clock size={11} className="text-[#F7C12B]" />
-          <span className="text-[#F7C12B] text-xs font-semibold">Pending Review</span>
+          <span className="text-[#F7C12B] text-xs font-semibold">
+            Pending Review
+          </span>
         </div>
 
         {/* ── Three dots ── */}
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setOptionsOpen(true)}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center cursor-pointer"
         >
           <MoreHorizontal size={15} className="text-white" />
         </motion.button>
@@ -73,10 +74,11 @@ const PendingPostCard = ({ post, onDelete }: PendingPostCardProps) => {
             {post.content}
           </p>
           {post.price !== undefined && (
-            <span className="text-[#F7C12B] font-bold text-xs">${post.price}</span>
+            <span className="text-[#F7C12B] font-bold text-xs">
+              ${post.price}
+            </span>
           )}
         </div>
-
       </div>
 
       {/* ── Options Sheet ── */}

@@ -459,13 +459,15 @@ const PageViewPage = () => {
                   <h3 className="text-zinc-500 text-xs font-semibold uppercase tracking-wide">
                     Pending Review ({pendingPosts.length})
                   </h3>
-                  {pendingPosts.map((post) => (
-                    <PendingPostCard
-                      key={post._id}
-                      post={post}
-                      onDelete={() => void refetchPending()}
-                    />
-                  ))}
+                  <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    {pendingPosts.map((post) => (
+                      <PendingPostCard
+                        key={post._id}
+                        post={post}
+                        onDelete={() => void refetchPending()}
+                      />
+                    ))}
+                  </div>
                   {/* Divider between pending and published */}
                   {posts.length > 0 && (
                     <div className="flex items-center gap-3 my-1">
