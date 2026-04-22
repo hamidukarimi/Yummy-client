@@ -1,39 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Search, X, Check } from "lucide-react";
+import { Search, X, Check } from "lucide-react";
 import useDiscoverPages from "@/features/pages/hooks/useDiscoverPages";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPageBySlugService } from "@/features/pages/services/page.service";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
 import useAuth from "@/hooks/useAuth";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Page Item (Responsive Card/Row) ──────────────────────────────────────────
 
-interface PageRowProps {
-  page:      ApiPage;
-  userId?:   string;
-  onPress:   () => void;
-}
-
-// ─── Page Row ─────────────────────────────────────────────────────────────────
-
-const PageRow = ({ page, userId, onPress }: PageRowProps) => {
+const PageItem = ({
+  page,
+  userId,
+}: {
+  page: ApiPage;
+  userId?: string;
+}) => {
   const navigate = useNavigate();
-
-  // Fix ownership check
-  const pageOwner = page.owner as { id?: string; _id?: string } | string;
-  const ownerId = typeof pageOwner === "object"
-    ? (pageOwner.id ?? pageOwner._id)
-    : pageOwner;
-  const isOwner = !!userId && ownerId === userId;
-
   const { toggleFollow, isPending } = useFollowPage(page.slug);
 
-  // Fix follower comparison — convert all to strings
-  const followersCount = page.followers?.length ?? 0;
+  // Ownership & Follower logic
+  const pageOwner = page.owner as { id?: string; _id?: string } | string;
+  const ownerId = typeof pageOwner === "object" ? (pageOwner.id ?? pageOwner._id) : pageOwner;
+  const isOwner = !!userId && ownerId === userId;
+
   const isFollowing = !!userId && (page.followers ?? []).some(
     (f) => f.toString() === userId.toString()
   );
@@ -42,72 +33,87 @@ const PageRow = ({ page, userId, onPress }: PageRowProps) => {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-3 py-3 border-b border-zinc-900 last:border-b-0"
+      className="w-full flex items-center gap-4 py-3 text-left border-b border-zinc-900 last:border-b-0
+                 md:border-none md:flex-col md:bg-zinc-900 md:rounded-xl md:overflow-hidden md:p-0 md:pb-3"
     >
-      {/* Avatar */}
-      <div
-        className="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden shrink-0 cursor-pointer"
-        onClick={() => navigate(`/pages/${page.slug}`)}
-      >
-        {page.avatar ? (
-          <img src={page.avatar} alt={page.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-lg font-bold text-white bg-zinc-700">
-            {page.name[0]}
-          </div>
-        )}
-      </div>
+      {/* Cover image only for md+ screens */}
+      {page.coverImage && (
+        <div 
+          className="hidden md:block w-full h-32 bg-zinc-800 overflow-hidden cursor-pointer"
+          onClick={() => navigate(`/pages/${page.slug}`)}
+        >
+          <img
+            src={page.coverImage}
+            alt={`${page.name} cover`}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+      )}
 
-      {/* Info */}
-      <div
-        className="flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer"
-        onClick={() => navigate(`/pages/${page.slug}`)}
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="text-white font-semibold text-sm truncate">
-            {page.name}
-          </span>
-          {page.isVerified && (
-            <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-              <Check size={9} className="text-white" />
+      {/* Content Wrapper */}
+      <div className="flex items-center gap-4 w-full md:px-3 md:pt-1">
+        {/* Avatar */}
+        <div 
+          className="w-12 h-12 rounded-xl md:rounded-full bg-zinc-800 overflow-hidden shrink-0 cursor-pointer"
+          onClick={() => navigate(`/pages/${page.slug}`)}
+        >
+          {page.avatar ? (
+            <img src={page.avatar} alt={page.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-lg font-bold text-white bg-zinc-700">
+              {page.name[0]}
             </div>
           )}
         </div>
-        <span className="text-zinc-500 text-xs truncate">
-          {page.description ?? page.category}
-        </span>
-        <span className="text-zinc-600 text-xs">
-          {followersCount.toLocaleString()} followers
-        </span>
-      </div>
 
-      {/* Follow button */}
-      {!isOwner && (
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          disabled={isPending}
-          onClick={() => toggleFollow()}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-colors duration-200 shrink-0 ${
-            isFollowing
-              ? "bg-zinc-900 border-zinc-700 text-zinc-400"
-              : "bg-transparent border-zinc-600 text-white hover:bg-zinc-900"
-          }`}
+        {/* Name and Info */}
+        <div 
+          className="flex flex-col gap-0.5 min-w-0 flex-1 cursor-pointer"
+          onClick={() => navigate(`/pages/${page.slug}`)}
         >
-          {isPending ? "..." : isFollowing ? "Following" : "Follow"}
-        </motion.button>
-      )}
+          <div className="flex items-center gap-1">
+            <span className="text-white font-semibold text-sm truncate">
+              {page.name}
+            </span>
+            {page.isVerified && (
+              <div className="w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                <Check size={8} className="text-white" strokeWidth={3} />
+              </div>
+            )}
+          </div>
+          <span className="text-zinc-500 text-xs truncate">
+            {page.description ?? page.category}
+          </span>
+        </div>
+
+        {/* Follow Button - Kept visible on both layouts */}
+        {!isOwner && (
+          <button
+            disabled={isPending}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFollow();
+            }}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${
+              isFollowing
+                ? "bg-zinc-800 border-zinc-700 text-zinc-400"
+                : "bg-white border-white text-black hover:bg-zinc-200"
+            }`}
+          >
+            {isPending ? "..." : isFollowing ? "Following" : "Follow"}
+          </button>
+        )}
+      </div>
     </motion.div>
   );
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const DiscoverPagesPage = () => {
-  const navigate    = useNavigate();
   const { user, restoreSession, isInitializing } = useAuth();
   const [search, setSearch] = useState("");
 
-  // Restore session since /discover is public
   useEffect(() => {
     if (!user && !isInitializing) {
       void restoreSession();
@@ -117,22 +123,9 @@ const DiscoverPagesPage = () => {
   const { pages, isLoading, isError } = useDiscoverPages(search);
 
   return (
-    <div className="min-h-screen bg-black pb-24 max-w-md mx-auto">
-
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 pt-5 pb-4">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate(-1)}
-          className="text-white shrink-0"
-        >
-          <ChevronLeft size={22} />
-        </motion.button>
-        <h1 className="text-lg font-bold text-white">Discover Pages</h1>
-      </div>
-
-      {/* ── Search ── */}
-      <div className="px-4 pb-4">
+    <div className="min-h-screen bg-black pb-24 mx-auto max-w-7xl">
+      {/* ── Search Header ── */}
+      <div className="px-4 py-4">
         <div className="relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
           <input
@@ -155,10 +148,8 @@ const DiscoverPagesPage = () => {
 
       {/* ── Content ── */}
       <div className="px-4">
-
-        {/* Section title */}
         {!search && (
-          <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wide mb-3">
+          <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wide mb-4">
             Follow suggestions
           </p>
         )}
@@ -183,19 +174,20 @@ const DiscoverPagesPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
+              // Responsive Grid: 1 col on mobile, 2 on md, 3 on lg
+              className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-4"
             >
               {pages.length === 0 && (
-                <p className="text-zinc-500 text-sm text-center py-16">
+                <p className="text-zinc-500 text-sm text-center py-16 col-span-full">
                   No pages found.
                 </p>
               )}
 
               {pages.map((page) => (
-                <PageRow
+                <PageItem
                   key={page._id ?? page.id}
                   page={page}
                   userId={user?.id}
-                  onPress={() => navigate(`/pages/${page.slug}`)}
                 />
               ))}
             </motion.div>

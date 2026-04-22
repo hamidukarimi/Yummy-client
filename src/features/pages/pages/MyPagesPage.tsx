@@ -344,7 +344,7 @@ const MyPagesPage = () => {
               )}
 
             {!followedLoading && !followedError && followedPages.length > 0 && (
-              <div className="flex flex-col md:gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 divide-y">
+              <div className="flex flex-col md:gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 divide-y divide-zinc-900">
                 {followedPages.map((page) => (
                   <PageItem
                     key={page.id}
