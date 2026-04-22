@@ -193,7 +193,7 @@ const PageViewPage = () => {
   return (
     <div className="min-h-screen bg-black pb-24 ">
       {/* ── Cover Image ── */}
-      <div className="relative w-full h-56">
+      <div className="relative w-full h-48 md:h-52 lg:h-56">
         {page.coverImage ? (
           <img
             src={page.coverImage}
@@ -205,54 +205,9 @@ const PageViewPage = () => {
         )}
         <div className="absolute inset-0 bg-black/40" />
 
-        {/* Top controls */}
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center text-white"
-          >
-            <ChevronLeft size={20} />
-          </motion.button>
-
-          {isOwner && (
-            <div className="flex items-center gap-2 bg-black/60 rounded-full px-3 py-1.5">
-              <BarChart2 size={14} className="text-white" />
-              <span className="text-white text-xs font-medium">Stats</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            {isOwner && (
-              <>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  className="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center text-white"
-                >
-                  <Eye size={16} />
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  className="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center text-white"
-                >
-                  <BarChart2 size={16} />
-                </motion.button>
-              </>
-            )}
-            {!isOwner && (
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                className="w-9 h-9 rounded-full bg-black/50 flex items-center justify-center text-white"
-              >
-                <Share2 size={16} />
-              </motion.button>
-            )}
-          </div>
-        </div>
-
         {/* Avatar + Name row */}
         <div className="absolute -bottom-16 left-4 right-4 flex items-end gap-3">
-          <div className="w-32 h-32 rounded-full border-4 border-black bg-zinc-800 overflow-hidden shrink-0">
+          <div className="w-32 h-32 lg:w-36 lg:h-36 rounded-full border-4 border-black bg-zinc-800 overflow-hidden shrink-0">
             {page.avatar ? (
               <img
                 src={page.avatar}
@@ -328,22 +283,24 @@ const PageViewPage = () => {
             </>
           ) : (
             <>
-              <Button
-                fullWidth
-                variant={isFollowing ? "outline" : "primary"}
-                isLoading={isFollowPending}
-                onClick={() => toggleFollow()}
-              >
-                {isFollowing ? "Following" : "Follow"}
-              </Button>
-              <Button
-                variant="outline"
-                fullWidth
-                onClick={() => void handleShare(page.name, page.slug)}
-              >
-                <Share2 size={15} />
-                Share
-              </Button>
+              <div className="flex w-full lg:w-[50%]  gap-3 lg:gap-4">
+                <Button
+                  fullWidth
+                  variant={isFollowing ? "outline" : "primary"}
+                  isLoading={isFollowPending}
+                  onClick={() => toggleFollow()}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Button>
+                <Button
+                  variant="outline"
+                  fullWidth
+                  onClick={() => void handleShare(page.name, page.slug)}
+                >
+                  <Share2 size={15} />
+                  Share
+                </Button>
+              </div>
             </>
           )}
         </motion.div>
@@ -428,7 +385,7 @@ const PageViewPage = () => {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px ${
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors duration-200 capitalize -mb-px cursor-pointer ${
                 tab === t
                   ? "border-[#F7C12B] text-[#F7C12B]"
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
