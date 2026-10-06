@@ -1,15 +1,44 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronLeft } from "lucide-react";
 import useSearch from "@/features/search/hooks/useSearch";
 import PostCard from "@/features/posts/components/PostCard";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
+import type { PostType } from "@/features/posts/types/post.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SearchTab = "pages" | "posts";
+
+const PAGE_CATEGORIES = [
+  "All",
+  "Fast Food",
+  "Cafe",
+  "Restaurant",
+  "Pizza",
+  "Sushi",
+  "Bakery",
+  "Dessert",
+  "Vegan",
+  "Seafood",
+  "BBQ",
+  "Steakhouse",
+  "Indian",
+  "Chinese",
+  "Italian",
+  "Mexican",
+  "Other",
+];
+
+const POST_TYPES: { value: PostType | ""; label: string }[] = [
+  { value: "", label: "All types" },
+  { value: "food", label: "Food" },
+  { value: "menu_item", label: "Menu item" },
+  { value: "promotion", label: "Promotion" },
+  { value: "announcement", label: "Announcement" },
+];
 
 // ─── Page Item ────────────────────────────────────────────────────────────────
 
@@ -58,8 +87,6 @@ const PageResultItem = ({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-import { useLocation } from "react-router-dom";
-
 const SearchPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -68,28 +95,59 @@ const SearchPage = () => {
   const [tab, setTab] = useState<SearchTab>("pages");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { posts, pages, postsLoading, pagesLoading, debouncedQuery } =
-    useSearch(query, tab);
+  const [postType, setPostType] = useState<PostType | "">("");
+  const [postCategory, setPostCategory] = useState("");
+  const [postTag, setPostTag] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
-  // Auto focus input on mount and set query from navigation state if present
+  const [pageCategory, setPageCategory] = useState("");
+  const [pageTag, setPageTag] = useState("");
+
+  const postFilters = {
+    ...(postType && { type: postType }),
+    ...(postCategory && { category: postCategory }),
+    ...(postTag.trim() && { tag: postTag.trim() }),
+    ...(minPrice !== "" &&
+      !Number.isNaN(Number(minPrice)) && { minPrice: Number(minPrice) }),
+    ...(maxPrice !== "" &&
+      !Number.isNaN(Number(maxPrice)) && { maxPrice: Number(maxPrice) }),
+  };
+
+  const pageFilters = {
+    ...(pageCategory && { category: pageCategory }),
+    ...(pageTag.trim() && { tag: pageTag.trim() }),
+  };
+
+  const {
+    posts,
+    pages,
+    postsLoading,
+    pagesLoading,
+    debouncedQuery,
+    hasActiveCriteria,
+  } = useSearch(query, tab, postFilters, pageFilters);
+
   useEffect(() => {
     inputRef.current?.focus();
     if (location.state?.query) {
       setQuery(location.state.query);
     }
-    // Optionally clear the state after using it, to avoid re-using on back navigation
-    // window.history.replaceState({}, document.title);
   }, [location.state]);
 
   const isLoading = tab === "pages" ? pagesLoading : postsLoading;
-  const hasQuery = debouncedQuery.trim().length >= 1;
   const results = tab === "pages" ? pages : posts;
+
+  const chipClass = (active: boolean) =>
+    `px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors duration-200 shrink-0 cursor-pointer ${
+      active
+        ? "bg-[#F7C12B] border-[#F7C12B] text-black"
+        : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white"
+    }`;
 
   return (
     <div className="min-h-screen bg-black pb-24">
-      {/* Centered container */}
       <div className="max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto">
-        {/* ── Header ── */}
         <div className="flex items-center gap-3 px-4 pt-5 pb-4 lg:px-6 lg:pt-8 sticky top-0 bg-black z-10">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -123,7 +181,6 @@ const SearchPage = () => {
           </div>
         </div>
 
-        {/* ── Tabs ── */}
         <div className="flex items-center border-b border-zinc-800 px-4 lg:px-6">
           {(["pages", "posts"] as SearchTab[]).map((t) => (
             <button
@@ -140,40 +197,123 @@ const SearchPage = () => {
           ))}
         </div>
 
-        {/* ── Content ── */}
+        {/* ── Filters ── */}
+        <div className="px-4 pt-4 lg:px-6 flex flex-col gap-3 border-b border-zinc-900 pb-4">
+          {tab === "pages" && (
+            <>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {PAGE_CATEGORIES.map((cat) => {
+                  const val = cat === "All" ? "" : cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setPageCategory(val)}
+                      className={chipClass(pageCategory === val)}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                value={pageTag}
+                onChange={(e) => setPageTag(e.target.value)}
+                placeholder="Filter by page tag..."
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+              />
+            </>
+          )}
+
+          {tab === "posts" && (
+            <>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {POST_TYPES.map(({ value, label }) => (
+                  <button
+                    key={value || "all"}
+                    type="button"
+                    onClick={() => setPostType(value)}
+                    className={chipClass(postType === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {PAGE_CATEGORIES.map((cat) => {
+                  const val = cat === "All" ? "" : cat;
+                  return (
+                    <button
+                      key={`post-${cat}`}
+                      type="button"
+                      onClick={() => setPostCategory(val)}
+                      className={chipClass(postCategory === val)}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                value={postTag}
+                onChange={(e) => setPostTag(e.target.value)}
+                placeholder="Filter by post tag..."
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  placeholder="Min price"
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  placeholder="Max price"
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
         <div className="px-4 pt-5 lg:px-6 lg:pt-8">
-          {/* Empty state */}
-          {!hasQuery && (
+          {!hasActiveCriteria && (
             <div className="flex flex-col items-center gap-3 py-20">
               <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
                 <Search size={24} className="text-zinc-600" />
               </div>
-              <p className="text-zinc-500 text-sm lg:text-base">
-                Search for{" "}
+              <p className="text-zinc-500 text-sm lg:text-base text-center">
+                Search or use filters to find{" "}
                 {tab === "pages" ? "restaurants and pages" : "posts and food"}
               </p>
             </div>
           )}
 
-          {/* Loading */}
-          {hasQuery && isLoading && (
+          {hasActiveCriteria && isLoading && (
             <div className="flex justify-center py-20">
               <Spinner size="md" />
             </div>
           )}
 
-          {/* No results */}
-          {hasQuery && !isLoading && results.length === 0 && (
+          {hasActiveCriteria && !isLoading && results.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-20">
               <p className="text-zinc-500 text-sm lg:text-base">
-                No {tab} found for "{debouncedQuery}"
+                No {tab} found
+                {debouncedQuery.trim() ? ` for "${debouncedQuery}"` : ""}
               </p>
             </div>
           )}
 
-          {/* Results */}
           <AnimatePresence mode="wait">
-            {hasQuery && !isLoading && results.length > 0 && (
+            {hasActiveCriteria && !isLoading && results.length > 0 && (
               <motion.div
                 key={`${tab}-${debouncedQuery}`}
                 initial={{ opacity: 0 }}
@@ -181,7 +321,6 @@ const SearchPage = () => {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Pages → list stays single column (better UX) */}
                 {tab === "pages" && (
                   <div className="flex flex-col">
                     {pages.map((page) => (
@@ -194,7 +333,6 @@ const SearchPage = () => {
                   </div>
                 )}
 
-                {/* Posts → grid on larger screens */}
                 {tab === "posts" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                     {posts.map((post) => (
