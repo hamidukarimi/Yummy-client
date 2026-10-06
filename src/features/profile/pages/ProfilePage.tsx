@@ -1,5 +1,10 @@
 import { motion } from "framer-motion";
-import { MoreHorizontal, ChevronRight, KeyRound } from "lucide-react";
+import {
+  MoreHorizontal,
+  ChevronRight,
+  KeyRound,
+  MonitorSmartphone,
+} from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Spinner from "@/components/ui/Spinner";
@@ -181,6 +186,18 @@ const ProfilePage = () => {
                 title="Change password" 
                 subtitle="Update your sign-in password" 
                 onClick={() => navigate("/profile/change-password")} 
+              />
+
+              <QuickLink
+                icon={
+                  <MonitorSmartphone
+                    size={22}
+                    className="text-[#F7C12B]"
+                  />
+                }
+                title="Active sessions"
+                subtitle="Review and log out other devices"
+                onClick={() => navigate("/profile/sessions")}
               />
             </motion.div>
 

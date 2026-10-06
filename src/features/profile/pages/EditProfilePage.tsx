@@ -32,6 +32,8 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
   const [gender, setGender] = useState<"male" | "female" | "other" | "">(
     user.gender ?? ""
   );
+  const [city, setCity] = useState(user.location?.city ?? "");
+  const [country, setCountry] = useState(user.location?.country ?? "");
 
   useEffect(() => {
     if (isSuccess) {
@@ -48,6 +50,13 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
       ...(avatar    !== (user.avatar ?? "") && avatar.trim() && { avatar }),
       ...(birthday  && { birthday }),
       ...(gender    && { gender }),
+      ...((city !== (user.location?.city ?? "") ||
+        country !== (user.location?.country ?? "")) && {
+        location: {
+          city: city.trim(),
+          country: country.trim(),
+        },
+      }),
     });
   };
 
@@ -181,6 +190,29 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
                 {g}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* ── Location ── */}
+        <div className="flex flex-col gap-3">
+          <label className={labelClass}>Location</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="City"
+              maxLength={100}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="Country"
+              maxLength={100}
+              className={inputClass}
+            />
           </div>
         </div>
 

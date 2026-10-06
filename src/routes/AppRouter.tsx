@@ -35,6 +35,7 @@ import DiscoverPages from "@/pages/DiscoverPagesPage";
 import Saved from "@/pages/SavedPage";
 import EditProfile from "@/pages/EditProfilePage";
 import ChangePassword from "@/pages/ChangePasswordPage";
+import Sessions from "@/pages/SessionsPage";
 import HomeNavbar from "@/components/layout/HomeNavbar";
 
 const CreatePostModalLayer = () => {
@@ -80,6 +81,7 @@ const AppRouter = () => {
                   path="/profile/change-password"
                   element={<ChangePassword />}
                 />
+                <Route path="/profile/sessions" element={<Sessions />} />
               </Route>
 
               {/* Page view is public */}

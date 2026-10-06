@@ -18,6 +18,10 @@ export interface UpdateProfilePayload {
   avatar?:    string;
   birthday?:  string;
   gender?:    "male" | "female" | "other";
+  location?: {
+    city?: string;
+    country?: string;
+  };
 }
 
 export const updateProfileService = async (

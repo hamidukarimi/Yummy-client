@@ -7,6 +7,9 @@ export const ENDPOINTS = {
     logout: `${BASE}/logout`,
     logoutAll: `${BASE}/logout/all`,
     refreshToken: `${BASE}/token`,
+    sessions: `${BASE}/sessions`,
+    revokeSession: (id: string) => `${BASE}/sessions/${id}`,
+    logoutOtherDevices: `${BASE}/sessions/others`,
   },
   user: {
     me: `${BASE}/users/me`,
