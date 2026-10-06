@@ -11,27 +11,9 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Toggle from "@/components/ui/Toggle";
+import { PAGE_CATEGORIES } from "@/features/pages/constants/pageCategories";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  "Fast Food",
-  "Pizza",
-  "Sushi",
-  "Burgers",
-  "Salads",
-  "Desserts",
-  "Café",
-  "Seafood",
-  "Vegetarian",
-  "Vegan",
-  "Iranian",
-  "Italian",
-  "Chinese",
-  "Indian",
-  "Mexican",
-  "Other",
-];
 
 const DAYS = [
   { key: "monday", label: "Monday" },
@@ -264,7 +246,7 @@ const CreatePageForm = ({ onClose }: CreatePageFormProps) => {
                   <option value="" className="bg-zinc-900">
                     Page category
                   </option>
-                  {CATEGORIES.map((cat) => (
+                  {PAGE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat} className="bg-zinc-900">
                       {cat}
                     </option>

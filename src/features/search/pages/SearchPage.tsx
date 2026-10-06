@@ -7,30 +7,11 @@ import PostCard from "@/features/posts/components/PostCard";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
 import type { PostType } from "@/features/posts/types/post.types";
+import { PAGE_CATEGORIES } from "@/features/pages/constants/pageCategories";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SearchTab = "pages" | "posts";
-
-const PAGE_CATEGORIES = [
-  "All",
-  "Fast Food",
-  "Cafe",
-  "Restaurant",
-  "Pizza",
-  "Sushi",
-  "Bakery",
-  "Dessert",
-  "Vegan",
-  "Seafood",
-  "BBQ",
-  "Steakhouse",
-  "Indian",
-  "Chinese",
-  "Italian",
-  "Mexican",
-  "Other",
-];
 
 const POST_TYPES: { value: PostType | ""; label: string }[] = [
   { value: "", label: "All types" },
@@ -202,7 +183,7 @@ const SearchPage = () => {
           {tab === "pages" && (
             <>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {PAGE_CATEGORIES.map((cat) => {
+                {["All", ...PAGE_CATEGORIES].map((cat) => {
                   const val = cat === "All" ? "" : cat;
                   return (
                     <button
@@ -241,7 +222,7 @@ const SearchPage = () => {
                 ))}
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {PAGE_CATEGORIES.map((cat) => {
+                {["All", ...PAGE_CATEGORIES].map((cat) => {
                   const val = cat === "All" ? "" : cat;
                   return (
                     <button

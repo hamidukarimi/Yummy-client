@@ -8,30 +8,11 @@ import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
 import useFollowedPages from "@/features/pages/hooks/useFollowedPages";
 import { useCreatePageModal } from "@/context/CreatePostModalContext";
+import { PAGE_CATEGORIES } from "@/features/pages/constants/pageCategories";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 type Tab = "my" | "all" | "followed";
-
-const CATEGORIES = [
-  "All",
-  "Fast Food",
-  "Cafe",
-  "Restaurant",
-  "Pizza",
-  "Sushi",
-  "Bakery",
-  "Dessert",
-  "Vegan",
-  "Seafood",
-  "BBQ",
-  "Steakhouse",
-  "Indian",
-  "Chinese",
-  "Italian",
-  "Mexican",
-  "Other",
-];
 
 // ─── Sub Components ───────────────────────────────────────────────────────────
 
@@ -253,7 +234,7 @@ const MyPagesPage = () => {
 
             {/* Category Filter */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {CATEGORIES.map((cat) => {
+              {["All", ...PAGE_CATEGORIES].map((cat) => {
                 const val = cat === "All" ? "" : cat;
                 const isActive = category === val;
                 return (

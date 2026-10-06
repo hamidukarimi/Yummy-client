@@ -10,14 +10,9 @@ import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage, WorkingHours } from "@/features/pages/types/page.types";
+import { PAGE_CATEGORIES } from "@/features/pages/constants/pageCategories";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  "Fast Food", "Cafe", "Restaurant", "Pizza", "Sushi",
-  "Bakery", "Dessert", "Vegan", "Seafood", "BBQ",
-  "Steakhouse", "Indian", "Chinese", "Italian", "Mexican", "Other",
-];
 
 const DAYS = [
   { key: "monday",    label: "Monday"    },
@@ -245,7 +240,7 @@ const InnerForm = ({ page, slug, onSuccess }: InnerFormProps) => {
             onChange={(e) => setCategory(e.target.value)}
             className={`${inputClass} appearance-none`}
           >
-            {CATEGORIES.map((cat) => (
+            {PAGE_CATEGORIES.map((cat) => (
               <option key={cat} value={cat} className="bg-zinc-900">
                 {cat}
               </option>
