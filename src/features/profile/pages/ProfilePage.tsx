@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MoreHorizontal, UserCircle, ChevronRight, KeyRound } from "lucide-react";
+import { MoreHorizontal, ChevronRight, KeyRound } from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Spinner from "@/components/ui/Spinner";

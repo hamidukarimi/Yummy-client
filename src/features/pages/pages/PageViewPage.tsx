@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronLeft,
   MapPin,
   Phone,
   Globe,
@@ -10,7 +9,6 @@ import {
   Pencil,
   BarChart2,
   Bookmark,
-  Eye,
   Check,
   Search,
 } from "lucide-react";
@@ -150,7 +148,6 @@ const PageViewPage = () => {
 
   const {
     data: pendingData,
-    isLoading: pendingLoading,
     refetch: refetchPending,
   } = useQuery({
     queryKey: ["posts", "page", pageId, "pending"],

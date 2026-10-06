@@ -25,14 +25,12 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isPageView = /^\/pages\/[^/]+$/.test(location.pathname);
   const isPostDetail = /^\/posts\/[^/]+$/.test(location.pathname);
   const isPostEdit = /^\/posts\/[^/]+\/edit$/.test(location.pathname);
   const isPageEdit = /^\/pages\/[^/]+\/edit$/.test(location.pathname);
 
   if (
     HIDDEN_ON.includes(location.pathname) ||
-    // isPageView ||
     isPostDetail ||
     isPostEdit ||
     isPageEdit

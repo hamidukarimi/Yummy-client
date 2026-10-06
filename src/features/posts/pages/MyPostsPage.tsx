@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import useMyPosts from "@/features/posts/hooks/useMyPosts";
 import { deletePostService } from "@/features/posts/services/post.service";
 import PostCard from "@/features/posts/components/PostCard";

@@ -81,7 +81,6 @@ const CreatePageForm = ({ onClose }: CreatePageFormProps) => {
     control,
     watch,
     setValue,
-    getValues,
     formState: { errors },
   } = useForm<CreatePageFormValues>({
     resolver: zodResolver(createPageSchema),
