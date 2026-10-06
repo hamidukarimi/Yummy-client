@@ -99,7 +99,7 @@ const FeedPage = () => {
           </div>
         )}
 
-      {/* ── For You empty state (logged in but no followed pages) ── */}
+      {/* ── For You empty state (logged in without recommendation signals) ── */}
       {activeFilter.type === "for-you" &&
         isAuthenticated &&
         !isLoading &&
@@ -112,7 +112,7 @@ const FeedPage = () => {
               Your feed is empty
             </p>
             <p className="text-zinc-500 text-xs text-center">
-              Follow some pages to see their posts here.
+              Follow pages, or like and save posts to personalize your feed.
             </p>
           </div>
         )}
