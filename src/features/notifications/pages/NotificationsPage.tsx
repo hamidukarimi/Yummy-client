@@ -174,7 +174,9 @@ const NotificationsPage = () => {
       key: "posts",
       label: "Posts",
       filter: (n) =>
-        ["post_approved", "post_rejected", "new_post"].includes(n.type),
+        ["post_approved", "post_rejected", "new_post", "new_like"].includes(
+          n.type,
+        ),
     },
     { key: "pages", label: "Pages", filter: (n) => n.type === "new_follower" },
   ];
