@@ -7,6 +7,7 @@ import type {
   GetAllPagesParams,
   PageViewData,
   PaginatedPages,
+  PaginatedVerificationRequests,
   UpdatePagePayload,
 } from "@/features/pages/types/page.types";
 
@@ -75,6 +76,39 @@ export const updatePageService = async (
 ): Promise<ApiPage> => {
   const response = await api.put<ApiResponse<{ page: ApiPage }>>(
     ENDPOINTS.pages.update(slug),
+    payload,
+  );
+  return response.data.data.page;
+};
+
+export const requestPageVerificationService = async (
+  slug: string,
+): Promise<ApiPage> => {
+  const response = await api.post<ApiResponse<{ page: ApiPage }>>(
+    ENDPOINTS.pages.requestVerification(slug),
+  );
+  return response.data.data.page;
+};
+
+export const getPendingPageVerificationsService =
+  async (): Promise<PaginatedVerificationRequests> => {
+    const response = await api.get<
+      ApiResponse<PaginatedVerificationRequests>
+    >(ENDPOINTS.pages.pendingVerifications);
+    return response.data.data;
+  };
+
+export interface ReviewPageVerificationPayload {
+  decision: "approved" | "rejected";
+  rejectionReason?: string;
+}
+
+export const reviewPageVerificationService = async (
+  pageId: string,
+  payload: ReviewPageVerificationPayload,
+): Promise<ApiPage> => {
+  const response = await api.patch<ApiResponse<{ page: ApiPage }>>(
+    ENDPOINTS.pages.reviewVerification(pageId),
     payload,
   );
   return response.data.data.page;

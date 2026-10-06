@@ -28,6 +28,12 @@ export interface PageOwner {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+export type PageVerificationStatus =
+  | "unverified"
+  | "pending"
+  | "verified"
+  | "rejected";
+
 export interface ApiPage {
   id:           string;
   _id:          string;
@@ -48,6 +54,10 @@ export interface ApiPage {
   };
   workingHours: WorkingHours;
   isVerified:   boolean;
+  verificationStatus: PageVerificationStatus;
+  verificationRequestedAt?: string;
+  verificationReviewedAt?: string;
+  verificationRejectionReason?: string;
   isActive:     boolean;
   followers:    string[];
   createdAt:    string;
@@ -61,6 +71,13 @@ export interface PageViewData {
   followersCount: number;
   isFollowing:    boolean;
   isOwner:        boolean;
+}
+
+export interface PaginatedVerificationRequests {
+  pages: ApiPage[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 // ─── Create Page Payload ──────────────────────────────────────────────────────

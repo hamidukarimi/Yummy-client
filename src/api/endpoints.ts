@@ -25,6 +25,11 @@ export const ENDPOINTS = {
     bySlug: (slug: string) => `${BASE}/pages/${slug}`,
     follow: (slug: string) => `${BASE}/pages/${slug}/follow`,
     update: (slug: string) => `/api/pages/${slug}`,
+    requestVerification: (slug: string) =>
+      `${BASE}/pages/${slug}/verification`,
+    pendingVerifications: `${BASE}/pages/admin/verification-requests`,
+    reviewVerification: (id: string) =>
+      `${BASE}/pages/admin/${id}/verification`,
   },
 
   posts: {

@@ -20,6 +20,7 @@ import {
 } from "@/features/posts/services/post.service";
 import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
+import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
 import PostCard from "@/features/posts/components/PostCard";
 import MenuCard from "@/features/posts/components/MenuCard";
@@ -29,6 +30,7 @@ import type {
 } from "@/features/pages/types/page.types";
 import PendingPostCard from "@/features/posts/components/PendingPostCard";
 import { useCreatePostModal } from "@/context/CreatePostModalContext";
+import { useRequestPageVerification } from "@/features/pages/hooks/usePageVerification";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -126,6 +128,12 @@ const PageViewPage = () => {
   const { toggleFollow, isPending: isFollowPending } = useFollowPage(
     slug ?? "",
   );
+  const {
+    requestVerification,
+    isPending: isVerificationPending,
+    error: verificationError,
+    isSuccess: verificationRequested,
+  } = useRequestPageVerification(slug ?? "");
 
   const pageId = data?.page._id;
   const { data: postsData, isLoading: postsLoading } = useQuery({
@@ -186,6 +194,9 @@ const PageViewPage = () => {
 
   const { page, followersCount, isFollowing } = data;
   const openStatus = getOpenStatus(page.workingHours);
+  const verificationStatus = page.isVerified
+    ? "verified"
+    : (page.verificationStatus ?? "unverified");
 
   return (
     <div className="min-h-screen bg-black pb-24 ">
@@ -301,6 +312,66 @@ const PageViewPage = () => {
             </>
           )}
         </motion.div>
+
+        {/* ── Owner Verification Status ── */}
+        {isOwner && (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 flex flex-col gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-white">
+                Page verification
+              </h2>
+              {verificationStatus === "verified" && (
+                <p className="text-xs text-green-400 mt-1">
+                  This page is verified.
+                </p>
+              )}
+              {verificationStatus === "pending" && (
+                <p className="text-xs text-yellow-400 mt-1">
+                  Your verification request is awaiting admin review.
+                </p>
+              )}
+              {verificationStatus === "rejected" && (
+                <p className="text-xs text-red-400 mt-1">
+                  Request rejected
+                  {page.verificationRejectionReason
+                    ? `: ${page.verificationRejectionReason}`
+                    : "."}
+                </p>
+              )}
+              {verificationStatus === "unverified" && (
+                <p className="text-xs text-zinc-500 mt-1">
+                  Submit this page for admin verification.
+                </p>
+              )}
+            </div>
+
+            {verificationError && (
+              <Alert variant="error" message={verificationError.message} />
+            )}
+            {verificationRequested && (
+              <Alert
+                variant="success"
+                message="Verification request submitted."
+              />
+            )}
+
+            {(verificationStatus === "unverified" ||
+              verificationStatus === "rejected") && (
+              <button
+                type="button"
+                onClick={() => requestVerification()}
+                disabled={isVerificationPending}
+                className="self-start rounded-xl bg-[#F7C12B] px-4 py-2 text-xs font-semibold text-black disabled:opacity-40 cursor-pointer"
+              >
+                {isVerificationPending
+                  ? "Submitting..."
+                  : verificationStatus === "rejected"
+                    ? "Request review again"
+                    : "Request verification"}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ── Description ── */}
         {page.description && (

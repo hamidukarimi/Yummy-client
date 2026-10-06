@@ -36,6 +36,7 @@ import Saved from "@/pages/SavedPage";
 import EditProfile from "@/pages/EditProfilePage";
 import ChangePassword from "@/pages/ChangePasswordPage";
 import Sessions from "@/pages/SessionsPage";
+import PageVerificationAdmin from "@/pages/PageVerificationAdminPage";
 import HomeNavbar from "@/components/layout/HomeNavbar";
 
 const CreatePostModalLayer = () => {
@@ -82,6 +83,10 @@ const AppRouter = () => {
                   element={<ChangePassword />}
                 />
                 <Route path="/profile/sessions" element={<Sessions />} />
+                <Route
+                  path="/admin/page-verifications"
+                  element={<PageVerificationAdmin />}
+                />
               </Route>
 
               {/* Page view is public */}

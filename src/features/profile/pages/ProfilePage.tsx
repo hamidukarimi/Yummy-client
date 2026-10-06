@@ -4,6 +4,7 @@ import {
   ChevronRight,
   KeyRound,
   MonitorSmartphone,
+  BadgeCheck,
 } from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
@@ -199,6 +200,20 @@ const ProfilePage = () => {
                 subtitle="Review and log out other devices"
                 onClick={() => navigate("/profile/sessions")}
               />
+
+              {authUser?.role === "admin" && (
+                <QuickLink
+                  icon={
+                    <BadgeCheck
+                      size={22}
+                      className="text-[#F7C12B]"
+                    />
+                  }
+                  title="Page verification"
+                  subtitle="Review pending restaurant verification requests"
+                  onClick={() => navigate("/admin/page-verifications")}
+                />
+              )}
             </motion.div>
 
             {/* Logout Section */}
