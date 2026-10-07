@@ -42,6 +42,9 @@ export const ENDPOINTS = {
     delete: (id: string) => `/api/posts/${id}`,
     adminPending: "/api/posts/admin/pending",
     adminReview: (id: string) => `/api/posts/admin/${id}/review`,
+    report: (id: string) => `/api/posts/${id}/report`,
+    adminReports: "/api/posts/admin/reports",
+    reviewReport: (id: string) => `/api/posts/admin/reports/${id}`,
   },
 
   notifications: {

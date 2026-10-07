@@ -5,6 +5,8 @@ import {
   KeyRound,
   MonitorSmartphone,
   BadgeCheck,
+  ClipboardCheck,
+  Flag,
 } from "lucide-react";
 import useProfile from "@/features/profile/hooks/useProfile";
 import LogoutButton from "@/components/ui/LogoutButton";
@@ -202,17 +204,41 @@ const ProfilePage = () => {
               />
 
               {authUser?.role === "admin" && (
-                <QuickLink
-                  icon={
-                    <BadgeCheck
-                      size={22}
-                      className="text-[#F7C12B]"
-                    />
-                  }
-                  title="Page verification"
-                  subtitle="Review pending restaurant verification requests"
-                  onClick={() => navigate("/admin/page-verifications")}
-                />
+                <>
+                  <QuickLink
+                    icon={
+                      <ClipboardCheck
+                        size={22}
+                        className="text-[#F7C12B]"
+                      />
+                    }
+                    title="Post review"
+                    subtitle="Approve or reject posts waiting to go live"
+                    onClick={() => navigate("/admin/post-reviews")}
+                  />
+                  <QuickLink
+                    icon={
+                      <Flag
+                        size={22}
+                        className="text-[#F7C12B]"
+                      />
+                    }
+                    title="Reported posts"
+                    subtitle="Review in-app reports from users"
+                    onClick={() => navigate("/admin/reports")}
+                  />
+                  <QuickLink
+                    icon={
+                      <BadgeCheck
+                        size={22}
+                        className="text-[#F7C12B]"
+                      />
+                    }
+                    title="Page verification"
+                    subtitle="Review pending restaurant verification requests"
+                    onClick={() => navigate("/admin/page-verifications")}
+                  />
+                </>
               )}
             </motion.div>
 

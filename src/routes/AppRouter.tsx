@@ -37,6 +37,8 @@ import EditProfile from "@/pages/EditProfilePage";
 import ChangePassword from "@/pages/ChangePasswordPage";
 import Sessions from "@/pages/SessionsPage";
 import PageVerificationAdmin from "@/pages/PageVerificationAdminPage";
+import AdminPostReview from "@/pages/AdminPostReviewPage";
+import AdminReports from "@/pages/AdminReportsPage";
 import HomeNavbar from "@/components/layout/HomeNavbar";
 
 const CreatePostModalLayer = () => {
@@ -87,6 +89,11 @@ const AppRouter = () => {
                   path="/admin/page-verifications"
                   element={<PageVerificationAdmin />}
                 />
+                <Route
+                  path="/admin/post-reviews"
+                  element={<AdminPostReview />}
+                />
+                <Route path="/admin/reports" element={<AdminReports />} />
               </Route>
 
               {/* Page view is public */}
