@@ -8,9 +8,7 @@ import {
   Share2,
   Pencil,
   BarChart2,
-  Bookmark,
   Check,
-  Search,
 } from "lucide-react";
 import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
@@ -23,7 +21,8 @@ import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
 import PostCard from "@/features/posts/components/PostCard";
-import MenuCard from "@/features/posts/components/MenuCard";
+import PageMenu from "@/features/pages/components/PageMenu";
+import PageReviews from "@/features/pages/components/PageReviews";
 import type {
   WorkingHours,
   WorkingHoursDay,
@@ -34,7 +33,7 @@ import { useRequestPageVerification } from "@/features/pages/hooks/usePageVerifi
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-type PageTab = "posts" | "menu" | "hours";
+type PageTab = "posts" | "menu" | "reviews" | "hours";
 
 const DAYS = [
   { key: "monday", label: "Monday" },
@@ -114,7 +113,6 @@ const PageViewPage = () => {
   const navigate = useNavigate();
   const { openModal } = useCreatePostModal();
   const [tab, setTab] = useState<PageTab>("posts");
-  const [menuSearch, setMenuSearch] = useState("");
 
   const handleCreatePost = () => {
     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
@@ -165,16 +163,6 @@ const PageViewPage = () => {
 
   const pendingPosts =
     pendingData?.posts.filter((p) => p.status === "pending") ?? [];
-
-  const filteredMenuItems = menuSearch.trim()
-    ? menuItems.filter((p) =>
-        [p.title, p.content, ...p.tags]
-          .filter(Boolean)
-          .some((field) =>
-            field!.toLowerCase().includes(menuSearch.toLowerCase()),
-          ),
-      )
-    : menuItems;
 
   if (isLoading) {
     return (
@@ -277,10 +265,14 @@ const PageViewPage = () => {
                   {followersCount}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 opacity-50 cursor-not-allowed">
-                <Bookmark size={15} className="text-zinc-400" />
-                <span className="text-zinc-400 text-sm">Insights</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/pages/${page.slug}/insights`)}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm cursor-pointer hover:border-zinc-600"
+              >
+                <BarChart2 size={15} className="text-zinc-400" />
+                <span>Insights</span>
+              </button>
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => void handleShare(page.name, page.slug)}
@@ -449,7 +441,7 @@ const PageViewPage = () => {
 
         {/* ── Tabs ── */}
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-0 mt-2">
-          {(["posts", "menu", "hours"] as PageTab[]).map((t) => (
+          {(["posts", "menu", "reviews", "hours"] as PageTab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -533,7 +525,6 @@ const PageViewPage = () => {
             </motion.div>
           )}
 
-          {/* ── Menu Tab ── */}
           {tab === "menu" && (
             <motion.div
               key="menu"
@@ -541,65 +532,26 @@ const PageViewPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col gap-4"
             >
-              {/* Search */}
-              {menuItems.length > 0 && (
-                <div className="relative">
-                  <Search
-                    size={15}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
-                  />
-                  <input
-                    type="text"
-                    value={menuSearch}
-                    onChange={(e) => setMenuSearch(e.target.value)}
-                    placeholder="Search menu..."
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
-                  />
-                </div>
-              )}
+              <PageMenu
+                slug={page.slug}
+                isOwner={isOwner}
+                menuItems={menuItems}
+                menuLoading={menuLoading}
+                onCreatePost={handleCreatePost}
+              />
+            </motion.div>
+          )}
 
-              {menuLoading && (
-                <div className="flex justify-center py-10">
-                  <Spinner size="md" />
-                </div>
-              )}
-
-              {!menuLoading && menuItems.length === 0 && (
-                <div className="flex flex-col items-center gap-3 py-12">
-                  <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center">
-                    <span className="text-2xl">🍽️</span>
-                  </div>
-                  <p className="text-white font-semibold text-sm">
-                    No menu items yet
-                  </p>
-                  {isOwner && (
-                    <button
-                      onClick={handleCreatePost}
-                      className="text-[#F7C12B] text-sm hover:underline"
-                    >
-                      Add your first menu item
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {!menuLoading &&
-                filteredMenuItems.length === 0 &&
-                menuItems.length > 0 && (
-                  <p className="text-zinc-500 text-sm text-center py-8">
-                    No items match your search.
-                  </p>
-                )}
-
-              {!menuLoading && filteredMenuItems.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {filteredMenuItems.map((post) => (
-                    <MenuCard key={post._id} post={post} />
-                  ))}
-                </div>
-              )}
+          {tab === "reviews" && (
+            <motion.div
+              key="reviews"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PageReviews slug={page.slug} isOwner={isOwner} />
             </motion.div>
           )}
 

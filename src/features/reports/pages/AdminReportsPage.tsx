@@ -7,9 +7,11 @@ import useAdminReports, {
   adminReportsQueryKey,
 } from "@/features/reports/hooks/useAdminReports";
 import { deleteCommentService } from "@/features/comments/services/comment.service";
+import { deleteReviewService } from "@/features/pages/services/review.service";
 import { parseApiError } from "@/utils/errorHandler";
 import type {
   ReportComment,
+  ReportReview,
   ReportPost,
   ReportReason,
   ReportReporter,
@@ -29,6 +31,18 @@ const AdminReportsPage = () => {
     mutationFn: async (input: { postId: string; commentId: string }) => {
       try {
         await deleteCommentService(input.postId, input.commentId);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminReportsQueryKey });
+    },
+  });
+  const removeReview = useMutation({
+    mutationFn: async (input: { slug: string; reviewId: string }) => {
+      try {
+        await deleteReviewService(input.slug, input.reviewId);
       } catch (error) {
         throw parseApiError(error);
       }
@@ -106,6 +120,10 @@ const AdminReportsPage = () => {
               report.comment && typeof report.comment === "object"
                 ? (report.comment as ReportComment)
                 : undefined;
+            const review =
+              report.review && typeof report.review === "object"
+                ? (report.review as ReportReview)
+                : undefined;
             const postId =
               typeof report.post === "object" ? report.post._id : report.post;
             const isReviewing = reviewingReportId === report._id;
@@ -130,8 +148,20 @@ const AdminReportsPage = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-white font-semibold truncate">
-                      {post?.title ?? "Untitled post"}
+                      {review
+                        ? `${review.page?.name ?? "Page"} · ${review.rating}/5`
+                        : (post?.title ?? "Untitled post")}
                     </h2>
+                    {review?.page?.slug && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/pages/${review.page?.slug}`)}
+                        className="text-zinc-500 hover:text-white cursor-pointer"
+                        aria-label="Open reported page"
+                      >
+                        <ExternalLink size={14} />
+                      </button>
+                    )}
                     {post && (
                       <button
                         type="button"
@@ -155,6 +185,12 @@ const AdminReportsPage = () => {
                   </p>
                 )}
 
+                {review?.content && (
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    Review: {review.content}
+                  </p>
+                )}
+
                 {post?.content && (
                   <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3">
                     {post.content}
@@ -173,7 +209,28 @@ const AdminReportsPage = () => {
                 )}
 
                 <div className="flex flex-col gap-2">
-                  {comment && (
+                  {review?.page?.slug && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeReview.mutate({
+                          slug: review.page!.slug,
+                          reviewId: review._id,
+                        })
+                      }
+                      disabled={
+                        removeReview.isPending &&
+                        removeReview.variables?.reviewId === review._id
+                      }
+                      className="rounded-xl border border-red-500/40 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-40 cursor-pointer"
+                    >
+                      {removeReview.isPending &&
+                      removeReview.variables?.reviewId === review._id
+                        ? "Removing..."
+                        : "Remove review"}
+                    </button>
+                  )}
+                  {comment && postId && (
                     <button
                       type="button"
                       onClick={() =>

@@ -40,6 +40,7 @@ import PageVerificationAdmin from "@/pages/PageVerificationAdminPage";
 import AdminPostReview from "@/pages/AdminPostReviewPage";
 import AdminReports from "@/pages/AdminReportsPage";
 import Tag from "@/pages/TagPage";
+import Insights from "@/pages/PageInsightsPage";
 import HomeNavbar from "@/components/layout/HomeNavbar";
 
 const CreatePostModalLayer = () => {
@@ -77,6 +78,7 @@ const AppRouter = () => {
                 <Route path="/posts/create" element={<CreatePost />} />
                 <Route path="/posts/:id/edit" element={<EditPost />} />
                 <Route path="/pages/:slug/edit" element={<EditPage />} />
+                <Route path="/pages/:slug/insights" element={<Insights />} />
                 <Route path="/my-posts" element={<MyPosts />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/saved" element={<Saved />} />

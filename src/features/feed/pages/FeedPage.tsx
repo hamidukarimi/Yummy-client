@@ -112,7 +112,7 @@ const FeedPage = () => {
               Your feed is empty
             </p>
             <p className="text-zinc-500 text-xs text-center">
-              Follow pages, or like and save posts to personalize your feed.
+              Follow pages, like and save posts, or set taste and diet preferences to personalize your feed.
             </p>
           </div>
         )}

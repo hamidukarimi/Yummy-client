@@ -30,6 +30,13 @@ export const ENDPOINTS = {
     pendingVerifications: `${BASE}/pages/admin/verification-requests`,
     reviewVerification: (id: string) =>
       `${BASE}/pages/admin/${id}/verification`,
+    menu: (slug: string) => `${BASE}/pages/${slug}/menu`,
+    insights: (slug: string) => `${BASE}/pages/${slug}/insights`,
+    reviews: (slug: string) => `${BASE}/pages/${slug}/reviews`,
+    review: (slug: string, reviewId: string) =>
+      `${BASE}/pages/${slug}/reviews/${reviewId}`,
+    reportReview: (slug: string, reviewId: string) =>
+      `${BASE}/pages/${slug}/reviews/${reviewId}/report`,
   },
 
   posts: {

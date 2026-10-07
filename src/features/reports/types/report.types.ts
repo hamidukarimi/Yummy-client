@@ -29,11 +29,23 @@ export interface ReportComment {
   content: string;
 }
 
+export interface ReportReview {
+  _id: string;
+  rating: number;
+  content?: string;
+  page?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+}
+
 export interface ApiReport {
   _id: string;
   reporter: ReportReporter | string;
   post: ReportPost | string;
   comment?: ReportComment | string | null;
+  review?: ReportReview | string | null;
   reason: ReportReason;
   details?: string;
   status: ReportStatus;

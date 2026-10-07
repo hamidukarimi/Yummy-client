@@ -38,6 +38,7 @@ export interface ApiUser {
   isVerified: boolean;
   isActive: boolean;
   savedPosts: string[];
+  dietaryPreferences?: string[];
   createdAt: string;
   updatedAt: string;
 }

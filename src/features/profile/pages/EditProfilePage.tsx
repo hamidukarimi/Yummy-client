@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiUser } from "@/types/api.types";
+import { PAGE_CATEGORIES } from "@/features/pages/constants/pageCategories";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
   );
   const [city, setCity] = useState(user.location?.city ?? "");
   const [country, setCountry] = useState(user.location?.country ?? "");
+  const [dietary, setDietary] = useState<string[]>(user.dietaryPreferences ?? []);
 
   useEffect(() => {
     if (isSuccess) {
@@ -56,6 +58,10 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
           city: city.trim(),
           country: country.trim(),
         },
+      }),
+      ...(JSON.stringify(dietary) !==
+        JSON.stringify(user.dietaryPreferences ?? []) && {
+        dietaryPreferences: dietary,
       }),
     });
   };
@@ -213,6 +219,35 @@ const InnerForm = ({ user, onSuccess }: InnerFormProps) => {
               maxLength={100}
               className={inputClass}
             />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>Taste and diet</label>
+          <div className="flex flex-wrap gap-2">
+            {PAGE_CATEGORIES.map((preference) => {
+              const selected = dietary.includes(preference);
+              return (
+                <button
+                  key={preference}
+                  type="button"
+                  onClick={() =>
+                    setDietary((current) =>
+                      selected
+                        ? current.filter((item) => item !== preference)
+                        : [...current, preference],
+                    )
+                  }
+                  className={`px-3 py-1.5 rounded-full border text-xs cursor-pointer ${
+                    selected
+                      ? "bg-[#F7C12B] border-[#F7C12B] text-black"
+                      : "border-zinc-700 text-zinc-400"
+                  }`}
+                >
+                  {preference}
+                </button>
+              );
+            })}
           </div>
         </div>
 

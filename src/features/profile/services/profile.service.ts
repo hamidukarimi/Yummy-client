@@ -22,6 +22,7 @@ export interface UpdateProfilePayload {
     city?: string;
     country?: string;
   };
+  dietaryPreferences?: string[];
 }
 
 export const updateProfileService = async (
