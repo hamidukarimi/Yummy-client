@@ -24,10 +24,16 @@ export interface ReportPost {
   };
 }
 
+export interface ReportComment {
+  _id: string;
+  content: string;
+}
+
 export interface ApiReport {
   _id: string;
   reporter: ReportReporter | string;
   post: ReportPost | string;
+  comment?: ReportComment | string | null;
   reason: ReportReason;
   details?: string;
   status: ReportStatus;

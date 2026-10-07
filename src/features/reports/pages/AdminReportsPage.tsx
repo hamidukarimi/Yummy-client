@@ -1,9 +1,15 @@
 import { ChevronLeft, ExternalLink, Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
-import useAdminReports from "@/features/reports/hooks/useAdminReports";
+import useAdminReports, {
+  adminReportsQueryKey,
+} from "@/features/reports/hooks/useAdminReports";
+import { deleteCommentService } from "@/features/comments/services/comment.service";
+import { parseApiError } from "@/utils/errorHandler";
 import type {
+  ReportComment,
   ReportPost,
   ReportReason,
   ReportReporter,
@@ -18,6 +24,19 @@ const REASON_LABELS: Record<ReportReason, string> = {
 
 const AdminReportsPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const removeComment = useMutation({
+    mutationFn: async (input: { postId: string; commentId: string }) => {
+      try {
+        await deleteCommentService(input.postId, input.commentId);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminReportsQueryKey });
+    },
+  });
   const {
     reports,
     total,
@@ -83,7 +102,16 @@ const AdminReportsPage = () => {
               typeof report.post === "object"
                 ? (report.post as ReportPost)
                 : undefined;
+            const comment =
+              report.comment && typeof report.comment === "object"
+                ? (report.comment as ReportComment)
+                : undefined;
+            const postId =
+              typeof report.post === "object" ? report.post._id : report.post;
             const isReviewing = reviewingReportId === report._id;
+            const isRemoving =
+              removeComment.isPending &&
+              removeComment.variables?.commentId === comment?._id;
 
             return (
               <div
@@ -121,6 +149,12 @@ const AdminReportsPage = () => {
                   </p>
                 </div>
 
+                {comment && (
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    Comment: {comment.content}
+                  </p>
+                )}
+
                 {post?.content && (
                   <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3">
                     {post.content}
@@ -133,14 +167,36 @@ const AdminReportsPage = () => {
                   </p>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => reviewReport(report._id)}
-                  disabled={isReviewing}
-                  className="rounded-xl border border-zinc-700 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-zinc-900 disabled:opacity-40 cursor-pointer"
-                >
-                  {isReviewing ? "Updating..." : "Mark as reviewed"}
-                </button>
+                {removeComment.error &&
+                  removeComment.variables?.commentId === comment?._id && (
+                  <Alert variant="error" message={removeComment.error.message} />
+                )}
+
+                <div className="flex flex-col gap-2">
+                  {comment && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeComment.mutate({
+                          postId,
+                          commentId: comment._id,
+                        })
+                      }
+                      disabled={isRemoving}
+                      className="rounded-xl border border-red-500/40 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-40 cursor-pointer"
+                    >
+                      {isRemoving ? "Removing..." : "Remove comment"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => reviewReport(report._id)}
+                    disabled={isReviewing}
+                    className="rounded-xl border border-zinc-700 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-zinc-900 disabled:opacity-40 cursor-pointer"
+                  >
+                    {isReviewing ? "Updating..." : "Mark as reviewed"}
+                  </button>
+                </div>
               </div>
             );
           })}

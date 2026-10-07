@@ -18,6 +18,7 @@ import useLikePost from "@/features/posts/hooks/useLikePost";
 import useAuth from "@/hooks/useAuth";
 import Spinner from "@/components/ui/Spinner";
 import PostOptionsSheet from "@/features/posts/components/PostOptionsSheet";
+import PostComments from "@/features/comments/components/PostComments";
 import { deletePostService } from "@/features/posts/services/post.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -339,12 +340,14 @@ const PostDetailPage = () => {
             {post.tags.length > 0 && (
               <div className="px-4 flex flex-wrap gap-2">
                 {post.tags.map((tag) => (
-                  <span
+                  <button
                     key={tag}
-                    className="px-3 py-1 rounded-full border border-zinc-700 text-zinc-300 text-xs md:text-sm"
+                    type="button"
+                    onClick={() => navigate(`/tags/${encodeURIComponent(tag)}`)}
+                    className="px-3 py-1 rounded-full border border-zinc-700 text-zinc-300 text-xs md:text-sm hover:border-[#F7C12B] hover:text-[#F7C12B] cursor-pointer"
                   >
                     #{tag}
-                  </span>
+                  </button>
                 ))}
               </div>
             )}
@@ -376,6 +379,11 @@ const PostDetailPage = () => {
             </div>
 
             <div className="h-px bg-zinc-900 mx-4" />
+
+            <PostComments
+              postId={post._id}
+              canModerate={isPostOwner || user?.role === "admin"}
+            />
 
             {/* Cooking Request */}
             <div className="px-4 flex flex-col gap-3">

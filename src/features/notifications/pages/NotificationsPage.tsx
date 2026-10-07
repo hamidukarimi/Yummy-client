@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   UserPlus,
+  MessageCircle,
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
@@ -46,6 +47,8 @@ const getNotificationIcon = (type: NotificationType) => {
       return <XCircle size={18} className="text-red-400" />;
     case "new_follower":
       return <UserPlus size={18} className="text-blue-400" />;
+    case "new_comment":
+      return <MessageCircle size={18} className="text-[#F7C12B]" />;
     default:
       return <Bell size={18} className="text-zinc-400" />;
   }
@@ -174,7 +177,7 @@ const NotificationsPage = () => {
       key: "posts",
       label: "Posts",
       filter: (n) =>
-        ["post_approved", "post_rejected", "new_post", "new_like"].includes(
+        ["post_approved", "post_rejected", "new_post", "new_like", "new_comment"].includes(
           n.type,
         ),
     },

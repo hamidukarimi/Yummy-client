@@ -33,6 +33,8 @@ const useToggleSave = (postId: string) => {
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: savedPostsQueryKey });
+      void queryClient.invalidateQueries({ queryKey: ["saved", "collections"] });
+      void queryClient.invalidateQueries({ queryKey: ["saved", "collection"] });
     },
   });
 

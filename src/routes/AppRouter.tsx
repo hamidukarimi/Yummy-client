@@ -39,6 +39,7 @@ import Sessions from "@/pages/SessionsPage";
 import PageVerificationAdmin from "@/pages/PageVerificationAdminPage";
 import AdminPostReview from "@/pages/AdminPostReviewPage";
 import AdminReports from "@/pages/AdminReportsPage";
+import Tag from "@/pages/TagPage";
 import HomeNavbar from "@/components/layout/HomeNavbar";
 
 const CreatePostModalLayer = () => {
@@ -100,6 +101,7 @@ const AppRouter = () => {
               <Route path="/pages" element={<MyPages />} />
               <Route path="/pages/:slug" element={<PagePage />} />
               <Route path="/posts/:id" element={<PostDetail />} />
+              <Route path="/tags/:tag" element={<Tag />} />
               <Route path="/search" element={<Search />} />
               <Route path="/discover" element={<DiscoverPages />} />
 

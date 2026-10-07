@@ -3,7 +3,8 @@ export type NotificationType =
   | "post_rejected"
   | "new_follower"
   | "new_post"
-  | "new_like";
+  | "new_like"
+  | "new_comment";
 
 export interface RelatedPage {
   _id:  string;

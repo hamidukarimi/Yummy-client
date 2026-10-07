@@ -43,6 +43,11 @@ export const ENDPOINTS = {
     adminPending: "/api/posts/admin/pending",
     adminReview: (id: string) => `/api/posts/admin/${id}/review`,
     report: (id: string) => `/api/posts/${id}/report`,
+    comments: (id: string) => `/api/posts/${id}/comments`,
+    comment: (id: string, commentId: string) =>
+      `/api/posts/${id}/comments/${commentId}`,
+    reportComment: (id: string, commentId: string) =>
+      `/api/posts/${id}/comments/${commentId}/report`,
     adminReports: "/api/posts/admin/reports",
     reviewReport: (id: string) => `/api/posts/admin/reports/${id}`,
   },
@@ -68,5 +73,9 @@ export const ENDPOINTS = {
   saved: {
     toggle: (postId: string) => `/api/users/me/saved/${postId}`,
     all: "/api/users/me/saved",
+    collections: "/api/users/me/collections",
+    collection: (id: string) => `/api/users/me/collections/${id}`,
+    collectionPost: (id: string, postId: string) =>
+      `/api/users/me/collections/${id}/posts/${postId}`,
   },
 } as const;
