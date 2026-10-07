@@ -7,6 +7,7 @@ import {
   FileText,
   User,
   Bell,
+  Mail,
   Settings,
   ShieldCheck,
   X,
@@ -31,6 +32,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: <Home size={20} />, path: "/" },
+  { label: "Messages", icon: <Mail size={20} />, path: "/messages" },
   { label: "Saved", icon: <Bookmark size={20} />, path: "/saved" },
   { label: "Create Post", icon: <Plus size={20} />, path: "/posts/create" },
   { label: "Pages", icon: <FileText size={20} />, path: "/pages" },
@@ -83,7 +85,7 @@ const Sidebar = ({ isOpen, onOpen, onClose }: SidebarProps) => {
         </motion.button>
 
         <nav className="flex flex-col gap-4 mt-8">
-          {NAV_ITEMS.slice(0, 6).map((item) => (
+          {NAV_ITEMS.slice(0, 7).map((item) => (
             <button
               key={item.path}
               // CHANGE THIS LINE:

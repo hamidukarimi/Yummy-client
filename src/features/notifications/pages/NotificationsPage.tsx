@@ -10,6 +10,7 @@ import {
   XCircle,
   UserPlus,
   MessageCircle,
+  Mail,
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
@@ -55,6 +56,8 @@ const getNotificationIcon = (type: NotificationType) => {
       return <UserPlus size={18} className="text-blue-400" />;
     case "new_comment":
       return <MessageCircle size={18} className="text-[#F7C12B]" />;
+    case "new_message":
+      return <Mail size={18} className="text-[#F7C12B]" />;
     default:
       return <Bell size={18} className="text-zinc-400" />;
   }
@@ -165,6 +168,7 @@ const PREFERENCE_OPTIONS: { key: keyof NotificationPreferences; label: string }[
   { key: "new_post", label: "New posts from pages you follow" },
   { key: "new_like", label: "Likes" },
   { key: "new_comment", label: "Comments" },
+  { key: "new_message", label: "Messages" },
 ];
 
 const NotificationsPage = () => {
@@ -221,6 +225,10 @@ const NotificationsPage = () => {
   );
 
   const handleNavigate = (notification: ApiNotification) => {
+    if (notification.relatedConversation) {
+      navigate(`/messages/${notification.relatedConversation}`);
+      return;
+    }
     if (notification.relatedPost) {
       const postId =
         typeof notification.relatedPost === "object"

@@ -4,7 +4,8 @@ export type NotificationType =
   | "new_follower"
   | "new_post"
   | "new_like"
-  | "new_comment";
+  | "new_comment"
+  | "new_message";
 
 export interface RelatedPage {
   _id:  string;
@@ -19,6 +20,7 @@ export interface ApiNotification {
   isRead:       boolean;
   relatedPost?: string;
   relatedPage?: string | RelatedPage;
+  relatedConversation?: string;
   createdAt:    string;
   updatedAt:    string;
 }

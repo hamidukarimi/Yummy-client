@@ -5,6 +5,7 @@ import { Menu, Bell, Search, Mail, PlusCircle } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
 import { useCreatePostModal } from "@/context/CreatePostModalContext";
 import useUnreadCount from "@/features/notifications/hooks/useUnreadCount";
+import { useUnreadMessageCount } from "@/features/messages/hooks/useMessages";
 import useAuth from "@/hooks/useAuth";
 import logo from "../../assets/yummy-logo.png";
 import { useLocation } from "react-router-dom";
@@ -39,6 +40,7 @@ const HomeNavbar = () => {
   const { user, isInitializing, restoreSession } = useAuth();
   const { openModal } = useCreatePostModal();
   const unreadCount = useUnreadCount(!!user);
+  const unreadMessages = useUnreadMessageCount(!!user);
 
   const handleCreatePost = () => {
     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
@@ -124,9 +126,14 @@ const HomeNavbar = () => {
           <div className="hidden md:flex items-center gap-6">
             <button
               onClick={() => navigate("/messages")}
-              className="hover:opacity-80 transition-opacity cursor-pointer"
+              className="hover:opacity-80 transition-opacity cursor-pointer relative"
             >
               <Mail size={22} />
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#F7C12B] text-black text-[10px] font-bold flex items-center justify-center">
+                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                </span>
+              )}
             </button>
 
             <button

@@ -72,6 +72,13 @@ export const ENDPOINTS = {
     pages: "/api/pages",
   },
 
+  messages: {
+    conversations: "/api/messages/conversations",
+    thread: (id: string) => `/api/messages/conversations/${id}/messages`,
+    read: (id: string) => `/api/messages/conversations/${id}/read`,
+    unreadCount: "/api/messages/unread-count",
+  },
+
   feed: {
     explore: "/api/feed/explore",
     forYou: "/api/feed/for-you",

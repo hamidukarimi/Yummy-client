@@ -42,6 +42,8 @@ import AdminReports from "@/pages/AdminReportsPage";
 import Tag from "@/pages/TagPage";
 import Insights from "@/pages/PageInsightsPage";
 import HomeNavbar from "@/components/layout/HomeNavbar";
+import Messages from "@/pages/MessagesPage";
+import MessageRealtime from "@/features/messages/components/MessageRealtime";
 
 const CreatePostModalLayer = () => {
   const { isOpen, closeModal } = useCreatePostModal();
@@ -60,6 +62,7 @@ const AppRouter = () => {
         <CreatePostModalProvider>
           <CreatePageModalProvider>
           <AuthProvider>
+            <MessageRealtime />
             <div className="sticky top-0 z-40 bg-black border-b border-zinc-900 lg:ml-[80px]">
               <HomeNavbar />
             </div>
@@ -81,6 +84,8 @@ const AppRouter = () => {
                 <Route path="/pages/:slug/insights" element={<Insights />} />
                 <Route path="/my-posts" element={<MyPosts />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/messages/:conversationId" element={<Messages />} />
                 <Route path="/saved" element={<Saved />} />
                 <Route path="/profile/edit" element={<EditProfile />} />
                 <Route

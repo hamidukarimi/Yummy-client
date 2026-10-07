@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Flag, Trash2 } from "lucide-react";
+import { Flag, Mail, Trash2 } from "lucide-react";
+import { useStartConversation } from "@/features/messages/hooks/useMessages";
 import useComments from "@/features/comments/hooks/useComments";
 import useAuth from "@/hooks/useAuth";
 import Spinner from "@/components/ui/Spinner";
@@ -56,6 +57,8 @@ const PostComments = ({ postId, canModerate }: PostCommentsProps) => {
   const [reason, setReason] = useState<ReportReason>("spam");
   const [details, setDetails] = useState("");
   const [reportMessage, setReportMessage] = useState("");
+  const [messageError, setMessageError] = useState("");
+  const startConversation = useStartConversation();
 
   const submitComment = async () => {
     const trimmed = content.trim();
@@ -103,6 +106,8 @@ const PostComments = ({ postId, canModerate }: PostCommentsProps) => {
         <p className="text-zinc-500 text-sm">Failed to load comments.</p>
       )}
 
+      {messageError && <p className="text-red-400 text-xs">{messageError}</p>}
+
       {!isLoading && !isError && comments.length === 0 && (
         <p className="text-zinc-500 text-sm">No comments yet. Start the conversation.</p>
       )}
@@ -126,6 +131,24 @@ const PostComments = ({ postId, canModerate }: PostCommentsProps) => {
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  {user && comment.author.id !== user.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMessageError("");
+                        void startConversation
+                          .mutateAsync(comment.author.username)
+                          .then((conversation) => navigate(`/messages/${conversation.id}`))
+                          .catch((error: { message?: string }) => {
+                            setMessageError(error.message ?? "Could not start the conversation");
+                          });
+                      }}
+                      className="p-1.5 text-zinc-500 hover:text-white cursor-pointer"
+                      aria-label={`Message @${comment.author.username}`}
+                    >
+                      <Mail size={14} />
+                    </button>
+                  )}
                   {user && comment.author.id !== user.id && (
                     <button
                       type="button"
