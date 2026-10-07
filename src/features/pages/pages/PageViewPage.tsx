@@ -23,10 +23,12 @@ import Spinner from "@/components/ui/Spinner";
 import PostCard from "@/features/posts/components/PostCard";
 import PageMenu from "@/features/pages/components/PageMenu";
 import PageReviews from "@/features/pages/components/PageReviews";
-import type {
-  WorkingHours,
-  WorkingHoursDay,
-} from "@/features/pages/types/page.types";
+import type { WorkingHoursDay } from "@/features/pages/types/page.types";
+import {
+  formatTime,
+  getCurrentDayKey,
+  getOpenStatus,
+} from "@/features/pages/utils/openStatus";
 import PendingPostCard from "@/features/posts/components/PendingPostCard";
 import { useCreatePostModal } from "@/context/CreatePostModalContext";
 import { useRequestPageVerification } from "@/features/pages/hooks/usePageVerification";
@@ -46,51 +48,6 @@ const DAYS = [
 ] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const getCurrentDayKey = (): keyof WorkingHours => {
-  const days: (keyof WorkingHours)[] = [
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ];
-  return days[new Date().getDay()];
-};
-
-const parseTime = (time: string): number => {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-};
-
-const formatTime = (time: string): string => {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 || 12;
-  return `${hour}:${m.toString().padStart(2, "0")} ${period}`;
-};
-
-const getOpenStatus = (workingHours: WorkingHours) => {
-  const dayKey = getCurrentDayKey();
-  const today = workingHours[dayKey] as WorkingHoursDay;
-  if (today.isClosed) return { isOpen: false, label: "Closed today" };
-  const now = new Date();
-  const current = now.getHours() * 60 + now.getMinutes();
-  const open = parseTime(today.open);
-  const close = parseTime(today.close);
-  if (current >= open && current < close) {
-    return {
-      isOpen: true,
-      label: `Open now · Closes ${formatTime(today.close)}`,
-    };
-  }
-  if (current < open) {
-    return { isOpen: false, label: `Opens at ${formatTime(today.open)}` };
-  }
-  return { isOpen: false, label: "Closed now" };
-};
 
 const handleShare = async (name: string, slug: string) => {
   if (navigator.share) {
@@ -235,6 +192,13 @@ const PageViewPage = () => {
                 </span>
                 <span className="text-zinc-400 text-md">
                   {followersCount} followers
+                </span>
+                <span
+                  className={`text-sm font-semibold ${
+                    openStatus.isOpen ? "text-green-400" : "text-zinc-500"
+                  }`}
+                >
+                  {openStatus.isOpen ? "Open" : "Closed"}
                 </span>
               </div>
             </div>

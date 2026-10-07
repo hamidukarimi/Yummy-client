@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +14,11 @@ import {
   Trash2,
 } from "lucide-react";
 import useNotifications from "@/features/notifications/hooks/useNotifications";
+import {
+  getNotificationPreferencesService,
+  updateNotificationPreferencesService,
+} from "@/features/notifications/services/notification.service";
+import type { NotificationPreferences } from "@/features/notifications/types/notification.types";
 import BottomSheet from "@/components/ui/BottomSheet";
 import BottomSheetItem from "@/components/ui/BottomSheetItem";
 import Spinner from "@/components/ui/Spinner";
@@ -152,9 +158,20 @@ const NotificationItem = ({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const PREFERENCE_OPTIONS: { key: keyof NotificationPreferences; label: string }[] = [
+  { key: "post_approved", label: "Post approved" },
+  { key: "post_rejected", label: "Post rejected" },
+  { key: "new_follower", label: "New follower" },
+  { key: "new_post", label: "New posts from pages you follow" },
+  { key: "new_like", label: "Likes" },
+  { key: "new_comment", label: "Comments" },
+];
+
 const NotificationsPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("all");
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   const {
     notifications,
@@ -164,7 +181,22 @@ const NotificationsPage = () => {
     markRead,
     markAllRead,
     deleteNotification,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useNotifications();
+
+  const { data: preferences } = useQuery({
+    queryKey: ["notifications", "preferences"],
+    queryFn: getNotificationPreferencesService,
+  });
+
+  const { mutate: updatePreference, isPending: isSavingPreference } = useMutation({
+    mutationFn: updateNotificationPreferencesService,
+    onSuccess: (next) => {
+      queryClient.setQueryData(["notifications", "preferences"], next);
+    },
+  });
 
   const tabs: {
     key: Tab;
@@ -219,17 +251,42 @@ const NotificationsPage = () => {
           <h1 className="text-lg font-bold text-white">Notifications</h1>
         </div>
 
-        {unreadCount > 0 && (
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => markAllRead()}
-            className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setPrefsOpen((open) => !open)}
+            className="text-xs text-zinc-400 hover:text-white"
           >
-            <CheckCheck size={16} />
-            <span className="text-xs">Mark all read</span>
-          </motion.button>
-        )}
+            Preferences
+          </button>
+          {unreadCount > 0 && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => markAllRead()}
+              className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors"
+            >
+              <CheckCheck size={16} />
+              <span className="text-xs">Mark all read</span>
+            </motion.button>
+          )}
+        </div>
       </div>
+
+      {prefsOpen && preferences && (
+        <div className="mx-4 mb-4 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 flex flex-col gap-3">
+          {PREFERENCE_OPTIONS.map(({ key, label }) => (
+            <label key={key} className="flex items-center justify-between gap-3 text-sm text-white">
+              <span>{label}</span>
+              <input
+                type="checkbox"
+                checked={preferences[key]}
+                disabled={isSavingPreference}
+                onChange={(event) => updatePreference({ [key]: event.target.checked })}
+                className="h-4 w-4 accent-[#F7C12B]"
+              />
+            </label>
+          ))}
+        </div>
+      )}
 
       {/* ── Tabs ── */}
       <div className="flex items-center gap-1 px-4 pb-4 overflow-x-auto scrollbar-hide">
@@ -301,6 +358,18 @@ const NotificationsPage = () => {
                 onNavigate={handleNavigate}
               />
             ))}
+
+            {hasNextPage && (
+              <div className="flex justify-center py-6">
+                <button
+                  onClick={() => void fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="px-4 py-2 rounded-full border border-zinc-700 text-sm text-white disabled:text-zinc-500"
+                >
+                  {isFetchingNextPage ? "Loading..." : "Load older"}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

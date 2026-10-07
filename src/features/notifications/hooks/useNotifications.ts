@@ -1,20 +1,29 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getNotificationsService,
   markAsReadService,
   markAllAsReadService,
   deleteNotificationService,
 } from "@/features/notifications/services/notification.service";
-import type { PaginatedNotifications } from "@/features/notifications/types/notification.types";
 
 export const notificationsQueryKey = ["notifications"] as const;
 
 const useNotifications = () => {
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery<PaginatedNotifications>({
-    queryKey:  notificationsQueryKey,
-    queryFn:   getNotificationsService,
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: notificationsQueryKey,
+    queryFn: ({ pageParam }) => getNotificationsService(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     staleTime: 1000 * 30,
   });
 
@@ -41,15 +50,20 @@ const useNotifications = () => {
     },
   });
 
+  const pages = data?.pages ?? [];
+
   return {
-    notifications: data?.notifications ?? [],
-    unreadCount:   data?.unreadCount ?? 0,
-    total:         data?.total ?? 0,
+    notifications: pages.flatMap((page) => page.notifications),
+    unreadCount:   pages[0]?.unreadCount ?? 0,
+    total:         pages[0]?.total ?? 0,
     isLoading,
     isError,
     markRead,
     markAllRead,
     deleteNotification,
+    fetchNextPage,
+    hasNextPage: hasNextPage ?? false,
+    isFetchingNextPage,
   };
 };
 

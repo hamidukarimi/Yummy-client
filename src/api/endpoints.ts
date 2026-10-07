@@ -62,6 +62,7 @@ export const ENDPOINTS = {
   notifications: {
     all: "/api/notifications",
     unreadCount: "/api/notifications/unread-count",
+    preferences: "/api/notifications/preferences",
     markRead: (id: string) => `/api/notifications/${id}/read`,
     markAllRead: "/api/notifications/read-all",
     delete: (id: string) => `/api/notifications/${id}`,

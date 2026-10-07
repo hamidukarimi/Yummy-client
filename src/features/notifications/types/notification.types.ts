@@ -23,6 +23,8 @@ export interface ApiNotification {
   updatedAt:    string;
 }
 
+export type NotificationPreferences = Record<NotificationType, boolean>;
+
 export interface PaginatedNotifications {
   notifications: ApiNotification[];
   total:         number;

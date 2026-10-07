@@ -7,6 +7,8 @@ import useFollowPage from "@/features/pages/hooks/useFollowPage";
 import Spinner from "@/components/ui/Spinner";
 import type { ApiPage } from "@/features/pages/types/page.types";
 import useAuth from "@/hooks/useAuth";
+import { PAGE_CATEGORIES } from "@/features/pages/constants/pageCategories";
+import { getOpenStatus } from "@/features/pages/utils/openStatus";
 
 // ─── Page Item (Responsive Card/Row) ──────────────────────────────────────────
 
@@ -84,6 +86,14 @@ const PageItem = ({
           <span className="text-zinc-500 text-xs truncate">
             {page.description ?? page.category}
           </span>
+          <span className="flex items-center gap-2 text-[11px]">
+            <span className={getOpenStatus(page.workingHours).isOpen ? "text-green-400" : "text-zinc-500"}>
+              {getOpenStatus(page.workingHours).isOpen ? "Open" : "Closed"}
+            </span>
+            {page.distanceKm !== undefined && (
+              <span className="text-zinc-500">{page.distanceKm} km</span>
+            )}
+          </span>
         </div>
 
         {/* Follow Button - Kept visible on both layouts */}
@@ -113,6 +123,10 @@ const PageItem = ({
 const DiscoverPagesPage = () => {
   const { user, restoreSession, isInitializing } = useAuth();
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [openNow, setOpenNow] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearbyError, setNearbyError] = useState("");
 
   useEffect(() => {
     if (!user && !isInitializing) {
@@ -120,7 +134,29 @@ const DiscoverPagesPage = () => {
     }
   }, [user, isInitializing, restoreSession]);
 
-  const { pages, isLoading, isError } = useDiscoverPages(search);
+  const { pages, isLoading, isError } = useDiscoverPages(search, category, coords, openNow);
+
+  const toggleNearby = () => {
+    if (coords) {
+      setCoords(null);
+      setNearbyError("");
+      return;
+    }
+    if (!navigator.geolocation) {
+      setNearbyError("Location is unavailable in this browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setNearbyError("");
+      },
+      () => setNearbyError("Allow location to see nearby pages"),
+    );
+  };
 
   return (
     <div className="min-h-screen bg-black pb-24 mx-auto max-w-7xl">
@@ -144,6 +180,52 @@ const DiscoverPagesPage = () => {
             </button>
           )}
         </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1 mt-3 scrollbar-hide">
+          {["All", ...PAGE_CATEGORIES].map((cat) => {
+            const value = cat === "All" ? "" : cat;
+            const isActive = category === value;
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategory(value)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors shrink-0 ${
+                  isActive
+                    ? "bg-[#F7C12B] border-[#F7C12B] text-black"
+                    : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white"
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => setOpenNow((value) => !value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+              openNow
+                ? "bg-green-500 border-green-500 text-black"
+                : "border-zinc-800 text-zinc-400"
+            }`}
+          >
+            Open now
+          </button>
+          <button
+            onClick={toggleNearby}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+              coords
+                ? "bg-[#F7C12B] border-[#F7C12B] text-black"
+                : "border-zinc-800 text-zinc-400"
+            }`}
+          >
+            {coords ? "Nearby · 10 km" : "Nearby"}
+          </button>
+        </div>
+        {nearbyError && (
+          <p className="text-red-400 text-xs mt-2">{nearbyError}</p>
+        )}
       </div>
 
       {/* ── Content ── */}
@@ -169,7 +251,7 @@ const DiscoverPagesPage = () => {
         <AnimatePresence mode="wait">
           {!isLoading && !isError && (
             <motion.div
-              key={search}
+              key={`${search}-${category}-${openNow}-${coords?.lat ?? ""}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

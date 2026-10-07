@@ -148,13 +148,31 @@ const CreatePageForm = ({ onClose }: CreatePageFormProps) => {
       ? [...(data.tags ?? []), tagInput.trim()]
       : data.tags;
 
+    const lat = data.location?.coordinates?.lat;
+    const lng = data.location?.coordinates?.lng;
+    const coordinates =
+      typeof lat === "number" && typeof lng === "number" && !Number.isNaN(lat) && !Number.isNaN(lng)
+        ? { lat, lng }
+        : undefined;
+
     const payload = {
-      ...data,
-      tags: finalTags,
-      // Clean empty optional strings
-      ...(data.website === "" && { website: undefined }),
-      ...(data.avatar === "" && { avatar: undefined }),
-      ...(data.coverImage === "" && { coverImage: undefined }),
+      name: data.name,
+      category: data.category,
+      ...(data.description && { description: data.description }),
+      ...(data.phone && { phone: data.phone }),
+      ...(data.website && { website: data.website }),
+      ...(data.avatar && { avatar: data.avatar }),
+      ...(data.coverImage && { coverImage: data.coverImage }),
+      ...(finalTags && { tags: finalTags }),
+      ...(data.workingHours && { workingHours: data.workingHours }),
+      ...(data.location && {
+        location: {
+          ...(data.location.address && { address: data.location.address }),
+          ...(data.location.city && { city: data.location.city }),
+          ...(data.location.country && { country: data.location.country }),
+          ...(coordinates && { coordinates }),
+        },
+      }),
     };
 
     createPage(payload);
@@ -314,6 +332,32 @@ const CreatePageForm = ({ onClose }: CreatePageFormProps) => {
                 error={errors.location?.address}
                 {...register("location.address")}
               />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="location.coordinates.lat"
+                  type="number"
+                  placeholder="Latitude"
+                  error={errors.location?.coordinates?.lat}
+                  {...register("location.coordinates.lat", {
+                    setValueAs: (value) =>
+                      value === "" || value === null ? undefined : Number(value),
+                  })}
+                />
+                <Input
+                  id="location.coordinates.lng"
+                  type="number"
+                  placeholder="Longitude"
+                  error={errors.location?.coordinates?.lng}
+                  {...register("location.coordinates.lng", {
+                    setValueAs: (value) =>
+                      value === "" || value === null ? undefined : Number(value),
+                  })}
+                />
+              </div>
+              {errors.location?.message && (
+                <p className="text-red-400 text-xs">{errors.location.message}</p>
+              )}
 
               <div className="flex gap-3 mt-2">
                 <Button

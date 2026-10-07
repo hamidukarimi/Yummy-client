@@ -53,6 +53,13 @@ const InnerForm = ({ page, slug, onSuccess }: InnerFormProps) => {
   const [location,    setLocation]    = useState(
     [page.location?.city, page.location?.country].filter(Boolean).join(", ") ?? ""
   );
+  const [latitude, setLatitude] = useState(
+    page.location?.coordinates?.lat?.toString() ?? "",
+  );
+  const [longitude, setLongitude] = useState(
+    page.location?.coordinates?.lng?.toString() ?? "",
+  );
+  const [coordError, setCoordError] = useState("");
   const [tagInput,    setTagInput]    = useState("");
   const [tags,        setTags]        = useState<string[]>(page.tags ?? []);
   const [workingHours, setWorkingHours] = useState<WorkingHours>(
@@ -107,6 +114,24 @@ const InnerForm = ({ page, slug, onSuccess }: InnerFormProps) => {
 
     // Parse location string back to object
     const locationParts = location.split(",").map((s) => s.trim());
+    const lat = latitude.trim() === "" ? undefined : Number(latitude);
+    const lng = longitude.trim() === "" ? undefined : Number(longitude);
+    if ((latitude.trim() === "") !== (longitude.trim() === "")) {
+      setCoordError("Enter both latitude and longitude");
+      return;
+    }
+    if (
+      (lat !== undefined && Number.isNaN(lat)) ||
+      (lng !== undefined && Number.isNaN(lng)) ||
+      (lat !== undefined && (lat < -90 || lat > 90)) ||
+      (lng !== undefined && (lng < -180 || lng > 180))
+    ) {
+      setCoordError("Enter valid coordinates");
+      return;
+    }
+    setCoordError("");
+    const coordinates =
+      lat !== undefined && lng !== undefined ? { lat, lng } : undefined;
 
     editPage({
       name:        name.trim(),
@@ -117,10 +142,12 @@ const InnerForm = ({ page, slug, onSuccess }: InnerFormProps) => {
       ...(phone.trim()       && { phone:       phone.trim()       }),
       ...(website.trim()     && { website:     website.trim()     }),
       ...(tags.length > 0    && { tags }),
-      ...(location.trim()    && {
+      ...((location.trim() || coordinates || page.location?.address) && {
         location: {
-          city:    locationParts[0] ?? "",
-          country: locationParts[1] ?? "",
+          ...(page.location?.address && { address: page.location.address }),
+          ...(locationParts[0] && { city: locationParts[0] }),
+          ...(locationParts[1] && { country: locationParts[1] }),
+          ...(coordinates && { coordinates }),
         },
       }),
       workingHours,
@@ -193,6 +220,7 @@ const InnerForm = ({ page, slug, onSuccess }: InnerFormProps) => {
       <div className="px-4 flex flex-col gap-5 max-w-md mx-auto">
 
         {/* ── Alerts ── */}
+        {coordError && <Alert variant="error" message={coordError} />}
         {error    && <Alert variant="error"   message={error.message} />}
         {isSuccess && <Alert variant="success" message="Page updated successfully!" />}
 
@@ -320,6 +348,29 @@ const InnerForm = ({ page, slug, onSuccess }: InnerFormProps) => {
             placeholder="Amsterdam, Netherlands"
             className={inputClass}
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Latitude</label>
+            <input
+              type="number"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              placeholder="34.5553"
+              className={inputClass}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Longitude</label>
+            <input
+              type="number"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              placeholder="69.2075"
+              className={inputClass}
+            />
+          </div>
         </div>
 
         {/* ── Divider ── */}

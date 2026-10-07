@@ -42,7 +42,18 @@ export const createPageSchema = z.object({
     address: z.string().optional(),
     city:    z.string().optional(),
     country: z.string().optional(),
-  }).optional(),
+    coordinates: z.object({
+      lat: z.number().min(-90).max(90).optional(),
+      lng: z.number().min(-180).max(180).optional(),
+    }).optional(),
+  }).optional().refine(
+    (location) => {
+      const lat = location?.coordinates?.lat;
+      const lng = location?.coordinates?.lng;
+      return (lat === undefined) === (lng === undefined);
+    },
+    { message: "Latitude and longitude are both required" },
+  ),
 
   avatar:     z.string().url("Invalid avatar URL").optional().or(z.literal("")),
   coverImage: z.string().url("Invalid cover image URL").optional().or(z.literal("")),

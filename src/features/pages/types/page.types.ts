@@ -51,7 +51,12 @@ export interface ApiPage {
     address?: string;
     city?:    string;
     country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
   };
+  distanceKm?: number;
   workingHours: WorkingHours;
   isVerified:   boolean;
   verificationStatus: PageVerificationStatus;
@@ -92,6 +97,10 @@ export interface CreatePagePayload {
     address?: string;
     city?:    string;
     country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
   };
   avatar?:      string;
   coverImage?:  string;
@@ -115,6 +124,10 @@ export interface GetAllPagesParams {
   limit?:    number;
   category?: string;
   search?:   string;
+  lat?:      number;
+  lng?:      number;
+  radiusKm?: number;
+  openNow?:  boolean;
 }
 
 
@@ -133,6 +146,10 @@ export interface UpdatePagePayload {
     address?: string;
     city?:    string;
     country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
   };
   workingHours?: WorkingHours;
 }
