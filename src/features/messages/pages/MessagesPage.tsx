@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Mail, Send } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import useAuth from "@/hooks/useAuth";
@@ -14,7 +14,8 @@ import {
   useSendMessage,
   useStartConversation,
 } from "@/features/messages/hooks/useMessages";
-import type { ConversationSummary, InboxFilter, MessageDto } from "@/features/messages/types/message.types";
+import type { ChatPage, ConversationSummary, InboxFilter, MessageDto } from "@/features/messages/types/message.types";
+import { formatTime, getCurrentDayKey, getOpenStatus } from "@/features/pages/utils/openStatus";
 
 const timeLabel = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -58,6 +59,9 @@ const MessagesPage = () => {
   const [debouncedInboxQuery, setDebouncedInboxQuery] = useState("");
   const [inboxFilter, setInboxFilter] = useState<InboxFilter>("all");
   const scroller = useRef<HTMLDivElement>(null);
+  const anchor = useRef<{ height: number; top: number } | null>(null);
+  const conversationRef = useRef(conversationId);
+  const newestRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedInboxQuery(inboxQuery.trim()), 300);
@@ -85,11 +89,40 @@ const MessagesPage = () => {
     markRead.mutate();
   }, [conversationId, active?.id, active?.unreadCount]);
 
-  useEffect(() => {
+  const loadOlder = () => {
+    const node = scroller.current;
+    if (!node || !thread.hasNextPage || thread.isFetchingNextPage) return;
+    anchor.current = { height: node.scrollHeight, top: node.scrollTop };
+    void thread.fetchNextPage();
+  };
+
+  useLayoutEffect(() => {
     const node = scroller.current;
     if (!node) return;
+    const switched = conversationRef.current !== conversationId;
+    const newestChanged = newestRef.current !== newestId;
+    conversationRef.current = conversationId;
+    newestRef.current = newestId;
+    if (switched) anchor.current = null;
+
+    if (anchor.current && !newestChanged && !switched) {
+      const delta = node.scrollHeight - anchor.current.height;
+      if (delta > 0) node.scrollTop = anchor.current.top + delta;
+      anchor.current = null;
+      return;
+    }
+
+    anchor.current = null;
     node.scrollTop = node.scrollHeight;
-  }, [newestId, conversationId]);
+  }, [newestId, conversationId, messages.length]);
+
+  useEffect(() => {
+    if (thread.isFetchingNextPage || !anchor.current) return;
+    const node = scroller.current;
+    if (!node || node.scrollHeight === anchor.current.height) {
+      anchor.current = null;
+    }
+  }, [thread.isFetchingNextPage, messages.length]);
 
   const openConversation = (id: string) => navigate(`/messages/${id}`);
 
@@ -367,10 +400,16 @@ const MessagesPage = () => {
               )}
             </header>
 
+            {active.otherKind === "page" &&
+              active.otherPage?.isActive &&
+              active.otherPage.workingHours && (
+                <HoursNote hours={active.otherPage.workingHours} />
+              )}
+
             <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2">
               {thread.hasNextPage && (
                 <button
-                  onClick={() => void thread.fetchNextPage()}
+                  onClick={loadOlder}
                   disabled={thread.isFetchingNextPage}
                   className="self-center text-xs text-zinc-400 border border-zinc-800 rounded-full px-3 py-1.5 mb-2"
                 >
@@ -395,6 +434,15 @@ const MessagesPage = () => {
                 />
               ))}
             </div>
+
+            {canSend && active.actingAs === "page" && active.actingPage && (
+              <QuickReplies
+                page={active.actingPage}
+                onPick={(text) =>
+                  setDraft((current) => (current.trim() ? `${current.trim()}\n${text}` : text))
+                }
+              />
+            )}
 
             <form
               className="flex items-end gap-2 px-3 py-3 border-t border-zinc-900"
@@ -442,6 +490,60 @@ const MessagesPage = () => {
   );
 };
 
+const HoursNote = ({ hours }: { hours: NonNullable<ChatPage["workingHours"]> }) => {
+  const status = getOpenStatus(hours);
+  return (
+    <p
+      className={`px-4 py-2 text-xs border-b border-zinc-900 ${
+        status.isOpen ? "text-emerald-400" : "text-amber-300"
+      }`}
+    >
+      {status.label}
+    </p>
+  );
+};
+
+const QuickReplies = ({
+  page,
+  onPick,
+}: {
+  page: ChatPage;
+  onPick: (text: string) => void;
+}) => {
+  const replies: { label: string; text: string }[] = [];
+  if (page.workingHours) {
+    const today = page.workingHours[getCurrentDayKey()];
+    if (today) {
+      const status = getOpenStatus(page.workingHours);
+      replies.push({
+        label: "Hours",
+        text: today.isClosed
+          ? "We're closed today."
+          : `${status.label}. Today ${formatTime(today.open)} – ${formatTime(today.close)}.`,
+      });
+    }
+  }
+  const address = [page.address, page.city, page.country].filter(Boolean).join(", ");
+  if (address) replies.push({ label: "Address", text: `Our address is ${address}.` });
+  if (page.phone) replies.push({ label: "Phone", text: `You can reach us at ${page.phone}.` });
+  if (replies.length === 0) return null;
+
+  return (
+    <div className="flex gap-2 px-3 pt-3 overflow-x-auto">
+      {replies.map((reply) => (
+        <button
+          key={reply.label}
+          type="button"
+          onClick={() => onPick(reply.text)}
+          className="shrink-0 text-xs font-semibold text-black bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer"
+        >
+          {reply.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const Bubble = ({
   message,
   mine,
@@ -450,20 +552,47 @@ const Bubble = ({
   message: MessageDto;
   mine: boolean;
   showRead: boolean;
-}) => (
+}) => {
+  const card = message.share;
+  const showBody = !card || message.body !== card.title;
+  return (
   <div className={`flex flex-col max-w-[78%] ${mine ? "self-end items-end" : "self-start"}`}>
     <div
       className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${
         mine ? "bg-[#F7C12B] text-black rounded-br-md" : "bg-zinc-800 text-white rounded-bl-md"
       }`}
     >
-      {message.body}
+      {showBody && message.body}
+      {card && (
+        <Link
+          to={card.path}
+          className={`mt-2 block rounded-xl overflow-hidden border ${
+            mine ? "border-black/10 bg-black/10" : "border-zinc-700 bg-zinc-900"
+          }`}
+        >
+          {card.image && (
+            <img src={card.image} alt="" className="w-full h-28 object-cover" />
+          )}
+          <span className="block px-2.5 py-2">
+            <span className="block font-semibold text-sm">{card.title}</span>
+            {card.subtitle && (
+              <span className={`block text-xs ${mine ? "text-black/70" : "text-zinc-400"}`}>
+                {card.subtitle}
+              </span>
+            )}
+            {card.price !== undefined && (
+              <span className="block text-xs font-semibold">${card.price}</span>
+            )}
+          </span>
+        </Link>
+      )}
     </div>
     <span className="text-[10px] text-zinc-600 mt-1">
       {timeLabel(message.createdAt)}
       {showRead ? " · Read" : ""}
     </span>
   </div>
-);
+  );
+};
 
 export default MessagesPage;

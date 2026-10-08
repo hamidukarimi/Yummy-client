@@ -1,3 +1,5 @@
+import type { WorkingHours } from "@/features/pages/types/page.types";
+
 export interface MessageUser {
   id: string;
   firstname: string;
@@ -20,6 +22,28 @@ export interface ChatPage {
   slug: string;
   avatar?: string;
   isActive: boolean;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  workingHours?: WorkingHours;
+}
+
+export interface ChatShare {
+  kind: "post" | "menu_item" | "page";
+  id?: string;
+  pageSlug?: string;
+  section?: string;
+  name?: string;
+}
+
+export interface MessageShareCard {
+  kind: "post" | "menu_item" | "page";
+  title: string;
+  subtitle?: string;
+  image?: string;
+  price?: number;
+  path: string;
 }
 
 export interface ConversationSummary {
@@ -41,6 +65,7 @@ export interface MessageDto {
   senderId: string;
   senderPageId?: string;
   body: string;
+  share?: MessageShareCard;
   createdAt: string;
   isRead: boolean;
 }

@@ -18,6 +18,8 @@ import useLikePost from "@/features/posts/hooks/useLikePost";
 import useAuth from "@/hooks/useAuth";
 import Spinner from "@/components/ui/Spinner";
 import PostOptionsSheet from "@/features/posts/components/PostOptionsSheet";
+import SendToChat from "@/features/messages/components/SendToChat";
+import type { ChatShare } from "@/features/messages/types/message.types";
 import PostComments from "@/features/comments/components/PostComments";
 import { deletePostService } from "@/features/posts/services/post.service";
 
@@ -63,6 +65,7 @@ const PostDetailPage = () => {
 
   const { user, restoreSession, isInitializing } = useAuth();
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
 
   useEffect(() => {
     if (!user && !isInitializing) {
@@ -99,6 +102,10 @@ const PostDetailPage = () => {
 
   const pageName = post.page.name;
   const pageSlug = post.page.slug;
+  const chatShare: ChatShare = {
+    kind: post.type === "menu_item" ? "menu_item" : "post",
+    id: post._id,
+  };
 
   return (
     <div className="min-h-screen bg-black pb-32 md:pb-0 md:h-screen md:overflow-hidden">
@@ -112,7 +119,12 @@ const PostDetailPage = () => {
           <ChevronLeft size={24} />
           <span className="text-lg font-bold">{pageName}</span>
         </motion.button>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          <SendToChat
+            share={chatShare}
+            iconOnly
+            className="text-zinc-400 hover:text-white cursor-pointer"
+          />
           <Share2
             className="text-zinc-400 cursor-pointer hover:text-white"
             onClick={() => handleShare(post.title ?? "", post._id)}
@@ -303,6 +315,11 @@ const PostDetailPage = () => {
                   <Heart size={16} className={isLiked ? "text-red-500 fill-red-500" : "text-zinc-400"} />
                 </motion.button>
 
+                <SendToChat
+                  share={chatShare}
+                  iconOnly
+                  className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 cursor-pointer"
+                />
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={() => void handleShare(post.title ?? "", post._id)}
@@ -478,11 +495,19 @@ const PostDetailPage = () => {
         </motion.button>
       </div>
 
+      <SendToChat
+        share={chatShare}
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        hideTrigger
+      />
+
       <PostOptionsSheet
         isOpen={optionsOpen}
         onClose={() => setOptionsOpen(false)}
         postId={post._id}
         isOwner={isPostOwner}
+        onSendToChat={() => setSendOpen(true)}
         onDelete={async () => {
           await deletePostService(post._id);
           navigate(-1);

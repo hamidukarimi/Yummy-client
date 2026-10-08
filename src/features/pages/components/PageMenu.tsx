@@ -6,6 +6,7 @@ import Spinner from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import type { ApiPost } from "@/features/posts/types/post.types";
 import type { MenuSection } from "@/features/pages/types/menu.types";
+import SendToChat from "@/features/messages/components/SendToChat";
 
 interface PageMenuProps {
   slug: string;
@@ -282,9 +283,21 @@ const PageMenu = ({
                       <p className="text-xs text-zinc-600">Unavailable</p>
                     )}
                   </div>
-                  {item.price !== undefined && (
-                    <span className="text-[#F7C12B] text-sm font-semibold">${item.price}</span>
-                  )}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {item.price !== undefined && (
+                      <span className="text-[#F7C12B] text-sm font-semibold">${item.price}</span>
+                    )}
+                    <SendToChat
+                      share={{
+                        kind: "menu_item",
+                        pageSlug: slug,
+                        section: section.name,
+                        name: item.name,
+                      }}
+                      iconOnly
+                      className="text-zinc-500 hover:text-white cursor-pointer"
+                    />
+                  </div>
                 </div>
               ))}
             </div>

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { DollarSign } from "lucide-react";
+import SendToChat from "@/features/messages/components/SendToChat";
 import type { ApiPost } from "@/features/posts/types/post.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,6 +36,17 @@ const MenuCard = ({ post }: MenuCardProps) => {
 
       {/* ── Gradient Overlay ── */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+      <div
+        className="absolute top-2 right-2 z-10"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <SendToChat
+          share={{ kind: "menu_item", id: post._id }}
+          iconOnly
+          className="w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center cursor-pointer"
+        />
+      </div>
 
       {/* ── Text Overlay ── */}
       <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 flex flex-col gap-0.5">

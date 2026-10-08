@@ -15,6 +15,7 @@ import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
 import useAuth from "@/hooks/useAuth";
 import { useStartConversation } from "@/features/messages/hooks/useMessages";
+import SendToChat from "@/features/messages/components/SendToChat";
 import {
   getPagePostsService,
   getMyPagePostsService,
@@ -243,6 +244,11 @@ const PageViewPage = () => {
                 <BarChart2 size={15} className="text-zinc-400" />
                 <span>Insights</span>
               </button>
+              <SendToChat
+                share={{ kind: "page", pageSlug: page.slug }}
+                iconOnly
+                className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 cursor-pointer"
+              />
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => void handleShare(page.name, page.slug)}
@@ -291,6 +297,11 @@ const PageViewPage = () => {
                   <Share2 size={15} />
                   Share
                 </Button>
+                <SendToChat
+                  share={{ kind: "page", pageSlug: page.slug }}
+                  iconOnly
+                  className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 cursor-pointer"
+                />
               </div>
             </>
           )}

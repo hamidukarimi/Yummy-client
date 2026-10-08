@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Link,
+  Mail,
   Bookmark,
   Pencil,
   Trash2,
@@ -25,6 +26,7 @@ interface PostOptionsSheetProps {
   postId: string;
   isOwner: boolean;
   onDelete: () => void;
+  onSendToChat: () => void;
 }
 
 const REPORT_REASONS: { value: ReportReason; label: string }[] = [
@@ -42,6 +44,7 @@ const PostOptionsSheet = ({
   postId,
   isOwner,
   onDelete,
+  onSendToChat,
 }: PostOptionsSheetProps) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -125,6 +128,20 @@ const PostOptionsSheet = ({
         </div>
       ) : (
         <>
+          <BottomSheetItem
+            icon={<Mail size={18} />}
+            label="Send in chat"
+            onClick={() => {
+              if (!isAuthenticated) {
+                closeSheet();
+                navigate("/login");
+                return;
+              }
+              onSendToChat();
+              closeSheet();
+            }}
+          />
+
           <BottomSheetItem
             icon={<Link size={18} />}
             label="Copy link"

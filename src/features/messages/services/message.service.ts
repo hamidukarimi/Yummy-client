@@ -2,6 +2,7 @@ import api from "@/api/axios";
 import { ENDPOINTS } from "@/api/endpoints";
 import type { ApiResponse } from "@/types/api.types";
 import type {
+  ChatShare,
   ConversationPage,
   ConversationSummary,
   InboxFilter,
@@ -66,10 +67,16 @@ export const sendMessageService = async (
   conversationId: string,
   body: string,
   asPageId?: string,
+  share?: ChatShare,
 ): Promise<MessageDto> => {
+  const trimmed = body.trim();
   const response = await api.post<ApiResponse<{ message: MessageDto }>>(
     ENDPOINTS.messages.thread(conversationId),
-    { body, ...(asPageId ? { asPageId } : {}) },
+    {
+      ...(trimmed ? { body: trimmed } : {}),
+      ...(asPageId ? { asPageId } : {}),
+      ...(share ? { share } : {}),
+    },
   );
   return response.data.data.message;
 };
