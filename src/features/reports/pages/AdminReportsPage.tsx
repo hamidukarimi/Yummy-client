@@ -113,8 +113,12 @@ const AdminReportsPage = () => {
                 ? (report.reporter as ReportReporter)
                 : undefined;
             const post =
-              typeof report.post === "object"
+              report.post && typeof report.post === "object"
                 ? (report.post as ReportPost)
+                : undefined;
+            const message =
+              report.message && typeof report.message === "object"
+                ? report.message
                 : undefined;
             const comment =
               report.comment && typeof report.comment === "object"
@@ -125,7 +129,7 @@ const AdminReportsPage = () => {
                 ? (report.review as ReportReview)
                 : undefined;
             const postId =
-              typeof report.post === "object" ? report.post._id : report.post;
+              report.post && typeof report.post === "object" ? report.post._id : report.post;
             const isReviewing = reviewingReportId === report._id;
             const isRemoving =
               removeComment.isPending &&
@@ -150,7 +154,9 @@ const AdminReportsPage = () => {
                     <h2 className="text-white font-semibold truncate">
                       {review
                         ? `${review.page?.name ?? "Page"} · ${review.rating}/5`
-                        : (post?.title ?? "Untitled post")}
+                        : message
+                          ? "Message"
+                          : (post?.title ?? "Untitled post")}
                     </h2>
                     {review?.page?.slug && (
                       <button
@@ -178,6 +184,12 @@ const AdminReportsPage = () => {
                     Reported by {reporter ? `@${reporter.username}` : "a user"}
                   </p>
                 </div>
+
+                {message && (
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    Message: {message.body}
+                  </p>
+                )}
 
                 {comment && (
                   <p className="text-sm text-zinc-300 leading-relaxed">

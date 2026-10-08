@@ -57,6 +57,14 @@ export interface ConversationSummary {
   unreadCount: number;
   lastMessageAt: string;
   canMessage: boolean;
+  muted: boolean;
+}
+
+export interface MessageReplyPreview {
+  id: string;
+  body: string;
+  senderId: string;
+  senderPageId?: string;
 }
 
 export interface MessageDto {
@@ -66,6 +74,7 @@ export interface MessageDto {
   senderPageId?: string;
   body: string;
   share?: MessageShareCard;
+  reply?: MessageReplyPreview;
   createdAt: string;
   isRead: boolean;
 }

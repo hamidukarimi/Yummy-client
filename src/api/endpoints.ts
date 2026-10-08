@@ -76,6 +76,10 @@ export const ENDPOINTS = {
     conversations: "/api/messages/conversations",
     thread: (id: string) => `/api/messages/conversations/${id}/messages`,
     read: (id: string) => `/api/messages/conversations/${id}/read`,
+    mute: (id: string) => `/api/messages/conversations/${id}/mute`,
+    hide: (id: string) => `/api/messages/conversations/${id}/hide`,
+    reportMessage: (id: string, messageId: string) =>
+      `/api/messages/conversations/${id}/messages/${messageId}/report`,
     unreadCount: "/api/messages/unread-count",
     suggestions: "/api/messages/suggestions",
   },

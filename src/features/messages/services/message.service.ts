@@ -68,6 +68,7 @@ export const sendMessageService = async (
   body: string,
   asPageId?: string,
   share?: ChatShare,
+  replyTo?: string,
 ): Promise<MessageDto> => {
   const trimmed = body.trim();
   const response = await api.post<ApiResponse<{ message: MessageDto }>>(
@@ -76,9 +77,33 @@ export const sendMessageService = async (
       ...(trimmed ? { body: trimmed } : {}),
       ...(asPageId ? { asPageId } : {}),
       ...(share ? { share } : {}),
+      ...(replyTo ? { replyTo } : {}),
     },
   );
   return response.data.data.message;
+};
+
+export const setConversationMutedService = async (
+  conversationId: string,
+  muted: boolean,
+): Promise<boolean> => {
+  const response = await api.post<ApiResponse<{ muted: boolean }>>(
+    ENDPOINTS.messages.mute(conversationId),
+    { muted },
+  );
+  return response.data.data.muted;
+};
+
+export const hideConversationService = async (conversationId: string): Promise<void> => {
+  await api.post(ENDPOINTS.messages.hide(conversationId));
+};
+
+export const reportMessageService = async (
+  conversationId: string,
+  messageId: string,
+  input: { reason: "spam" | "inappropriate" | "misleading" | "other"; details?: string },
+): Promise<void> => {
+  await api.post(ENDPOINTS.messages.reportMessage(conversationId, messageId), input);
 };
 
 export const markConversationReadService = async (

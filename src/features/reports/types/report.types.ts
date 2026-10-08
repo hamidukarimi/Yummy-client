@@ -40,12 +40,18 @@ export interface ReportReview {
   };
 }
 
+export interface ReportMessage {
+  _id: string;
+  body: string;
+}
+
 export interface ApiReport {
   _id: string;
   reporter: ReportReporter | string;
-  post: ReportPost | string;
+  post?: ReportPost | string | null;
   comment?: ReportComment | string | null;
   review?: ReportReview | string | null;
+  message?: ReportMessage | string | null;
   reason: ReportReason;
   details?: string;
   status: ReportStatus;

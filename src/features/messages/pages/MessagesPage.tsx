@@ -9,13 +9,42 @@ import {
   lastMessageLabel,
   useConversationThread,
   useConversations,
+  useHideConversation,
   useMarkConversationRead,
   useRecipientSuggestions,
+  useReportMessage,
   useSendMessage,
+  useSetConversationMuted,
   useStartConversation,
 } from "@/features/messages/hooks/useMessages";
 import type { ChatPage, ConversationSummary, InboxFilter, MessageDto } from "@/features/messages/types/message.types";
+import type { ReportReason } from "@/features/reports/types/report.types";
 import { formatTime, getCurrentDayKey, getOpenStatus } from "@/features/pages/utils/openStatus";
+
+const exactTime = (dateStr: string): string =>
+  new Date(dateStr).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+const dayStamp = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+};
+
+const dayLabel = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const startOf = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const days = Math.round((startOf(today) - startOf(date)) / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+
+const REPORT_REASONS: { value: ReportReason; label: string }[] = [
+  { value: "spam", label: "Spam" },
+  { value: "inappropriate", label: "Inappropriate" },
+  { value: "misleading", label: "Misleading" },
+  { value: "other", label: "Other" },
+];
 
 const timeLabel = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -58,10 +87,20 @@ const MessagesPage = () => {
   const [inboxQuery, setInboxQuery] = useState("");
   const [debouncedInboxQuery, setDebouncedInboxQuery] = useState("");
   const [inboxFilter, setInboxFilter] = useState<InboxFilter>("all");
+  const [replyTarget, setReplyTarget] = useState<MessageDto | null>(null);
+  const [reportTarget, setReportTarget] = useState<MessageDto | null>(null);
+  const [reportReason, setReportReason] = useState<ReportReason>("spam");
+  const [reportDetails, setReportDetails] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
   const anchor = useRef<{ height: number; top: number } | null>(null);
   const conversationRef = useRef(conversationId);
   const newestRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    setReplyTarget(null);
+    setReportTarget(null);
+    setReportDetails("");
+  }, [conversationId]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedInboxQuery(inboxQuery.trim()), 300);
@@ -74,6 +113,9 @@ const MessagesPage = () => {
   const start = useStartConversation();
   const send = useSendMessage(conversationId ?? "");
   const markRead = useMarkConversationRead(conversationId);
+  const mute = useSetConversationMuted(conversationId);
+  const hide = useHideConversation(conversationId);
+  const report = useReportMessage(conversationId);
 
   const items = conversations.data?.pages.flatMap((page) => page.conversations) ?? [];
   const messages = useMemo(() => {
@@ -148,11 +190,13 @@ const MessagesPage = () => {
     try {
       await send.mutateAsync({
         body,
+        ...(replyTarget ? { replyTo: replyTarget.id } : {}),
         ...(active?.actingAs === "page" && active.actingPage
           ? { asPageId: active.actingPage.id }
           : {}),
       });
       setDraft("");
+      setReplyTarget(null);
     } catch {
       return;
     }
@@ -393,11 +437,33 @@ const MessagesPage = () => {
                   </div>
                 </div>
               )}
-              {active.actingAs === "page" && active.actingPage && (
-                <p className="text-zinc-600 text-xs truncate ml-auto">
-                  Replying as {active.actingPage.name}
-                </p>
-              )}
+              <div className="ml-auto flex items-center gap-2 shrink-0">
+                {active.actingAs === "page" && active.actingPage && (
+                  <p className="text-zinc-600 text-xs truncate">
+                    Replying as {active.actingPage.name}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => mute.mutate(!active.muted)}
+                  disabled={mute.isPending}
+                  className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
+                >
+                  {active.muted ? "Unmute" : "Mute"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    hide.mutate(undefined, {
+                      onSuccess: () => navigate("/messages"),
+                    });
+                  }}
+                  disabled={hide.isPending}
+                  className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
+                >
+                  Hide
+                </button>
+              </div>
             </header>
 
             {active.otherKind === "page" &&
@@ -406,7 +472,7 @@ const MessagesPage = () => {
                 <HoursNote hours={active.otherPage.workingHours} />
               )}
 
-            <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2">
+            <div ref={scroller} className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full px-4 py-4 flex flex-col gap-2">
               {thread.hasNextPage && (
                 <button
                   onClick={loadOlder}
@@ -421,18 +487,37 @@ const MessagesPage = () => {
                   No messages yet. Say hello.
                 </p>
               )}
-              {messages.map((message, index) => (
-                <Bubble
-                  key={message.id}
-                  message={message}
-                  mine={isMine(message)}
-                  showRead={
-                    isMine(message) &&
-                    message.isRead &&
-                    index === messages.length - 1
-                  }
-                />
-              ))}
+              {messages.map((message, index) => {
+                const stamp = dayStamp(message.createdAt);
+                const previous = index > 0 ? dayStamp(messages[index - 1]!.createdAt) : "";
+                return (
+                  <div key={message.id} className="flex flex-col gap-2">
+                    {stamp !== previous && (
+                      <p className="self-center text-[11px] text-zinc-500 px-2 py-0.5">
+                        {dayLabel(message.createdAt)}
+                      </p>
+                    )}
+                    <Bubble
+                      message={message}
+                      mine={isMine(message)}
+                      onReply={() => {
+                        setReportTarget(null);
+                        setReplyTarget(message);
+                      }}
+                      onReport={
+                        isMine(message)
+                          ? undefined
+                          : () => {
+                              setReplyTarget(null);
+                              setReportTarget(message);
+                              setReportReason("spam");
+                              setReportDetails("");
+                            }
+                      }
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {canSend && active.actingAs === "page" && active.actingPage && (
@@ -442,6 +527,75 @@ const MessagesPage = () => {
                   setDraft((current) => (current.trim() ? `${current.trim()}\n${text}` : text))
                 }
               />
+            )}
+
+            {replyTarget && (
+              <div className="mx-3 mt-2 flex items-center gap-2 rounded-xl border border-zinc-800 px-3 py-2 text-xs text-zinc-300">
+                <span className="min-w-0 truncate">Replying to {replyTarget.body}</span>
+                <button
+                  type="button"
+                  onClick={() => setReplyTarget(null)}
+                  className="shrink-0 text-zinc-400 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {reportTarget && (
+              <form
+                className="mx-3 mt-2 flex flex-col gap-2 rounded-xl border border-zinc-800 px-3 py-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  report.mutate(
+                    {
+                      messageId: reportTarget.id,
+                      reason: reportReason,
+                      ...(reportDetails.trim() ? { details: reportDetails.trim() } : {}),
+                    },
+                    { onSuccess: () => setReportTarget(null) },
+                  );
+                }}
+              >
+                <p className="text-xs text-zinc-400 truncate">Report: {reportTarget.body}</p>
+                <select
+                  value={reportReason}
+                  onChange={(event) => setReportReason(event.target.value as ReportReason)}
+                  className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1.5 text-sm text-white"
+                >
+                  {REPORT_REASONS.map((reason) => (
+                    <option key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={reportDetails}
+                  onChange={(event) => setReportDetails(event.target.value)}
+                  maxLength={500}
+                  placeholder="Details (optional)"
+                  className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1.5 text-sm text-white"
+                />
+                {report.error && (
+                  <p className="text-xs text-red-400">{report.error.message}</p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={report.isPending}
+                    className="text-xs font-semibold text-black bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer disabled:opacity-40"
+                  >
+                    {report.isPending ? "Sending..." : "Submit report"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReportTarget(null)}
+                    className="text-xs text-zinc-400 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             )}
 
             <form
@@ -547,11 +701,13 @@ const QuickReplies = ({
 const Bubble = ({
   message,
   mine,
-  showRead,
+  onReply,
+  onReport,
 }: {
   message: MessageDto;
   mine: boolean;
-  showRead: boolean;
+  onReply: () => void;
+  onReport?: () => void;
 }) => {
   const card = message.share;
   const showBody = !card || message.body !== card.title;
@@ -562,6 +718,15 @@ const Bubble = ({
         mine ? "bg-[#F7C12B] text-black rounded-br-md" : "bg-zinc-800 text-white rounded-bl-md"
       }`}
     >
+      {message.reply && (
+        <span
+          className={`block text-xs mb-1 border-l-2 pl-2 ${
+            mine ? "border-black/30 text-black/70" : "border-zinc-500 text-zinc-300"
+          }`}
+        >
+          {message.reply.body}
+        </span>
+      )}
       {showBody && message.body}
       {card && (
         <Link
@@ -587,9 +752,17 @@ const Bubble = ({
         </Link>
       )}
     </div>
-    <span className="text-[10px] text-zinc-600 mt-1">
-      {timeLabel(message.createdAt)}
-      {showRead ? " · Read" : ""}
+    <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
+      <span>{exactTime(message.createdAt)}</span>
+      {mine && <span>{message.isRead ? "Read" : "Delivered"}</span>}
+      <button type="button" onClick={onReply} className="cursor-pointer hover:text-zinc-300">
+        Reply
+      </button>
+      {onReport && (
+        <button type="button" onClick={onReport} className="cursor-pointer hover:text-zinc-300">
+          Report
+        </button>
+      )}
     </span>
   </div>
   );

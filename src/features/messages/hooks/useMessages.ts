@@ -14,8 +14,11 @@ import {
   getMessagesService,
   getRecipientSuggestionsService,
   getUnreadMessageCountService,
+  hideConversationService,
   markConversationReadService,
+  reportMessageService,
   sendMessageService,
+  setConversationMutedService,
   startConversationService,
 } from "@/features/messages/services/message.service";
 import { connectMessageSocket, disconnectMessageSocket } from "@/features/messages/socket";
@@ -232,9 +235,15 @@ export const useSendMessage = (conversationId: string) => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (input: { body: string; asPageId?: string }) => {
+    mutationFn: async (input: { body: string; asPageId?: string; replyTo?: string }) => {
       try {
-        return await sendMessageService(conversationId, input.body, input.asPageId);
+        return await sendMessageService(
+          conversationId,
+          input.body,
+          input.asPageId,
+          undefined,
+          input.replyTo,
+        );
       } catch (error) {
         throw parseApiError(error);
       }
@@ -269,6 +278,74 @@ export const useMarkConversationRead = (conversationId?: string) => {
       });
       void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
       void queryClient.invalidateQueries({ queryKey: messageKeys.unread });
+    },
+  });
+};
+
+export const useSetConversationMuted = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (muted: boolean) => {
+      if (!conversationId) return muted;
+      try {
+        return await setConversationMutedService(conversationId, muted);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: (muted) => {
+      if (!conversationId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(messageKeys.thread(conversationId), (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          pages: current.pages.map((page) => ({
+            ...page,
+            conversation: { ...page.conversation, muted },
+          })),
+        };
+      });
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+};
+
+export const useHideConversation = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!conversationId) return;
+      try {
+        await hideConversationService(conversationId);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+      void queryClient.invalidateQueries({ queryKey: messageKeys.unread });
+    },
+  });
+};
+
+export const useReportMessage = (conversationId?: string) => {
+  return useMutation({
+    mutationFn: async (input: {
+      messageId: string;
+      reason: "spam" | "inappropriate" | "misleading" | "other";
+      details?: string;
+    }) => {
+      if (!conversationId) return;
+      try {
+        await reportMessageService(conversationId, input.messageId, {
+          reason: input.reason,
+          ...(input.details ? { details: input.details } : {}),
+        });
+      } catch (error) {
+        throw parseApiError(error);
+      }
     },
   });
 };
