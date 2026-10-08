@@ -137,7 +137,7 @@ const PostComments = ({ postId, canModerate }: PostCommentsProps) => {
                       onClick={() => {
                         setMessageError("");
                         void startConversation
-                          .mutateAsync(comment.author.username)
+                          .mutateAsync({ username: comment.author.username })
                           .then((conversation) => navigate(`/messages/${conversation.id}`))
                           .catch((error: { message?: string }) => {
                             setMessageError(error.message ?? "Could not start the conversation");

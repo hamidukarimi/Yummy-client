@@ -6,6 +6,7 @@ import type {
   ConversationSummary,
   MessageDto,
   MessagePage,
+  StartConversationInput,
 } from "@/features/messages/types/message.types";
 
 export const getConversationsService = async (
@@ -19,11 +20,11 @@ export const getConversationsService = async (
 };
 
 export const startConversationService = async (
-  username: string,
+  input: StartConversationInput,
 ): Promise<ConversationSummary> => {
   const response = await api.post<ApiResponse<{ conversation: ConversationSummary }>>(
     ENDPOINTS.messages.conversations,
-    { username },
+    input,
   );
   return response.data.data.conversation;
 };
@@ -42,10 +43,11 @@ export const getMessagesService = async (
 export const sendMessageService = async (
   conversationId: string,
   body: string,
+  asPageId?: string,
 ): Promise<MessageDto> => {
   const response = await api.post<ApiResponse<{ message: MessageDto }>>(
     ENDPOINTS.messages.thread(conversationId),
-    { body },
+    { body, ...(asPageId ? { asPageId } : {}) },
   );
   return response.data.data.message;
 };

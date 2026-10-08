@@ -13,9 +13,21 @@ export interface LastMessagePreview {
   createdAt: string;
 }
 
+export interface ChatPage {
+  id: string;
+  name: string;
+  slug: string;
+  avatar?: string;
+  isActive: boolean;
+}
+
 export interface ConversationSummary {
   id: string;
   otherUser: MessageUser | null;
+  otherPage: ChatPage | null;
+  otherKind: "user" | "page";
+  actingAs: "user" | "page";
+  actingPage: ChatPage | null;
   lastMessage: LastMessagePreview | null;
   unreadCount: number;
   lastMessageAt: string;
@@ -26,9 +38,16 @@ export interface MessageDto {
   id: string;
   conversationId: string;
   senderId: string;
+  senderPageId?: string;
   body: string;
   createdAt: string;
   isRead: boolean;
+}
+
+export interface StartConversationInput {
+  username?: string;
+  pageSlug?: string;
+  asPageSlug?: string;
 }
 
 export interface ConversationPage {

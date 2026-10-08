@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Mail, Send } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import useAuth from "@/hooks/useAuth";
+import useMyPages from "@/features/pages/hooks/useMyPages";
 import {
   conversationTitle,
   useConversationThread,
@@ -25,12 +26,14 @@ const timeLabel = (dateStr: string): string => {
 };
 
 const Avatar = ({ conversation }: { conversation: ConversationSummary }) => {
-  const user = conversation.otherUser;
-  const letter = user?.firstname?.[0] ?? "?";
+  const page = conversation.otherKind === "page" ? conversation.otherPage : null;
+  const user = page ? null : conversation.otherUser;
+  const image = page?.avatar ?? user?.avatar;
+  const letter = page?.name?.[0] ?? user?.firstname?.[0] ?? "?";
   return (
     <div className="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden shrink-0">
-      {user?.avatar ? (
-        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+      {image ? (
+        <img src={image} alt="" className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-white font-semibold">
           {letter}
@@ -44,7 +47,10 @@ const MessagesPage = () => {
   const navigate = useNavigate();
   const { conversationId } = useParams();
   const { user } = useAuth();
-  const [username, setUsername] = useState("");
+  const { pages: myPages } = useMyPages();
+  const [target, setTarget] = useState<"person" | "page">("person");
+  const [handle, setHandle] = useState("");
+  const [asPageSlug, setAsPageSlug] = useState("");
   const [draft, setDraft] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -77,11 +83,14 @@ const MessagesPage = () => {
   const openConversation = (id: string) => navigate(`/messages/${id}`);
 
   const beginConversation = async () => {
-    const value = username.trim();
+    const value = handle.trim().replace(/^@/, "");
     if (!value) return;
     try {
-      const conversation = await start.mutateAsync(value);
-      setUsername("");
+      const conversation = await start.mutateAsync({
+        ...(target === "page" ? { pageSlug: value } : { username: value }),
+        ...(asPageSlug ? { asPageSlug } : {}),
+      });
+      setHandle("");
       navigate(`/messages/${conversation.id}`);
     } catch {
       return;
@@ -92,11 +101,29 @@ const MessagesPage = () => {
     const body = draft.trim();
     if (!body || !conversationId) return;
     try {
-      await send.mutateAsync(body);
+      await send.mutateAsync({
+        body,
+        ...(active?.actingAs === "page" && active.actingPage
+          ? { asPageId: active.actingPage.id }
+          : {}),
+      });
       setDraft("");
     } catch {
       return;
     }
+  };
+
+  const subtitle = (conversation: ConversationSummary): string => {
+    if (conversation.otherKind === "page") {
+      return conversation.otherPage?.isActive ? `/${conversation.otherPage.slug}` : "Unavailable";
+    }
+    return conversation.otherUser ? `@${conversation.otherUser.username}` : "Unavailable";
+  };
+
+  const isMine = (message: MessageDto): boolean => {
+    if (!active) return false;
+    if (active.actingAs === "page") return message.senderPageId === active.actingPage?.id;
+    return message.senderId === user?.id && !message.senderPageId;
   };
 
   return (
@@ -107,25 +134,49 @@ const MessagesPage = () => {
         <div className="px-4 pt-4 pb-3">
           <h1 className="text-lg font-bold">Messages</h1>
           <form
-            className="mt-3 flex gap-2"
+            className="mt-3 flex flex-col gap-2"
             onSubmit={(event) => {
               event.preventDefault();
               void beginConversation();
             }}
           >
-            <input
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="Message a username"
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
-            />
-            <button
-              type="submit"
-              disabled={start.isPending}
-              className="px-3 rounded-xl bg-[#F7C12B] text-black text-sm font-semibold disabled:opacity-50"
-            >
-              {start.isPending ? "..." : "Start"}
-            </button>
+            <div className="flex gap-2">
+              <select
+                value={target}
+                onChange={(event) => setTarget(event.target.value as "person" | "page")}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-zinc-600"
+              >
+                <option value="person">Person</option>
+                <option value="page">Page</option>
+              </select>
+              <input
+                value={handle}
+                onChange={(event) => setHandle(event.target.value)}
+                placeholder={target === "page" ? "Page slug" : "Username"}
+                className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+              />
+              <button
+                type="submit"
+                disabled={start.isPending}
+                className="px-3 rounded-xl bg-[#F7C12B] text-black text-sm font-semibold disabled:opacity-50"
+              >
+                {start.isPending ? "..." : "Start"}
+              </button>
+            </div>
+            {myPages.some((page) => page.isActive) && (
+              <select
+                value={asPageSlug}
+                onChange={(event) => setAsPageSlug(event.target.value)}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-zinc-600"
+              >
+                <option value="">From me</option>
+                {myPages.filter((page) => page.isActive).map((page) => (
+                  <option key={page.id} value={page.slug}>
+                    From {page.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </form>
           {start.error && (
             <p className="text-red-400 text-xs mt-2">{start.error.message}</p>
@@ -227,9 +278,12 @@ const MessagesPage = () => {
               <Avatar conversation={active} />
               <div className="min-w-0">
                 <p className="font-semibold text-sm truncate">{conversationTitle(active)}</p>
-                <p className="text-zinc-500 text-xs truncate">
-                  {active.otherUser ? `@${active.otherUser.username}` : "Unavailable"}
-                </p>
+                <p className="text-zinc-500 text-xs truncate">{subtitle(active)}</p>
+                {active.actingAs === "page" && active.actingPage && (
+                  <p className="text-zinc-600 text-xs truncate">
+                    Replying as {active.actingPage.name}
+                  </p>
+                )}
               </div>
             </header>
 
@@ -252,9 +306,9 @@ const MessagesPage = () => {
                 <Bubble
                   key={message.id}
                   message={message}
-                  mine={message.senderId === user?.id}
+                  mine={isMine(message)}
                   showRead={
-                    message.senderId === user?.id &&
+                    isMine(message) &&
                     message.isRead &&
                     index === messages.length - 1
                   }
@@ -280,7 +334,13 @@ const MessagesPage = () => {
                 }}
                 disabled={!canSend}
                 rows={1}
-                placeholder={canSend ? "Message..." : "This account can't receive messages"}
+                placeholder={
+                  canSend
+                    ? "Message..."
+                    : active.otherKind === "page"
+                      ? "This page can't receive messages"
+                      : "This account can't receive messages"
+                }
                 className="flex-1 resize-none bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 disabled:opacity-60"
               />
               <button

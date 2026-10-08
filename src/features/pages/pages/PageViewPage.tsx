@@ -9,9 +9,12 @@ import {
   Pencil,
   BarChart2,
   Check,
+  Mail,
 } from "lucide-react";
 import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
+import useAuth from "@/hooks/useAuth";
+import { useStartConversation } from "@/features/messages/hooks/useMessages";
 import {
   getPagePostsService,
   getMyPagePostsService,
@@ -68,6 +71,9 @@ const handleShare = async (name: string, slug: string) => {
 const PageViewPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const startConversation = useStartConversation();
+  const [messageError, setMessageError] = useState("");
   const { openModal } = useCreatePostModal();
   const [tab, setTab] = useState<PageTab>("posts");
 
@@ -259,6 +265,27 @@ const PageViewPage = () => {
                 <Button
                   variant="outline"
                   fullWidth
+                  isLoading={startConversation.isPending}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate("/login");
+                      return;
+                    }
+                    setMessageError("");
+                    void startConversation
+                      .mutateAsync({ pageSlug: page.slug })
+                      .then((conversation) => navigate(`/messages/${conversation.id}`))
+                      .catch((error: { message?: string }) => {
+                        setMessageError(error.message ?? "Could not start the conversation");
+                      });
+                  }}
+                >
+                  <Mail size={15} />
+                  Message
+                </Button>
+                <Button
+                  variant="outline"
+                  fullWidth
                   onClick={() => void handleShare(page.name, page.slug)}
                 >
                   <Share2 size={15} />
@@ -268,6 +295,9 @@ const PageViewPage = () => {
             </>
           )}
         </motion.div>
+        {messageError && (
+          <p className="text-red-400 text-xs">{messageError}</p>
+        )}
 
         {/* ── Owner Verification Status ── */}
         {isOwner && (

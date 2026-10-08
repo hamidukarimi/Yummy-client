@@ -78,9 +78,9 @@ export const useStartConversation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (username: string) => {
+    mutationFn: async (input: { username?: string; pageSlug?: string; asPageSlug?: string }) => {
       try {
-        return await startConversationService(username);
+        return await startConversationService(input);
       } catch (error) {
         throw parseApiError(error);
       }
@@ -95,9 +95,9 @@ export const useSendMessage = (conversationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: string) => {
+    mutationFn: async (input: { body: string; asPageId?: string }) => {
       try {
-        return await sendMessageService(conversationId, body);
+        return await sendMessageService(conversationId, input.body, input.asPageId);
       } catch (error) {
         throw parseApiError(error);
       }
@@ -123,6 +123,9 @@ export const useMarkConversationRead = (conversationId?: string) => {
 };
 
 export const conversationTitle = (conversation: ConversationSummary): string => {
+  if (conversation.otherKind === "page") {
+    return conversation.otherPage?.name ?? "Deleted page";
+  }
   if (!conversation.otherUser) return "Deleted account";
   return `${conversation.otherUser.firstname} ${conversation.otherUser.lastname}`;
 };
