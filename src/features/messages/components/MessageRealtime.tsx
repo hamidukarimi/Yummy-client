@@ -3,7 +3,7 @@ import { useMessageSocket } from "@/features/messages/hooks/useMessages";
 
 const MessageRealtime = () => {
   const { user } = useAuth();
-  useMessageSocket(Boolean(user));
+  useMessageSocket(user?.id);
   return null;
 };
 

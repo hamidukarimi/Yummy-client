@@ -4,17 +4,39 @@ import type { ApiResponse } from "@/types/api.types";
 import type {
   ConversationPage,
   ConversationSummary,
+  InboxFilter,
   MessageDto,
   MessagePage,
+  RecipientSuggestions,
   StartConversationInput,
 } from "@/features/messages/types/message.types";
 
 export const getConversationsService = async (
   cursor?: string,
+  q?: string,
+  filter?: InboxFilter,
 ): Promise<ConversationPage> => {
   const response = await api.get<ApiResponse<ConversationPage>>(
     ENDPOINTS.messages.conversations,
-    { params: { limit: 20, ...(cursor ? { cursor } : {}) } },
+    {
+      params: {
+        limit: 20,
+        ...(cursor ? { cursor } : {}),
+        ...(q ? { q } : {}),
+        ...(filter && filter !== "all" ? { filter } : {}),
+      },
+    },
+  );
+  return response.data.data;
+};
+
+export const getRecipientSuggestionsService = async (
+  q: string,
+  asPageSlug?: string,
+): Promise<RecipientSuggestions> => {
+  const response = await api.get<ApiResponse<RecipientSuggestions>>(
+    ENDPOINTS.messages.suggestions,
+    { params: { q, ...(asPageSlug ? { asPageSlug } : {}) } },
   );
   return response.data.data;
 };

@@ -6,13 +6,15 @@ import useAuth from "@/hooks/useAuth";
 import useMyPages from "@/features/pages/hooks/useMyPages";
 import {
   conversationTitle,
+  lastMessageLabel,
   useConversationThread,
   useConversations,
   useMarkConversationRead,
+  useRecipientSuggestions,
   useSendMessage,
   useStartConversation,
 } from "@/features/messages/hooks/useMessages";
-import type { ConversationSummary, MessageDto } from "@/features/messages/types/message.types";
+import type { ConversationSummary, InboxFilter, MessageDto } from "@/features/messages/types/message.types";
 
 const timeLabel = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -52,9 +54,18 @@ const MessagesPage = () => {
   const [handle, setHandle] = useState("");
   const [asPageSlug, setAsPageSlug] = useState("");
   const [draft, setDraft] = useState("");
+  const [inboxQuery, setInboxQuery] = useState("");
+  const [debouncedInboxQuery, setDebouncedInboxQuery] = useState("");
+  const [inboxFilter, setInboxFilter] = useState<InboxFilter>("all");
   const scroller = useRef<HTMLDivElement>(null);
 
-  const conversations = useConversations();
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedInboxQuery(inboxQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [inboxQuery]);
+
+  const conversations = useConversations(debouncedInboxQuery, inboxFilter);
+  const suggestions = useRecipientSuggestions(handle.replace(/^@/, ""), asPageSlug || undefined);
   const thread = useConversationThread(conversationId);
   const start = useStartConversation();
   const send = useSendMessage(conversationId ?? "");
@@ -82,12 +93,13 @@ const MessagesPage = () => {
 
   const openConversation = (id: string) => navigate(`/messages/${id}`);
 
-  const beginConversation = async () => {
-    const value = handle.trim().replace(/^@/, "");
-    if (!value) return;
+  const beginConversation = async (input?: { username?: string; pageSlug?: string }) => {
+    const typed = handle.trim().replace(/^@/, "");
+    const payload = input ?? (target === "page" ? { pageSlug: typed } : { username: typed });
+    if (!payload.username && !payload.pageSlug) return;
     try {
       const conversation = await start.mutateAsync({
-        ...(target === "page" ? { pageSlug: value } : { username: value }),
+        ...payload,
         ...(asPageSlug ? { asPageSlug } : {}),
       });
       setHandle("");
@@ -152,7 +164,7 @@ const MessagesPage = () => {
               <input
                 value={handle}
                 onChange={(event) => setHandle(event.target.value)}
-                placeholder={target === "page" ? "Page slug" : "Username"}
+                placeholder={target === "page" ? "Page name or slug" : "Name or username"}
                 className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
               />
               <button
@@ -163,6 +175,32 @@ const MessagesPage = () => {
                 {start.isPending ? "..." : "Start"}
               </button>
             </div>
+            {(suggestions.data?.users.length ?? 0) + (suggestions.data?.pages.length ?? 0) > 0 && handle.trim().length > 0 && (
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden">
+                {suggestions.data?.users.map((person) => (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => void beginConversation({ username: person.username })}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-zinc-900"
+                  >
+                    <span className="font-medium">{person.firstname} {person.lastname}</span>
+                    <span className="text-zinc-500"> @{person.username}</span>
+                  </button>
+                ))}
+                {suggestions.data?.pages.map((page) => (
+                  <button
+                    key={page.id}
+                    type="button"
+                    onClick={() => void beginConversation({ pageSlug: page.slug })}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-zinc-900"
+                  >
+                    <span className="font-medium">{page.name}</span>
+                    <span className="text-zinc-500"> /{page.slug}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {myPages.some((page) => page.isActive) && (
               <select
                 value={asPageSlug}
@@ -181,9 +219,29 @@ const MessagesPage = () => {
           {start.error && (
             <p className="text-red-400 text-xs mt-2">{start.error.message}</p>
           )}
+          <input
+            value={inboxQuery}
+            onChange={(event) => setInboxQuery(event.target.value)}
+            placeholder="Search conversations"
+            className="mt-3 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+          />
+          <div className="mt-2 flex gap-1.5">
+            {(["all", "unread", "people", "pages"] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setInboxFilter(key)}
+                className={`px-2.5 py-1 rounded-full text-xs capitalize ${
+                  inboxFilter === key ? "bg-[#F7C12B] text-black font-semibold" : "bg-zinc-900 text-zinc-400"
+                }`}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pb-20 lg:pb-4">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full pb-20 lg:pb-4">
           {conversations.isLoading && (
             <div className="flex justify-center py-10">
               <Spinner size="md" />
@@ -195,7 +253,11 @@ const MessagesPage = () => {
           {!conversations.isLoading && items.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-16 text-zinc-500">
               <Mail size={28} />
-              <p className="text-sm">No conversations yet.</p>
+              <p className="text-sm">
+                {debouncedInboxQuery || inboxFilter !== "all"
+                  ? "No conversations match."
+                  : "No conversations yet."}
+              </p>
             </div>
           )}
           {items.map((conversation) => (
@@ -218,7 +280,7 @@ const MessagesPage = () => {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-zinc-500 text-xs truncate">
-                    {conversation.lastMessage?.text ?? "No messages yet"}
+                    {lastMessageLabel(conversation, user?.id)}
                   </p>
                   {conversation.unreadCount > 0 && (
                     <span className="min-w-5 h-5 px-1 rounded-full bg-[#F7C12B] text-black text-[10px] font-bold flex items-center justify-center">
@@ -275,16 +337,34 @@ const MessagesPage = () => {
               >
                 <ChevronLeft size={22} />
               </button>
-              <Avatar conversation={active} />
-              <div className="min-w-0">
-                <p className="font-semibold text-sm truncate">{conversationTitle(active)}</p>
-                <p className="text-zinc-500 text-xs truncate">{subtitle(active)}</p>
-                {active.actingAs === "page" && active.actingPage && (
-                  <p className="text-zinc-600 text-xs truncate">
-                    Replying as {active.actingPage.name}
-                  </p>
-                )}
-              </div>
+              {active.otherPage && active.otherKind === "page" && active.otherPage.isActive ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (active.otherPage) navigate(`/pages/${active.otherPage.slug}`);
+                  }}
+                  className="min-w-0 flex items-center gap-3 text-left"
+                >
+                  <Avatar conversation={active} />
+                  <span className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{conversationTitle(active)}</p>
+                    <p className="text-zinc-500 text-xs truncate">{subtitle(active)}</p>
+                  </span>
+                </button>
+              ) : (
+                <div className="min-w-0 flex items-center gap-3">
+                  <Avatar conversation={active} />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{conversationTitle(active)}</p>
+                    <p className="text-zinc-500 text-xs truncate">{subtitle(active)}</p>
+                  </div>
+                </div>
+              )}
+              {active.actingAs === "page" && active.actingPage && (
+                <p className="text-zinc-600 text-xs truncate ml-auto">
+                  Replying as {active.actingPage.name}
+                </p>
+              )}
             </header>
 
             <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2">

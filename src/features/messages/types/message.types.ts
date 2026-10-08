@@ -10,6 +10,7 @@ export interface MessageUser {
 export interface LastMessagePreview {
   text: string;
   senderId: string;
+  senderPageId?: string;
   createdAt: string;
 }
 
@@ -48,6 +49,13 @@ export interface StartConversationInput {
   username?: string;
   pageSlug?: string;
   asPageSlug?: string;
+}
+
+export type InboxFilter = "all" | "unread" | "people" | "pages";
+
+export interface RecipientSuggestions {
+  users: MessageUser[];
+  pages: ChatPage[];
 }
 
 export interface ConversationPage {

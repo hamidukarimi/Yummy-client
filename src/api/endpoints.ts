@@ -77,6 +77,7 @@ export const ENDPOINTS = {
     thread: (id: string) => `/api/messages/conversations/${id}/messages`,
     read: (id: string) => `/api/messages/conversations/${id}/read`,
     unreadCount: "/api/messages/unread-count",
+    suggestions: "/api/messages/suggestions",
   },
 
   feed: {
