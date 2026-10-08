@@ -10,6 +10,9 @@ import {
 import { parseApiError } from "@/utils/errorHandler";
 import useAuth from "@/hooks/useAuth";
 import {
+  blockUserService,
+  deleteMessageService,
+  editMessageService,
   getConversationsService,
   getMessagesService,
   getRecipientSuggestionsService,
@@ -19,7 +22,9 @@ import {
   reportMessageService,
   sendMessageService,
   setConversationMutedService,
+  setConversationPinnedService,
   startConversationService,
+  unblockUserService,
 } from "@/features/messages/services/message.service";
 import { connectMessageSocket, disconnectMessageSocket } from "@/features/messages/socket";
 import type {
@@ -77,6 +82,31 @@ const appendMessage = (
       },
       ...older,
     ],
+  };
+};
+
+const replaceMessage = (
+  data: InfiniteData<MessagePage> | undefined,
+  message: MessageDto,
+): InfiniteData<MessagePage> | undefined => {
+  if (!data) return data;
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      messages: page.messages.map((item) => (item.id === message.id ? message : item)),
+      conversation: page.conversation.lastMessage
+        && page.conversation.lastMessage.createdAt === message.createdAt
+        && page.conversation.lastMessage.senderId === message.senderId
+        ? {
+            ...page.conversation,
+            lastMessage: {
+              ...page.conversation.lastMessage,
+              text: message.body.slice(0, 140),
+            },
+          }
+        : page.conversation,
+    })),
   };
 };
 
@@ -145,6 +175,15 @@ export const useMessageSocket = (userId?: string) => {
       refreshLists();
     };
 
+    const onUpdate = (payload: { conversationId?: string; message?: MessageDto }) => {
+      if (!payload?.conversationId || !payload.message?.id) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(
+        messageKeys.thread(payload.conversationId),
+        (current) => replaceMessage(current, payload.message as MessageDto),
+      );
+      refreshLists();
+    };
+
     const onRead = (payload: { conversationId?: string; readAt?: string }) => {
       if (!payload?.conversationId || !payload.readAt) return;
       queryClient.setQueryData<InfiniteData<MessagePage>>(
@@ -158,11 +197,13 @@ export const useMessageSocket = (userId?: string) => {
     };
 
     socket.on("message:new", onNew);
+    socket.on("message:update", onUpdate);
     socket.on("message:read", onRead);
     socket.io.on("reconnect", onReconnect);
 
     return () => {
       socket.off("message:new", onNew);
+      socket.off("message:update", onUpdate);
       socket.off("message:read", onRead);
       socket.io.off("reconnect", onReconnect);
     };
@@ -306,6 +347,102 @@ export const useSetConversationMuted = (conversationId?: string) => {
           })),
         };
       });
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+};
+
+export const useSetConversationPinned = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pinned: boolean) => {
+      if (!conversationId) return pinned;
+      try {
+        return await setConversationPinnedService(conversationId, pinned);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: (pinned) => {
+      if (!conversationId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(messageKeys.thread(conversationId), (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          pages: current.pages.map((page) => ({
+            ...page,
+            conversation: { ...page.conversation, pinned },
+          })),
+        };
+      });
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+};
+
+export const useBlockUser = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { userId: string; blocked: boolean }) => {
+      try {
+        if (input.blocked) await blockUserService(input.userId);
+        else await unblockUserService(input.userId);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: () => {
+      if (conversationId) {
+        void queryClient.invalidateQueries({ queryKey: messageKeys.thread(conversationId) });
+      }
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+};
+
+export const useEditMessage = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { messageId: string; body: string }) => {
+      if (!conversationId) throw new Error("Conversation not found");
+      try {
+        return await editMessageService(conversationId, input.messageId, input.body);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: (message) => {
+      if (!conversationId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(
+        messageKeys.thread(conversationId),
+        (current) => replaceMessage(current, message),
+      );
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+};
+
+export const useDeleteMessage = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (messageId: string) => {
+      if (!conversationId) throw new Error("Conversation not found");
+      try {
+        return await deleteMessageService(conversationId, messageId);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: (message) => {
+      if (!conversationId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(
+        messageKeys.thread(conversationId),
+        (current) => replaceMessage(current, message),
+      );
       void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
     },
   });

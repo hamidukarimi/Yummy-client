@@ -78,6 +78,11 @@ export const ENDPOINTS = {
     read: (id: string) => `/api/messages/conversations/${id}/read`,
     mute: (id: string) => `/api/messages/conversations/${id}/mute`,
     hide: (id: string) => `/api/messages/conversations/${id}/hide`,
+    pin: (id: string) => `/api/messages/conversations/${id}/pin`,
+    blocks: "/api/messages/blocks",
+    unblock: (userId: string) => `/api/messages/blocks/${userId}`,
+    editMessage: (id: string, messageId: string) =>
+      `/api/messages/conversations/${id}/messages/${messageId}`,
     reportMessage: (id: string, messageId: string) =>
       `/api/messages/conversations/${id}/messages/${messageId}/report`,
     unreadCount: "/api/messages/unread-count",

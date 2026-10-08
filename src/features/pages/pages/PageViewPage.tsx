@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,11 +17,12 @@ import useFollowPage from "@/features/pages/hooks/useFollowPage";
 import useAuth from "@/hooks/useAuth";
 import { useStartConversation } from "@/features/messages/hooks/useMessages";
 import SendToChat from "@/features/messages/components/SendToChat";
+import { getMyPagesService } from "@/features/pages/services/page.service";
+import { myPagesQueryKey } from "@/features/pages/hooks/useMyPages";
 import {
   getPagePostsService,
   getMyPagePostsService,
 } from "@/features/posts/services/post.service";
-import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import Spinner from "@/components/ui/Spinner";
@@ -75,6 +77,13 @@ const PageViewPage = () => {
   const { isAuthenticated } = useAuth();
   const startConversation = useStartConversation();
   const [messageError, setMessageError] = useState("");
+  const [asPageSlug, setAsPageSlug] = useState("");
+  const myPages = useQuery({
+    queryKey: myPagesQueryKey,
+    queryFn: getMyPagesService,
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5,
+  });
   const { openModal } = useCreatePostModal();
   const [tab, setTab] = useState<PageTab>("posts");
 
@@ -259,7 +268,25 @@ const PageViewPage = () => {
             </>
           ) : (
             <>
-              <div className="flex w-full lg:w-[50%]  gap-3 lg:gap-4">
+              <div className="flex w-full lg:w-[50%] flex-col gap-3">
+                {(myPages.data ?? []).some((item) => item.isActive && item.slug !== page.slug) && (
+                  <select
+                    value={asPageSlug}
+                    onChange={(event) => setAsPageSlug(event.target.value)}
+                    aria-label="Message as"
+                    className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">Message as you</option>
+                    {(myPages.data ?? [])
+                      .filter((item) => item.isActive && item.slug !== page.slug)
+                      .map((item) => (
+                        <option key={item.id} value={item.slug}>
+                          Message as {item.name}
+                        </option>
+                      ))}
+                  </select>
+                )}
+                <div className="flex w-full gap-3 lg:gap-4">
                 <Button
                   fullWidth
                   variant={isFollowing ? "outline" : "primary"}
@@ -279,7 +306,10 @@ const PageViewPage = () => {
                     }
                     setMessageError("");
                     void startConversation
-                      .mutateAsync({ pageSlug: page.slug })
+                      .mutateAsync({
+                        pageSlug: page.slug,
+                        ...(asPageSlug ? { asPageSlug } : {}),
+                      })
                       .then((conversation) => navigate(`/messages/${conversation.id}`))
                       .catch((error: { message?: string }) => {
                         setMessageError(error.message ?? "Could not start the conversation");
@@ -302,6 +332,7 @@ const PageViewPage = () => {
                   iconOnly
                   className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 cursor-pointer"
                 />
+                </div>
               </div>
             </>
           )}

@@ -7,16 +7,22 @@ import useMyPages from "@/features/pages/hooks/useMyPages";
 import {
   conversationTitle,
   lastMessageLabel,
+  useBlockUser,
   useConversationThread,
   useConversations,
+  useDeleteMessage,
+  useEditMessage,
   useHideConversation,
   useMarkConversationRead,
   useRecipientSuggestions,
   useReportMessage,
   useSendMessage,
   useSetConversationMuted,
+  useSetConversationPinned,
   useStartConversation,
 } from "@/features/messages/hooks/useMessages";
+import MessageText from "@/features/messages/components/MessageText";
+import { connectMessageSocket } from "@/features/messages/socket";
 import type { ChatPage, ConversationSummary, InboxFilter, MessageDto } from "@/features/messages/types/message.types";
 import type { ReportReason } from "@/features/reports/types/report.types";
 import { formatTime, getCurrentDayKey, getOpenStatus } from "@/features/pages/utils/openStatus";
@@ -38,6 +44,8 @@ const dayLabel = (dateStr: string): string => {
   if (days === 1) return "Yesterday";
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 };
+
+const MESSAGE_CHANGE_WINDOW_MS = 15 * 60 * 1000;
 
 const REPORT_REASONS: { value: ReportReason; label: string }[] = [
   { value: "spam", label: "Spam" },
@@ -91,6 +99,12 @@ const MessagesPage = () => {
   const [reportTarget, setReportTarget] = useState<MessageDto | null>(null);
   const [reportReason, setReportReason] = useState<ReportReason>("spam");
   const [reportDetails, setReportDetails] = useState("");
+  const [editing, setEditing] = useState<MessageDto | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const [identityError, setIdentityError] = useState("");
+  const typingSent = useRef(0);
+  const typingHide = useRef<number | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const anchor = useRef<{ height: number; top: number } | null>(null);
   const conversationRef = useRef(conversationId);
@@ -100,6 +114,10 @@ const MessagesPage = () => {
     setReplyTarget(null);
     setReportTarget(null);
     setReportDetails("");
+    setEditing(null);
+    setConfirmDeleteId(null);
+    setOtherTyping(false);
+    setIdentityError("");
   }, [conversationId]);
 
   useEffect(() => {
@@ -114,7 +132,11 @@ const MessagesPage = () => {
   const send = useSendMessage(conversationId ?? "");
   const markRead = useMarkConversationRead(conversationId);
   const mute = useSetConversationMuted(conversationId);
+  const pin = useSetConversationPinned(conversationId);
   const hide = useHideConversation(conversationId);
+  const block = useBlockUser(conversationId);
+  const edit = useEditMessage(conversationId);
+  const remove = useDeleteMessage(conversationId);
   const report = useReportMessage(conversationId);
 
   const items = conversations.data?.pages.flatMap((page) => page.conversations) ?? [];
@@ -125,6 +147,56 @@ const MessagesPage = () => {
   const active = thread.data?.pages[0]?.conversation;
   const canSend = Boolean(active?.canMessage);
   const newestId = messages[messages.length - 1]?.id;
+  const senderPages = myPages.filter(
+    (page) => page.isActive && page.slug !== active?.otherPage?.slug,
+  );
+
+  useEffect(() => {
+    if (!conversationId) return;
+    const socket = connectMessageSocket();
+    if (!socket) return;
+    const onTyping = (payload: { conversationId?: string }) => {
+      if (payload?.conversationId !== conversationId) return;
+      setOtherTyping(true);
+      if (typingHide.current) window.clearTimeout(typingHide.current);
+      typingHide.current = window.setTimeout(() => setOtherTyping(false), 3000);
+    };
+    socket.on("typing", onTyping);
+    return () => {
+      socket.off("typing", onTyping);
+      if (typingHide.current) window.clearTimeout(typingHide.current);
+    };
+  }, [conversationId]);
+
+  const notifyTyping = () => {
+    if (!conversationId || !canSend || editing) return;
+    const now = Date.now();
+    if (now - typingSent.current < 1500) return;
+    typingSent.current = now;
+    connectMessageSocket()?.emit("typing", { conversationId });
+  };
+
+  const switchIdentity = async (slug: string) => {
+    if (!active) return;
+    const current = active.actingAs === "page" ? active.actingPage?.slug ?? "" : "";
+    if (slug === current) return;
+    const target = active.otherKind === "page" && active.otherPage
+      ? { pageSlug: active.otherPage.slug }
+      : active.otherUser
+        ? { username: active.otherUser.username }
+        : null;
+    if (!target) return;
+    try {
+      const conversation = await start.mutateAsync({
+        ...target,
+        ...(slug ? { asPageSlug: slug } : {}),
+      });
+      setIdentityError("");
+      navigate(`/messages/${conversation.id}`);
+    } catch (error) {
+      setIdentityError(error instanceof Error ? error.message : "Could not switch");
+    }
+  };
 
   useEffect(() => {
     if (!conversationId || !active || active.unreadCount < 1) return;
@@ -187,6 +259,16 @@ const MessagesPage = () => {
   const submitMessage = async () => {
     const body = draft.trim();
     if (!body || !conversationId) return;
+    if (editing) {
+      try {
+        await edit.mutateAsync({ messageId: editing.id, body });
+        setDraft("");
+        setEditing(null);
+      } catch {
+        return;
+      }
+      return;
+    }
     try {
       await send.mutateAsync({
         body,
@@ -357,6 +439,7 @@ const MessagesPage = () => {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-zinc-500 text-xs truncate">
+                    {conversation.pinned ? "Pinned · " : ""}
                     {lastMessageLabel(conversation, user?.id)}
                   </p>
                   {conversation.unreadCount > 0 && (
@@ -438,11 +521,43 @@ const MessagesPage = () => {
                 </div>
               )}
               <div className="ml-auto flex items-center gap-2 shrink-0">
-                {active.actingAs === "page" && active.actingPage && (
-                  <p className="text-zinc-600 text-xs truncate">
-                    Replying as {active.actingPage.name}
-                  </p>
+                {senderPages.length > 0 && (
+                  <select
+                    value={active.actingAs === "page" ? active.actingPage?.slug ?? "" : ""}
+                    onChange={(event) => void switchIdentity(event.target.value)}
+                    disabled={start.isPending}
+                    aria-label="Replying as"
+                    className="max-w-36 bg-zinc-900 border border-zinc-800 rounded-full px-2 py-1 text-xs text-zinc-200"
+                  >
+                    <option value="">You</option>
+                    {senderPages.map((page) => (
+                      <option key={page.id} value={page.slug}>
+                        {page.name}
+                      </option>
+                    ))}
+                  </select>
                 )}
+                {active.otherKind === "user" && active.otherUser && (
+                  <button
+                    type="button"
+                    onClick={() => block.mutate({
+                      userId: active.otherUser?.id ?? "",
+                      blocked: !active.blocked,
+                    })}
+                    disabled={block.isPending}
+                    className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
+                  >
+                    {active.blocked ? "Unblock" : "Block"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => pin.mutate(!active.pinned)}
+                  disabled={pin.isPending}
+                  className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
+                >
+                  {active.pinned ? "Unpin" : "Pin"}
+                </button>
                 <button
                   type="button"
                   onClick={() => mute.mutate(!active.muted)}
@@ -465,6 +580,12 @@ const MessagesPage = () => {
                 </button>
               </div>
             </header>
+            {identityError && (
+              <p className="px-4 py-2 text-xs text-red-400 border-b border-zinc-900">{identityError}</p>
+            )}
+            {otherTyping && (
+              <p className="px-4 py-1.5 text-xs text-zinc-400 border-b border-zinc-900">Typing…</p>
+            )}
 
             {active.otherKind === "page" &&
               active.otherPage?.isActive &&
@@ -500,15 +621,35 @@ const MessagesPage = () => {
                     <Bubble
                       message={message}
                       mine={isMine(message)}
+                      canChange={
+                        isMine(message) &&
+                        !message.deleted &&
+                        Date.now() - new Date(message.createdAt).getTime() < MESSAGE_CHANGE_WINDOW_MS
+                      }
+                      confirmDelete={confirmDeleteId === message.id}
                       onReply={() => {
+                        setEditing(null);
                         setReportTarget(null);
                         setReplyTarget(message);
                       }}
+                      onEdit={() => {
+                        setReplyTarget(null);
+                        setReportTarget(null);
+                        setEditing(message);
+                        setDraft(message.body);
+                      }}
+                      onDelete={() => setConfirmDeleteId(message.id)}
+                      onConfirmDelete={() => {
+                        remove.mutate(message.id, {
+                          onSuccess: () => setConfirmDeleteId(null),
+                        });
+                      }}
                       onReport={
-                        isMine(message)
+                        isMine(message) || message.deleted
                           ? undefined
                           : () => {
                               setReplyTarget(null);
+                              setEditing(null);
                               setReportTarget(message);
                               setReportReason("spam");
                               setReportDetails("");
@@ -527,6 +668,22 @@ const MessagesPage = () => {
                   setDraft((current) => (current.trim() ? `${current.trim()}\n${text}` : text))
                 }
               />
+            )}
+
+            {editing && (
+              <div className="mx-3 mt-2 flex items-center gap-2 rounded-xl border border-zinc-800 px-3 py-2 text-xs text-zinc-300">
+                <span className="min-w-0 truncate">Editing message</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(null);
+                    setDraft("");
+                  }}
+                  className="shrink-0 text-zinc-400 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             )}
 
             {replyTarget && (
@@ -607,35 +764,42 @@ const MessagesPage = () => {
             >
               <textarea
                 value={draft}
-                onChange={(event) => setDraft(event.target.value)}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  if (event.target.value.trim()) notifyTyping();
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     void submitMessage();
                   }
                 }}
-                disabled={!canSend}
+                disabled={!canSend && !editing}
                 rows={1}
                 placeholder={
-                  canSend
+                  editing
+                    ? "Edit message..."
+                    : canSend
                     ? "Message..."
                     : active.otherKind === "page"
                       ? "This page can't receive messages"
-                      : "This account can't receive messages"
+                      : active.otherUser?.isActive
+                        ? "You can't message this user"
+                        : "This account can't receive messages"
                 }
                 className="flex-1 resize-none bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 disabled:opacity-60"
               />
               <button
                 type="submit"
-                disabled={!canSend || send.isPending || draft.trim().length === 0}
+                disabled={(!canSend && !editing) || send.isPending || edit.isPending || draft.trim().length === 0}
                 className="w-10 h-10 rounded-full bg-[#F7C12B] text-black flex items-center justify-center disabled:opacity-40"
                 aria-label="Send message"
               >
                 <Send size={16} />
               </button>
             </form>
-            {send.error && (
-              <p className="text-red-400 text-xs px-4 pb-3">{send.error.message}</p>
+            {(send.error || edit.error) && (
+              <p className="text-red-400 text-xs px-4 pb-3">{send.error?.message ?? edit.error?.message}</p>
             )}
           </>
         )}
@@ -701,16 +865,26 @@ const QuickReplies = ({
 const Bubble = ({
   message,
   mine,
+  canChange,
+  confirmDelete,
   onReply,
+  onEdit,
+  onDelete,
+  onConfirmDelete,
   onReport,
 }: {
   message: MessageDto;
   mine: boolean;
+  canChange: boolean;
+  confirmDelete: boolean;
   onReply: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onConfirmDelete: () => void;
   onReport?: () => void;
 }) => {
   const card = message.share;
-  const showBody = !card || message.body !== card.title;
+  const showBody = !message.deleted && (!card || message.body !== card.title);
   return (
   <div className={`flex flex-col max-w-[78%] ${mine ? "self-end items-end" : "self-start"}`}>
     <div
@@ -718,7 +892,7 @@ const Bubble = ({
         mine ? "bg-[#F7C12B] text-black rounded-br-md" : "bg-zinc-800 text-white rounded-bl-md"
       }`}
     >
-      {message.reply && (
+      {!message.deleted && message.reply && (
         <span
           className={`block text-xs mb-1 border-l-2 pl-2 ${
             mine ? "border-black/30 text-black/70" : "border-zinc-500 text-zinc-300"
@@ -727,8 +901,9 @@ const Bubble = ({
           {message.reply.body}
         </span>
       )}
-      {showBody && message.body}
-      {card && (
+      {message.deleted && <span className="italic">This message was deleted</span>}
+      {showBody && <MessageText text={message.body} mine={mine} />}
+      {!message.deleted && card && (
         <Link
           to={card.path}
           className={`mt-2 block rounded-xl overflow-hidden border ${
@@ -754,10 +929,28 @@ const Bubble = ({
     </div>
     <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
       <span>{exactTime(message.createdAt)}</span>
-      {mine && <span>{message.isRead ? "Read" : "Delivered"}</span>}
-      <button type="button" onClick={onReply} className="cursor-pointer hover:text-zinc-300">
-        Reply
-      </button>
+      {message.editedAt && !message.deleted && <span>Edited</span>}
+      {mine && !message.deleted && <span>{message.isRead ? "Read" : "Delivered"}</span>}
+      {!message.deleted && (
+        <button type="button" onClick={onReply} className="cursor-pointer hover:text-zinc-300">
+          Reply
+        </button>
+      )}
+      {canChange && (
+        <button type="button" onClick={onEdit} className="cursor-pointer hover:text-zinc-300">
+          Edit
+        </button>
+      )}
+      {canChange && !confirmDelete && (
+        <button type="button" onClick={onDelete} className="cursor-pointer hover:text-zinc-300">
+          Delete
+        </button>
+      )}
+      {canChange && confirmDelete && (
+        <button type="button" onClick={onConfirmDelete} className="cursor-pointer hover:text-red-400">
+          Confirm
+        </button>
+      )}
       {onReport && (
         <button type="button" onClick={onReport} className="cursor-pointer hover:text-zinc-300">
           Report

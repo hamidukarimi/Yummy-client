@@ -58,6 +58,8 @@ export interface ConversationSummary {
   lastMessageAt: string;
   canMessage: boolean;
   muted: boolean;
+  pinned: boolean;
+  blocked: boolean;
 }
 
 export interface MessageReplyPreview {
@@ -77,6 +79,8 @@ export interface MessageDto {
   reply?: MessageReplyPreview;
   createdAt: string;
   isRead: boolean;
+  editedAt?: string;
+  deleted?: boolean;
 }
 
 export interface StartConversationInput {

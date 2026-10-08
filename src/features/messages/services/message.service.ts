@@ -98,6 +98,47 @@ export const hideConversationService = async (conversationId: string): Promise<v
   await api.post(ENDPOINTS.messages.hide(conversationId));
 };
 
+export const setConversationPinnedService = async (
+  conversationId: string,
+  pinned: boolean,
+): Promise<boolean> => {
+  const response = await api.post<ApiResponse<{ pinned: boolean }>>(
+    ENDPOINTS.messages.pin(conversationId),
+    { pinned },
+  );
+  return response.data.data.pinned;
+};
+
+export const blockUserService = async (userId: string): Promise<void> => {
+  await api.post(ENDPOINTS.messages.blocks, { userId });
+};
+
+export const unblockUserService = async (userId: string): Promise<void> => {
+  await api.delete(ENDPOINTS.messages.unblock(userId));
+};
+
+export const editMessageService = async (
+  conversationId: string,
+  messageId: string,
+  body: string,
+): Promise<MessageDto> => {
+  const response = await api.patch<ApiResponse<{ message: MessageDto }>>(
+    ENDPOINTS.messages.editMessage(conversationId, messageId),
+    { body },
+  );
+  return response.data.data.message;
+};
+
+export const deleteMessageService = async (
+  conversationId: string,
+  messageId: string,
+): Promise<MessageDto> => {
+  const response = await api.delete<ApiResponse<{ message: MessageDto }>>(
+    ENDPOINTS.messages.editMessage(conversationId, messageId),
+  );
+  return response.data.data.message;
+};
+
 export const reportMessageService = async (
   conversationId: string,
   messageId: string,
