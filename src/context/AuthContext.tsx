@@ -26,12 +26,16 @@ export const AuthContext = createContext<AuthContextValue>({
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
+let sessionRestoreStarted = false;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isInitializing, setIsInitializing] = useState(false);
   const setUser = useAuthStore((state) => state.setUser);
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const restoreSession = useCallback(async () => {
+    if (sessionRestoreStarted) return;
+    sessionRestoreStarted = true;
     setIsInitializing(true);
     try {
       const response = await api.post<ApiResponse<AuthData>>("/api/token");
