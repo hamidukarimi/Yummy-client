@@ -16,6 +16,7 @@ import usePage from "@/features/pages/hooks/usePage";
 import useFollowPage from "@/features/pages/hooks/useFollowPage";
 import useAuth from "@/hooks/useAuth";
 import { useStartConversation } from "@/features/messages/hooks/useMessages";
+import ChoiceMenu from "@/features/messages/components/ChoiceMenu";
 import SendToChat from "@/features/messages/components/SendToChat";
 import { getMyPagesService } from "@/features/pages/services/page.service";
 import { myPagesQueryKey } from "@/features/pages/hooks/useMyPages";
@@ -74,7 +75,7 @@ const handleShare = async (name: string, slug: string) => {
 const PageViewPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const startConversation = useStartConversation();
   const [messageError, setMessageError] = useState("");
   const [asPageSlug, setAsPageSlug] = useState("");
@@ -270,21 +271,21 @@ const PageViewPage = () => {
             <>
               <div className="flex w-full lg:w-[50%] flex-col gap-3">
                 {(myPages.data ?? []).some((item) => item.isActive && item.slug !== page.slug) && (
-                  <select
+                  <ChoiceMenu
+                    ariaLabel="Message as"
                     value={asPageSlug}
-                    onChange={(event) => setAsPageSlug(event.target.value)}
-                    aria-label="Message as"
-                    className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white"
-                  >
-                    <option value="">Message as you</option>
-                    {(myPages.data ?? [])
-                      .filter((item) => item.isActive && item.slug !== page.slug)
-                      .map((item) => (
-                        <option key={item.id} value={item.slug}>
-                          Message as {item.name}
-                        </option>
-                      ))}
-                  </select>
+                    onChange={setAsPageSlug}
+                    options={[
+                      { value: "", label: "Message as you", ...(user?.avatar ? { avatar: user.avatar } : {}) },
+                      ...(myPages.data ?? [])
+                        .filter((item) => item.isActive && item.slug !== page.slug)
+                        .map((item) => ({
+                          value: item.slug,
+                          label: `Message as ${item.name}`,
+                          ...(item.avatar ? { avatar: item.avatar } : {}),
+                        })),
+                    ]}
+                  />
                 )}
                 <div className="flex w-full gap-3 lg:gap-4">
                 <Button

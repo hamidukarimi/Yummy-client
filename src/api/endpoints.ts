@@ -85,6 +85,12 @@ export const ENDPOINTS = {
       `/api/messages/conversations/${id}/messages/${messageId}`,
     reportMessage: (id: string, messageId: string) =>
       `/api/messages/conversations/${id}/messages/${messageId}/report`,
+    deleteConversations: "/api/messages/conversations/delete",
+    readAll: "/api/messages/conversations/read-all",
+    reportConversation: (id: string) => `/api/messages/conversations/${id}/report`,
+    react: (id: string, messageId: string) =>
+      `/api/messages/conversations/${id}/messages/${messageId}/reactions`,
+    linkPreview: "/api/messages/link-preview",
     unreadCount: "/api/messages/unread-count",
     suggestions: "/api/messages/suggestions",
   },

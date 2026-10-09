@@ -11,6 +11,7 @@ import { parseApiError } from "@/utils/errorHandler";
 import useAuth from "@/hooks/useAuth";
 import {
   blockUserService,
+  deleteConversationsService,
   deleteMessageService,
   editMessageService,
   getConversationsService,
@@ -19,6 +20,9 @@ import {
   getUnreadMessageCountService,
   hideConversationService,
   markConversationReadService,
+  reactToMessageService,
+  readAllConversationsService,
+  reportConversationService,
   reportMessageService,
   sendMessageService,
   setConversationMutedService,
@@ -28,6 +32,7 @@ import {
 } from "@/features/messages/services/message.service";
 import { connectMessageSocket, disconnectMessageSocket } from "@/features/messages/socket";
 import type {
+  ConversationPage,
   ConversationSummary,
   InboxFilter,
   MessageDto,
@@ -192,6 +197,44 @@ export const useMessageSocket = (userId?: string) => {
       );
     };
 
+    const onPresence = (payload: { userId?: string; online?: boolean; lastSeen?: string }) => {
+      if (!payload?.userId || typeof payload.online !== "boolean") return;
+      const apply = (conversation: ConversationSummary): ConversationSummary => {
+        if (conversation.otherUser?.id !== payload.userId) return conversation;
+        return {
+          ...conversation,
+          otherOnline: payload.online,
+          ...(payload.lastSeen ? { otherLastSeen: payload.lastSeen } : {}),
+        };
+      };
+      queryClient.setQueriesData<InfiniteData<ConversationPage>>(
+        { queryKey: messageKeys.conversations },
+        (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              conversations: page.conversations.map(apply),
+            })),
+          };
+        },
+      );
+      queryClient.setQueriesData<InfiniteData<MessagePage>>(
+        { queryKey: ["messages", "thread"] },
+        (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              conversation: apply(page.conversation),
+            })),
+          };
+        },
+      );
+    };
+
     const onReconnect = () => {
       void queryClient.invalidateQueries({ queryKey: messageKeys.all });
     };
@@ -199,12 +242,14 @@ export const useMessageSocket = (userId?: string) => {
     socket.on("message:new", onNew);
     socket.on("message:update", onUpdate);
     socket.on("message:read", onRead);
+    socket.on("presence", onPresence);
     socket.io.on("reconnect", onReconnect);
 
     return () => {
       socket.off("message:new", onNew);
       socket.off("message:update", onUpdate);
       socket.off("message:read", onRead);
+      socket.off("presence", onPresence);
       socket.io.off("reconnect", onReconnect);
     };
   }, [userId, queryClient]);
@@ -225,6 +270,13 @@ export const useConversationThread = (conversationId?: string) =>
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(conversationId),
+  });
+
+export const useThreadSearch = (conversationId?: string, q?: string) =>
+  useQuery({
+    queryKey: ["messages", "search", conversationId ?? "", q ?? ""],
+    queryFn: () => getMessagesService(conversationId ?? "", undefined, q),
+    enabled: Boolean(conversationId && q && q.trim().length > 0),
   });
 
 export const useUnreadMessageCount = (enabled = true) => {
@@ -276,7 +328,12 @@ export const useSendMessage = (conversationId: string) => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (input: { body: string; asPageId?: string; replyTo?: string }) => {
+    mutationFn: async (input: {
+      body: string;
+      asPageId?: string;
+      replyTo?: string;
+      hideLinkPreview?: boolean;
+    }) => {
       try {
         return await sendMessageService(
           conversationId,
@@ -284,6 +341,7 @@ export const useSendMessage = (conversationId: string) => {
           input.asPageId,
           undefined,
           input.replyTo,
+          input.hideLinkPreview,
         );
       } catch (error) {
         throw parseApiError(error);
@@ -463,6 +521,81 @@ export const useHideConversation = (conversationId?: string) => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
       void queryClient.invalidateQueries({ queryKey: messageKeys.unread });
+    },
+  });
+};
+
+export const useDeleteConversations = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      try {
+        await deleteConversationsService(ids);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+      void queryClient.invalidateQueries({ queryKey: messageKeys.unread });
+    },
+  });
+};
+
+export const useReadAllConversations = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      try {
+        await readAllConversationsService();
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: messageKeys.conversations });
+      void queryClient.invalidateQueries({ queryKey: messageKeys.unread });
+      void queryClient.invalidateQueries({ queryKey: ["messages", "thread"] });
+    },
+  });
+};
+
+export const useReportConversation = () => {
+  return useMutation({
+    mutationFn: async (input: {
+      conversationId: string;
+      reason: "spam" | "inappropriate" | "misleading" | "other";
+      details?: string;
+    }) => {
+      try {
+        await reportConversationService(input.conversationId, {
+          reason: input.reason,
+          ...(input.details ? { details: input.details } : {}),
+        });
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+  });
+};
+
+export const useReactToMessage = (conversationId?: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { messageId: string; emoji: string }) => {
+      if (!conversationId) throw new Error("Conversation not found");
+      try {
+        return await reactToMessageService(conversationId, input.messageId, input.emoji);
+      } catch (error) {
+        throw parseApiError(error);
+      }
+    },
+    onSuccess: (message) => {
+      if (!conversationId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(
+        messageKeys.thread(conversationId),
+        (current) => replaceMessage(current, message),
+      );
     },
   });
 };

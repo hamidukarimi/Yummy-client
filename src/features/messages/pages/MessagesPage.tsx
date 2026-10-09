@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Mail, Send } from "lucide-react";
+import { ChevronLeft, Mail, Plus, Send, X } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import useAuth from "@/hooks/useAuth";
 import useMyPages from "@/features/pages/hooks/useMyPages";
@@ -10,18 +10,26 @@ import {
   useBlockUser,
   useConversationThread,
   useConversations,
+  useDeleteConversations,
   useDeleteMessage,
   useEditMessage,
   useHideConversation,
   useMarkConversationRead,
+  useReactToMessage,
+  useReadAllConversations,
   useRecipientSuggestions,
+  useReportConversation,
   useReportMessage,
   useSendMessage,
+  useThreadSearch,
   useSetConversationMuted,
   useSetConversationPinned,
   useStartConversation,
 } from "@/features/messages/hooks/useMessages";
 import MessageText from "@/features/messages/components/MessageText";
+import ActionMenu from "@/features/messages/components/ActionMenu";
+import ChoiceMenu from "@/features/messages/components/ChoiceMenu";
+import { getLinkPreviewService } from "@/features/messages/services/message.service";
 import { connectMessageSocket } from "@/features/messages/socket";
 import type { ChatPage, ConversationSummary, InboxFilter, MessageDto } from "@/features/messages/types/message.types";
 import type { ReportReason } from "@/features/reports/types/report.types";
@@ -46,6 +54,12 @@ const dayLabel = (dateStr: string): string => {
 };
 
 const MESSAGE_CHANGE_WINDOW_MS = 15 * 60 * 1000;
+const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+const firstUrl = (text: string): string => {
+  const match = text.match(/https?:\/\/[^\s]+/i);
+  return match?.[0]?.replace(/[.,;:!?)]+$/, "") ?? "";
+};
 
 const REPORT_REASONS: { value: ReportReason; label: string }[] = [
   { value: "spam", label: "Spam" },
@@ -71,13 +85,18 @@ const Avatar = ({ conversation }: { conversation: ConversationSummary }) => {
   const image = page?.avatar ?? user?.avatar;
   const letter = page?.name?.[0] ?? user?.firstname?.[0] ?? "?";
   return (
-    <div className="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden shrink-0">
-      {image ? (
-        <img src={image} alt="" className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-          {letter}
-        </div>
+    <div className="relative w-12 h-12 shrink-0">
+      <div className="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden">
+        {image ? (
+          <img src={image} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white font-semibold">
+            {letter}
+          </div>
+        )}
+      </div>
+      {conversation.otherKind === "user" && conversation.otherOnline && (
+        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-black" />
       )}
     </div>
   );
@@ -103,7 +122,16 @@ const MessagesPage = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [otherTyping, setOtherTyping] = useState(false);
   const [identityError, setIdentityError] = useState("");
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [reportConversationId, setReportConversationId] = useState<string | null>(null);
+  const [threadQuery, setThreadQuery] = useState("");
+  const [debouncedThreadQuery, setDebouncedThreadQuery] = useState("");
+  const [linkPreview, setLinkPreview] = useState<MessageDto["linkPreview"] | null>(null);
+  const [hiddenPreviewUrl, setHiddenPreviewUrl] = useState<string | null>(null);
   const typingSent = useRef(0);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const typingHide = useRef<number | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const anchor = useRef<{ height: number; top: number } | null>(null);
@@ -118,6 +146,10 @@ const MessagesPage = () => {
     setConfirmDeleteId(null);
     setOtherTyping(false);
     setIdentityError("");
+    setThreadQuery("");
+    setDebouncedThreadQuery("");
+    setLinkPreview(null);
+    setHiddenPreviewUrl(null);
   }, [conversationId]);
 
   useEffect(() => {
@@ -125,9 +157,33 @@ const MessagesPage = () => {
     return () => window.clearTimeout(timer);
   }, [inboxQuery]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedThreadQuery(threadQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [threadQuery]);
+
+  useEffect(() => {
+    const url = firstUrl(draft);
+    if (!url || editing || hiddenPreviewUrl === url) {
+      setLinkPreview(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void getLinkPreviewService(url).then((preview) => {
+        setLinkPreview(preview && preview.url ? preview : null);
+      }).catch(() => setLinkPreview(null));
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [draft, editing, hiddenPreviewUrl]);
+
   const conversations = useConversations(debouncedInboxQuery, inboxFilter);
   const suggestions = useRecipientSuggestions(handle.replace(/^@/, ""), asPageSlug || undefined);
   const thread = useConversationThread(conversationId);
+  const threadSearch = useThreadSearch(conversationId, debouncedThreadQuery);
+  const removeConversations = useDeleteConversations();
+  const readAll = useReadAllConversations();
+  const reportConversation = useReportConversation();
+  const react = useReactToMessage(conversationId);
   const start = useStartConversation();
   const send = useSendMessage(conversationId ?? "");
   const markRead = useMarkConversationRead(conversationId);
@@ -140,10 +196,12 @@ const MessagesPage = () => {
   const report = useReportMessage(conversationId);
 
   const items = conversations.data?.pages.flatMap((page) => page.conversations) ?? [];
-  const messages = useMemo(() => {
+  const timeline = useMemo(() => {
     const pages = thread.data?.pages ?? [];
     return [...pages].reverse().flatMap((page) => page.messages);
   }, [thread.data]);
+  const searching = debouncedThreadQuery.length > 0;
+  const messages = searching ? (threadSearch.data?.messages ?? []) : timeline;
   const active = thread.data?.pages[0]?.conversation;
   const canSend = Boolean(active?.canMessage);
   const newestId = messages[messages.length - 1]?.id;
@@ -155,15 +213,27 @@ const MessagesPage = () => {
     if (!conversationId) return;
     const socket = connectMessageSocket();
     if (!socket) return;
-    const onTyping = (payload: { conversationId?: string }) => {
-      if (payload?.conversationId !== conversationId) return;
+    const showTyping = () => {
       setOtherTyping(true);
       if (typingHide.current) window.clearTimeout(typingHide.current);
       typingHide.current = window.setTimeout(() => setOtherTyping(false), 3000);
     };
+    const hideTyping = (payload: { conversationId?: string }) => {
+      if (payload?.conversationId !== conversationId) return;
+      setOtherTyping(false);
+      if (typingHide.current) window.clearTimeout(typingHide.current);
+    };
+    const onTyping = (payload: { conversationId?: string }) => {
+      if (payload?.conversationId !== conversationId) return;
+      showTyping();
+    };
     socket.on("typing", onTyping);
+    socket.on("typing:stop", hideTyping);
+    socket.on("message:new", hideTyping);
     return () => {
       socket.off("typing", onTyping);
+      socket.off("typing:stop", hideTyping);
+      socket.off("message:new", hideTyping);
       if (typingHide.current) window.clearTimeout(typingHide.current);
     };
   }, [conversationId]);
@@ -230,6 +300,13 @@ const MessagesPage = () => {
     node.scrollTop = node.scrollHeight;
   }, [newestId, conversationId, messages.length]);
 
+  useLayoutEffect(() => {
+    const node = scroller.current;
+    if (!node || !otherTyping) return;
+    const distance = node.scrollHeight - node.scrollTop - node.clientHeight;
+    if (distance < 160) node.scrollTop = node.scrollHeight;
+  }, [otherTyping]);
+
   useEffect(() => {
     if (thread.isFetchingNextPage || !anchor.current) return;
     const node = scroller.current;
@@ -238,7 +315,31 @@ const MessagesPage = () => {
     }
   }, [thread.isFetchingNextPage, messages.length]);
 
-  const openConversation = (id: string) => navigate(`/messages/${id}`);
+  const openConversation = (id: string) => {
+    if (selecting) {
+      setSelectedIds((current) => (
+        current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+      ));
+      return;
+    }
+    navigate(`/messages/${id}`);
+  };
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!conversationId || (!canSend && !editing)) return;
+      if (!window.matchMedia("(min-width: 1024px)").matches) return;
+      const node = event.target;
+      if (node instanceof HTMLElement && node.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
+      event.preventDefault();
+      composerRef.current?.focus();
+      setDraft((current) => current + event.key);
+      notifyTyping();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [conversationId, canSend, editing]);
 
   const beginConversation = async (input?: { username?: string; pageSlug?: string }) => {
     const typed = handle.trim().replace(/^@/, "");
@@ -250,6 +351,7 @@ const MessagesPage = () => {
         ...(asPageSlug ? { asPageSlug } : {}),
       });
       setHandle("");
+      setComposeOpen(false);
       navigate(`/messages/${conversation.id}`);
     } catch {
       return;
@@ -276,9 +378,12 @@ const MessagesPage = () => {
         ...(active?.actingAs === "page" && active.actingPage
           ? { asPageId: active.actingPage.id }
           : {}),
+        ...(firstUrl(body) && hiddenPreviewUrl === firstUrl(body) ? { hideLinkPreview: true } : {}),
       });
       setDraft("");
       setReplyTarget(null);
+      setLinkPreview(null);
+      setHiddenPreviewUrl(null);
     } catch {
       return;
     }
@@ -288,8 +393,23 @@ const MessagesPage = () => {
     if (conversation.otherKind === "page") {
       return conversation.otherPage?.isActive ? `/${conversation.otherPage.slug}` : "Unavailable";
     }
+    if (conversation.otherOnline) return "online";
+    if (conversation.otherLastSeen) return `last seen ${timeLabel(conversation.otherLastSeen)}`;
     return conversation.otherUser ? `@${conversation.otherUser.username}` : "Unavailable";
   };
+
+  const senderChoices = [
+    {
+      value: "",
+      label: "You",
+      ...(user?.avatar ? { avatar: user.avatar } : {}),
+    },
+    ...senderPages.map((page) => ({
+      value: page.slug,
+      label: page.name,
+      ...(page.avatar ? { avatar: page.avatar } : {}),
+    })),
+  ];
 
   const isMine = (message: MessageDto): boolean => {
     if (!active) return false;
@@ -298,86 +418,65 @@ const MessagesPage = () => {
   };
 
   return (
-    <div className="h-[calc(100dvh-4.25rem)] bg-black text-white lg:grid lg:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="fixed inset-x-0 bottom-0 top-[61px] z-10 overflow-hidden bg-black text-white lg:left-20 lg:grid lg:grid-cols-[360px_minmax(0,1fr)]">
       <section
-        className={`${conversationId ? "hidden lg:flex" : "flex"} flex-col border-r border-zinc-900 min-h-0`}
+        className={`${conversationId ? "hidden lg:flex" : "flex"} h-full min-h-0 overflow-hidden flex-col border-r border-zinc-900`}
       >
         <div className="px-4 pt-4 pb-3">
-          <h1 className="text-lg font-bold">Messages</h1>
-          <form
-            className="mt-3 flex flex-col gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void beginConversation();
-            }}
-          >
-            <div className="flex gap-2">
-              <select
-                value={target}
-                onChange={(event) => setTarget(event.target.value as "person" | "page")}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-zinc-600"
-              >
-                <option value="person">Person</option>
-                <option value="page">Page</option>
-              </select>
-              <input
-                value={handle}
-                onChange={(event) => setHandle(event.target.value)}
-                placeholder={target === "page" ? "Page name or slug" : "Name or username"}
-                className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
-              />
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-lg font-bold">Messages</h1>
+            <div className="flex items-center">
               <button
-                type="submit"
-                disabled={start.isPending}
-                className="px-3 rounded-xl bg-[#F7C12B] text-black text-sm font-semibold disabled:opacity-50"
+                type="button"
+                aria-label="New message"
+                onClick={() => setComposeOpen(true)}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-200 hover:bg-zinc-900 cursor-pointer"
               >
-                {start.isPending ? "..." : "Start"}
+                <Plus size={18} />
               </button>
+              <ActionMenu
+                label="Conversation actions"
+                items={[
+                  {
+                    label: selecting ? "Cancel selection" : "Select chats",
+                    onClick: () => {
+                      setSelecting((current) => !current);
+                      setSelectedIds([]);
+                    },
+                  },
+                  {
+                    label: "Read all",
+                    onClick: () => readAll.mutate(),
+                  },
+                  ...(selecting && selectedIds.length === 1
+                    ? [{
+                        label: "Report",
+                        onClick: () => {
+                          setReportConversationId(selectedIds[0] ?? null);
+                          setReportReason("spam");
+                          setReportDetails("");
+                        },
+                      }]
+                    : []),
+                  ...(selecting && selectedIds.length > 0
+                    ? [{
+                        label: selectedIds.length === 1 ? "Delete chat" : "Delete chats",
+                        onClick: () => {
+                          const openId = conversationId;
+                          removeConversations.mutate(selectedIds, {
+                            onSuccess: () => {
+                              setSelectedIds([]);
+                              setSelecting(false);
+                              if (openId && selectedIds.includes(openId)) navigate("/messages");
+                            },
+                          });
+                        },
+                      }]
+                    : []),
+                ]}
+              />
             </div>
-            {(suggestions.data?.users.length ?? 0) + (suggestions.data?.pages.length ?? 0) > 0 && handle.trim().length > 0 && (
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden">
-                {suggestions.data?.users.map((person) => (
-                  <button
-                    key={person.id}
-                    type="button"
-                    onClick={() => void beginConversation({ username: person.username })}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-zinc-900"
-                  >
-                    <span className="font-medium">{person.firstname} {person.lastname}</span>
-                    <span className="text-zinc-500"> @{person.username}</span>
-                  </button>
-                ))}
-                {suggestions.data?.pages.map((page) => (
-                  <button
-                    key={page.id}
-                    type="button"
-                    onClick={() => void beginConversation({ pageSlug: page.slug })}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-zinc-900"
-                  >
-                    <span className="font-medium">{page.name}</span>
-                    <span className="text-zinc-500"> /{page.slug}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {myPages.some((page) => page.isActive) && (
-              <select
-                value={asPageSlug}
-                onChange={(event) => setAsPageSlug(event.target.value)}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-zinc-600"
-              >
-                <option value="">From me</option>
-                {myPages.filter((page) => page.isActive).map((page) => (
-                  <option key={page.id} value={page.slug}>
-                    From {page.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </form>
-          {start.error && (
-            <p className="text-red-400 text-xs mt-2">{start.error.message}</p>
-          )}
+          </div>
           <input
             value={inboxQuery}
             onChange={(event) => setInboxQuery(event.target.value)}
@@ -424,9 +523,18 @@ const MessagesPage = () => {
               key={conversation.id}
               onClick={() => openConversation(conversation.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-zinc-900 ${
-                conversation.id === conversationId ? "bg-zinc-900" : ""
+                conversation.id === conversationId || selectedIds.includes(conversation.id) ? "bg-zinc-900" : ""
               }`}
             >
+              {selecting && (
+                <span
+                  className={`w-5 h-5 rounded-full border shrink-0 ${
+                    selectedIds.includes(conversation.id)
+                      ? "bg-[#F7C12B] border-[#F7C12B]"
+                      : "border-zinc-600"
+                  }`}
+                />
+              )}
               <Avatar conversation={conversation} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
@@ -466,7 +574,7 @@ const MessagesPage = () => {
       </section>
 
       <section
-        className={`${conversationId ? "flex" : "hidden lg:flex"} flex-col min-h-0`}
+        className={`${conversationId ? "flex" : "hidden lg:flex"} h-full min-h-0 overflow-hidden flex-col`}
       >
         {!conversationId && (
           <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-2">
@@ -522,69 +630,57 @@ const MessagesPage = () => {
               )}
               <div className="ml-auto flex items-center gap-2 shrink-0">
                 {senderPages.length > 0 && (
-                  <select
+                  <ChoiceMenu
+                    ariaLabel="Replying as"
                     value={active.actingAs === "page" ? active.actingPage?.slug ?? "" : ""}
-                    onChange={(event) => void switchIdentity(event.target.value)}
+                    options={senderChoices}
                     disabled={start.isPending}
-                    aria-label="Replying as"
-                    className="max-w-36 bg-zinc-900 border border-zinc-800 rounded-full px-2 py-1 text-xs text-zinc-200"
-                  >
-                    <option value="">You</option>
-                    {senderPages.map((page) => (
-                      <option key={page.id} value={page.slug}>
-                        {page.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => void switchIdentity(value)}
+                    className="w-36"
+                  />
                 )}
-                {active.otherKind === "user" && active.otherUser && (
-                  <button
-                    type="button"
-                    onClick={() => block.mutate({
-                      userId: active.otherUser?.id ?? "",
-                      blocked: !active.blocked,
-                    })}
-                    disabled={block.isPending}
-                    className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
-                  >
-                    {active.blocked ? "Unblock" : "Block"}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => pin.mutate(!active.pinned)}
-                  disabled={pin.isPending}
-                  className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
-                >
-                  {active.pinned ? "Unpin" : "Pin"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => mute.mutate(!active.muted)}
-                  disabled={mute.isPending}
-                  className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
-                >
-                  {active.muted ? "Unmute" : "Mute"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    hide.mutate(undefined, {
-                      onSuccess: () => navigate("/messages"),
-                    });
-                  }}
-                  disabled={hide.isPending}
-                  className="text-xs font-semibold text-zinc-300 border border-zinc-700 rounded-full px-3 py-1 cursor-pointer disabled:opacity-40"
-                >
-                  Hide
-                </button>
+                <ActionMenu
+                  label="Chat actions"
+                  items={[
+                    ...(active.otherKind === "user" && active.otherUser
+                      ? [{
+                          label: active.blocked ? "Unblock" : "Block",
+                          onClick: () => block.mutate({
+                            userId: active.otherUser?.id ?? "",
+                            blocked: !active.blocked,
+                          }),
+                        }]
+                      : []),
+                    {
+                      label: active.pinned ? "Unpin" : "Pin",
+                      onClick: () => pin.mutate(!active.pinned),
+                    },
+                    {
+                      label: active.muted ? "Unmute" : "Mute",
+                      onClick: () => mute.mutate(!active.muted),
+                    },
+                    {
+                      label: "Hide",
+                      onClick: () => {
+                        hide.mutate(undefined, {
+                          onSuccess: () => navigate("/messages"),
+                        });
+                      },
+                    },
+                  ]}
+                />
               </div>
             </header>
+            <div className="px-3 py-2 border-b border-zinc-900">
+              <input
+                value={threadQuery}
+                onChange={(event) => setThreadQuery(event.target.value)}
+                placeholder="Search in this chat"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+              />
+            </div>
             {identityError && (
               <p className="px-4 py-2 text-xs text-red-400 border-b border-zinc-900">{identityError}</p>
-            )}
-            {otherTyping && (
-              <p className="px-4 py-1.5 text-xs text-zinc-400 border-b border-zinc-900">Typing…</p>
             )}
 
             {active.otherKind === "page" &&
@@ -594,7 +690,7 @@ const MessagesPage = () => {
               )}
 
             <div ref={scroller} className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full px-4 py-4 flex flex-col gap-2">
-              {thread.hasNextPage && (
+              {!searching && thread.hasNextPage && (
                 <button
                   onClick={loadOlder}
                   disabled={thread.isFetchingNextPage}
@@ -605,7 +701,7 @@ const MessagesPage = () => {
               )}
               {messages.length === 0 && (
                 <p className="text-zinc-500 text-sm text-center py-10">
-                  No messages yet. Say hello.
+                  {searching ? "No messages match." : "No messages yet. Say hello."}
                 </p>
               )}
               {messages.map((message, index) => {
@@ -655,10 +751,12 @@ const MessagesPage = () => {
                               setReportDetails("");
                             }
                       }
+                      onReact={(emoji) => react.mutate({ messageId: message.id, emoji })}
                     />
                   </div>
                 );
               })}
+              {otherTyping && !searching && <TypingBubble />}
             </div>
 
             {canSend && active.actingAs === "page" && active.actingPage && (
@@ -755,14 +853,40 @@ const MessagesPage = () => {
               </form>
             )}
 
+            {linkPreview && !editing && (
+              <div className="mx-3 mb-1 flex items-start gap-2 rounded-xl border border-zinc-800 bg-zinc-950 p-2">
+                {linkPreview.image && (
+                  <img src={linkPreview.image} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold truncate">{linkPreview.title ?? linkPreview.url}</span>
+                  {linkPreview.description && (
+                    <span className="block text-xs text-zinc-400 line-clamp-2">{linkPreview.description}</span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Hide preview"
+                  onClick={() => {
+                    setHiddenPreviewUrl(linkPreview.url);
+                    setLinkPreview(null);
+                  }}
+                  className="text-zinc-400 cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             <form
-              className="flex items-end gap-2 px-3 py-3 border-t border-zinc-900"
+              className="shrink-0 flex items-end gap-2 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-zinc-900"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitMessage();
               }}
             >
               <textarea
+                ref={composerRef}
                 value={draft}
                 onChange={(event) => {
                   setDraft(event.target.value);
@@ -804,6 +928,136 @@ const MessagesPage = () => {
           </>
         )}
       </section>
+      {composeOpen && (
+        <div className="fixed inset-0 z-40 bg-black/70 flex items-end sm:items-center justify-center p-4">
+          <form
+            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-4 flex flex-col gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void beginConversation();
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">New message</h2>
+              <button type="button" aria-label="Close" onClick={() => setComposeOpen(false)} className="text-zinc-400 cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+            <ChoiceMenu
+              ariaLabel="Person or page"
+              value={target}
+              options={[
+                { value: "person", label: "Person" },
+                { value: "page", label: "Page" },
+              ]}
+              onChange={(value) => setTarget(value as "person" | "page")}
+            />
+            <input
+              value={handle}
+              onChange={(event) => setHandle(event.target.value)}
+              placeholder={target === "page" ? "Page name or slug" : "Name or username"}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+            />
+            {(suggestions.data?.users.length ?? 0) + (suggestions.data?.pages.length ?? 0) > 0 && handle.trim().length > 0 && (
+              <div className="rounded-xl border border-zinc-800 overflow-hidden max-h-48 overflow-y-auto">
+                {suggestions.data?.users.map((person) => (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => void beginConversation({ username: person.username })}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-zinc-900"
+                  >
+                    <span className="font-medium">{person.firstname} {person.lastname}</span>
+                    <span className="text-zinc-500"> @{person.username}</span>
+                  </button>
+                ))}
+                {suggestions.data?.pages.map((page) => (
+                  <button
+                    key={page.id}
+                    type="button"
+                    onClick={() => void beginConversation({ pageSlug: page.slug })}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-zinc-900"
+                  >
+                    <span className="font-medium">{page.name}</span>
+                    <span className="text-zinc-500"> /{page.slug}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {myPages.some((page) => page.isActive) && (
+              <ChoiceMenu
+                ariaLabel="Send as"
+                value={asPageSlug}
+                options={[
+                  { value: "", label: "From me", ...(user?.avatar ? { avatar: user.avatar } : {}) },
+                  ...myPages.filter((page) => page.isActive).map((page) => ({
+                    value: page.slug,
+                    label: `From ${page.name}`,
+                    ...(page.avatar ? { avatar: page.avatar } : {}),
+                  })),
+                ]}
+                onChange={setAsPageSlug}
+              />
+            )}
+            {start.error && <p className="text-red-400 text-xs">{start.error.message}</p>}
+            <button
+              type="submit"
+              disabled={start.isPending}
+              className="rounded-xl bg-[#F7C12B] text-black text-sm font-semibold py-2 disabled:opacity-50"
+            >
+              {start.isPending ? "..." : "Start"}
+            </button>
+          </form>
+        </div>
+      )}
+      {reportConversationId && (
+        <form
+          className="fixed inset-x-4 bottom-24 z-40 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 flex flex-col gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            reportConversation.mutate(
+              {
+                conversationId: reportConversationId,
+                reason: reportReason,
+                ...(reportDetails.trim() ? { details: reportDetails.trim() } : {}),
+              },
+              {
+                onSuccess: () => {
+                  setReportConversationId(null);
+                  setSelecting(false);
+                  setSelectedIds([]);
+                },
+              },
+            );
+          }}
+        >
+          <p className="text-sm font-semibold">Report conversation</p>
+          <ChoiceMenu
+            ariaLabel="Report reason"
+            value={reportReason}
+            options={REPORT_REASONS.map((reason) => ({ value: reason.value, label: reason.label }))}
+            onChange={(value) => setReportReason(value as ReportReason)}
+          />
+          <input
+            value={reportDetails}
+            onChange={(event) => setReportDetails(event.target.value)}
+            maxLength={500}
+            placeholder="Details (optional)"
+            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-sm"
+          />
+          {reportConversation.error && (
+            <p className="text-xs text-red-400">{reportConversation.error.message}</p>
+          )}
+          <div className="flex gap-2">
+            <button type="submit" className="text-xs font-semibold text-black bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer">
+              Submit report
+            </button>
+            <button type="button" onClick={() => setReportConversationId(null)} className="text-xs text-zinc-400 cursor-pointer">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };
@@ -862,6 +1116,14 @@ const QuickReplies = ({
   );
 };
 
+const TypingBubble = () => (
+  <div className="self-start flex items-center gap-1 px-3 py-3 rounded-2xl rounded-bl-md bg-zinc-800" aria-label="Typing">
+    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-bounce [animation-delay:0ms]" />
+    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-bounce [animation-delay:150ms]" />
+    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-bounce [animation-delay:300ms]" />
+  </div>
+);
+
 const Bubble = ({
   message,
   mine,
@@ -872,6 +1134,7 @@ const Bubble = ({
   onDelete,
   onConfirmDelete,
   onReport,
+  onReact,
 }: {
   message: MessageDto;
   mine: boolean;
@@ -882,7 +1145,9 @@ const Bubble = ({
   onDelete: () => void;
   onConfirmDelete: () => void;
   onReport?: () => void;
+  onReact: (emoji: string) => void;
 }) => {
+  const [picker, setPicker] = useState(false);
   const card = message.share;
   const showBody = !message.deleted && (!card || message.body !== card.title);
   return (
@@ -903,6 +1168,28 @@ const Bubble = ({
       )}
       {message.deleted && <span className="italic">This message was deleted</span>}
       {showBody && <MessageText text={message.body} mine={mine} />}
+      {!message.deleted && message.linkPreview && (
+        <a
+          href={message.linkPreview.url}
+          target="_blank"
+          rel="noreferrer"
+          className={`mt-2 block rounded-xl overflow-hidden border ${
+            mine ? "border-black/10 bg-black/10" : "border-zinc-700 bg-zinc-900"
+          }`}
+        >
+          {message.linkPreview.image && (
+            <img src={message.linkPreview.image} alt="" className="w-full h-28 object-cover" />
+          )}
+          <span className="block px-2.5 py-2">
+            <span className="block font-semibold text-sm">{message.linkPreview.title ?? message.linkPreview.url}</span>
+            {message.linkPreview.description && (
+              <span className={`block text-xs ${mine ? "text-black/70" : "text-zinc-400"}`}>
+                {message.linkPreview.description}
+              </span>
+            )}
+          </span>
+        </a>
+      )}
       {!message.deleted && card && (
         <Link
           to={card.path}
@@ -927,6 +1214,47 @@ const Bubble = ({
         </Link>
       )}
     </div>
+    {!message.deleted && (
+      <span className="mt-1 flex items-center gap-1">
+        {(message.reactions ?? []).map((reaction) => (
+          <button
+            key={reaction.emoji}
+            type="button"
+            onClick={() => onReact(reaction.emoji)}
+            className={`text-xs rounded-full px-1.5 py-0.5 cursor-pointer ${
+              reaction.reacted ? "bg-[#F7C12B] text-black" : "bg-zinc-900 text-white"
+            }`}
+          >
+            {reaction.emoji} {reaction.count}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setPicker((current) => !current)}
+          className="text-[10px] text-zinc-500 cursor-pointer"
+        >
+          React
+        </button>
+        {picker && (
+          <span className="flex gap-0.5">
+            {REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  onReact(emoji);
+                  setPicker(false);
+                }}
+                className="text-sm cursor-pointer"
+                aria-label={`React ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </span>
+        )}
+      </span>
+    )}
     <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
       <span>{exactTime(message.createdAt)}</span>
       {message.editedAt && !message.deleted && <span>Edited</span>}

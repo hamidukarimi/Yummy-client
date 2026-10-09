@@ -60,6 +60,8 @@ export interface ConversationSummary {
   muted: boolean;
   pinned: boolean;
   blocked: boolean;
+  otherOnline?: boolean;
+  otherLastSeen?: string;
 }
 
 export interface MessageReplyPreview {
@@ -81,6 +83,13 @@ export interface MessageDto {
   isRead: boolean;
   editedAt?: string;
   deleted?: boolean;
+  linkPreview?: {
+    url: string;
+    title?: string;
+    description?: string;
+    image?: string;
+  };
+  reactions?: { emoji: string; count: number; reacted: boolean }[];
 }
 
 export interface StartConversationInput {

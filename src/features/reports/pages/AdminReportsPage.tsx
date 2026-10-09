@@ -128,6 +128,10 @@ const AdminReportsPage = () => {
               report.review && typeof report.review === "object"
                 ? (report.review as ReportReview)
                 : undefined;
+            const conversation =
+              report.conversation && typeof report.conversation === "object"
+                ? report.conversation
+                : undefined;
             const postId =
               report.post && typeof report.post === "object" ? report.post._id : report.post;
             const isReviewing = reviewingReportId === report._id;
@@ -156,7 +160,9 @@ const AdminReportsPage = () => {
                         ? `${review.page?.name ?? "Page"} · ${review.rating}/5`
                         : message
                           ? "Message"
-                          : (post?.title ?? "Untitled post")}
+                          : conversation
+                            ? "Conversation"
+                            : (post?.title ?? "Untitled post")}
                     </h2>
                     {review?.page?.slug && (
                       <button
@@ -185,6 +191,11 @@ const AdminReportsPage = () => {
                   </p>
                 </div>
 
+                {conversation && (
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    Conversation: {conversation.lastMessage?.text ?? "No preview"}
+                  </p>
+                )}
                 {message && (
                   <p className="text-sm text-zinc-300 leading-relaxed">
                     Message: {message.body}

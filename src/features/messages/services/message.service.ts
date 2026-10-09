@@ -55,10 +55,11 @@ export const startConversationService = async (
 export const getMessagesService = async (
   conversationId: string,
   before?: string,
+  q?: string,
 ): Promise<MessagePage> => {
   const response = await api.get<ApiResponse<MessagePage>>(
     ENDPOINTS.messages.thread(conversationId),
-    { params: { limit: 30, ...(before ? { before } : {}) } },
+    { params: { limit: 30, ...(before ? { before } : {}), ...(q ? { q } : {}) } },
   );
   return response.data.data;
 };
@@ -69,6 +70,7 @@ export const sendMessageService = async (
   asPageId?: string,
   share?: ChatShare,
   replyTo?: string,
+  hideLinkPreview?: boolean,
 ): Promise<MessageDto> => {
   const trimmed = body.trim();
   const response = await api.post<ApiResponse<{ message: MessageDto }>>(
@@ -78,6 +80,7 @@ export const sendMessageService = async (
       ...(asPageId ? { asPageId } : {}),
       ...(share ? { share } : {}),
       ...(replyTo ? { replyTo } : {}),
+      ...(hideLinkPreview ? { hideLinkPreview: true } : {}),
     },
   );
   return response.data.data.message;
@@ -145,6 +148,43 @@ export const reportMessageService = async (
   input: { reason: "spam" | "inappropriate" | "misleading" | "other"; details?: string },
 ): Promise<void> => {
   await api.post(ENDPOINTS.messages.reportMessage(conversationId, messageId), input);
+};
+
+export const deleteConversationsService = async (ids: string[]): Promise<void> => {
+  await api.post(ENDPOINTS.messages.deleteConversations, { ids });
+};
+
+export const readAllConversationsService = async (): Promise<void> => {
+  await api.post(ENDPOINTS.messages.readAll);
+};
+
+export const reportConversationService = async (
+  conversationId: string,
+  input: { reason: "spam" | "inappropriate" | "misleading" | "other"; details?: string },
+): Promise<void> => {
+  await api.post(ENDPOINTS.messages.reportConversation(conversationId), input);
+};
+
+export const reactToMessageService = async (
+  conversationId: string,
+  messageId: string,
+  emoji: string,
+): Promise<MessageDto> => {
+  const response = await api.post<ApiResponse<{ message: MessageDto }>>(
+    ENDPOINTS.messages.react(conversationId, messageId),
+    { emoji },
+  );
+  return response.data.data.message;
+};
+
+export const getLinkPreviewService = async (
+  url: string,
+): Promise<MessageDto["linkPreview"] | null> => {
+  const response = await api.get<ApiResponse<{ preview: MessageDto["linkPreview"] | null }>>(
+    ENDPOINTS.messages.linkPreview,
+    { params: { url } },
+  );
+  return response.data.data.preview;
 };
 
 export const markConversationReadService = async (

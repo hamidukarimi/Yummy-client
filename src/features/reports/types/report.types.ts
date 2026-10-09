@@ -45,6 +45,11 @@ export interface ReportMessage {
   body: string;
 }
 
+export interface ReportConversation {
+  _id: string;
+  lastMessage?: { text?: string };
+}
+
 export interface ApiReport {
   _id: string;
   reporter: ReportReporter | string;
@@ -52,6 +57,7 @@ export interface ApiReport {
   comment?: ReportComment | string | null;
   review?: ReportReview | string | null;
   message?: ReportMessage | string | null;
+  conversation?: ReportConversation | string | null;
   reason: ReportReason;
   details?: string;
   status: ReportStatus;
