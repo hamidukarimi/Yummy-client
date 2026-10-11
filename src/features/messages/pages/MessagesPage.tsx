@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Mail, Plus, Send, X } from "lucide-react";
+import { ChevronLeft, Flag, Mail, MoreHorizontal, Pencil, Plus, Reply, Search, Send, SmilePlus, Trash2, X } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import useAuth from "@/hooks/useAuth";
 import useMyPages from "@/features/pages/hooks/useMyPages";
@@ -477,20 +478,23 @@ const MessagesPage = () => {
               />
             </div>
           </div>
-          <input
-            value={inboxQuery}
-            onChange={(event) => setInboxQuery(event.target.value)}
-            placeholder="Search conversations"
-            className="mt-3 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
-          />
+          <div className="relative mt-3">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+            <input
+              value={inboxQuery}
+              onChange={(event) => setInboxQuery(event.target.value)}
+              placeholder="Search conversations"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+            />
+          </div>
           <div className="mt-2 flex gap-1.5">
             {(["all", "unread", "people", "pages"] as const).map((key) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setInboxFilter(key)}
-                className={`px-2.5 py-1 rounded-full text-xs capitalize ${
-                  inboxFilter === key ? "bg-[#F7C12B] text-black font-semibold" : "bg-zinc-900 text-zinc-400"
+                className={`px-2.5 py-1 rounded-full text-xs capitalize cursor-pointer ${
+                  inboxFilter === key ? "bg-[#F7C12B] text-white font-semibold" : "bg-zinc-900 text-zinc-400"
                 }`}
               >
                 {key}
@@ -519,10 +523,9 @@ const MessagesPage = () => {
             </div>
           )}
           {items.map((conversation) => (
-            <button
+            <div
               key={conversation.id}
-              onClick={() => openConversation(conversation.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-zinc-900 ${
+              className={`group/row relative w-full flex items-center gap-3 px-4 py-3 text-left border-b border-zinc-900 ${
                 conversation.id === conversationId || selectedIds.includes(conversation.id) ? "bg-zinc-900" : ""
               }`}
             >
@@ -535,29 +538,52 @@ const MessagesPage = () => {
                   }`}
                 />
               )}
-              <Avatar conversation={conversation} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-sm truncate">
-                    {conversationTitle(conversation)}
-                  </span>
-                  <span className="text-zinc-600 text-xs shrink-0">
-                    {timeLabel(conversation.lastMessage?.createdAt ?? conversation.lastMessageAt)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-zinc-500 text-xs truncate">
-                    {conversation.pinned ? "Pinned · " : ""}
-                    {lastMessageLabel(conversation, user?.id)}
-                  </p>
-                  {conversation.unreadCount > 0 && (
-                    <span className="min-w-5 h-5 px-1 rounded-full bg-[#F7C12B] text-black text-[10px] font-bold flex items-center justify-center">
-                      {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+              <button
+                type="button"
+                onClick={() => openConversation(conversation.id)}
+                className="min-w-0 flex-1 flex items-center gap-3 text-left cursor-pointer"
+              >
+                <Avatar conversation={conversation} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm truncate">
+                      {conversationTitle(conversation)}
                     </span>
-                  )}
-                </div>
-              </div>
-            </button>
+                    <span className="text-zinc-600 text-xs shrink-0">
+                      {timeLabel(conversation.lastMessage?.createdAt ?? conversation.lastMessageAt)}
+                    </span>
+                  </span>
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-zinc-500 text-xs truncate">
+                      {conversation.pinned ? "Pinned · " : ""}
+                      {lastMessageLabel(conversation, user?.id)}
+                    </span>
+                    {conversation.unreadCount > 0 && (
+                      <span className="min-w-5 h-5 px-1 rounded-full bg-[#F7C12B] text-white text-[10px] font-bold flex items-center justify-center">
+                        {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </button>
+              {!selecting && (
+                <ConversationMenu
+                  onDelete={() => {
+                    const openId = conversationId;
+                    removeConversations.mutate([conversation.id], {
+                      onSuccess: () => {
+                        if (openId === conversation.id) navigate("/messages");
+                      },
+                    });
+                  }}
+                  onReport={() => {
+                    setReportConversationId(conversation.id);
+                    setReportReason("spam");
+                    setReportDetails("");
+                  }}
+                />
+              )}
+            </div>
           ))}
           {conversations.hasNextPage && (
             <div className="flex justify-center py-4">
@@ -672,12 +698,15 @@ const MessagesPage = () => {
               </div>
             </header>
             <div className="px-3 py-2 border-b border-zinc-900">
-              <input
-                value={threadQuery}
-                onChange={(event) => setThreadQuery(event.target.value)}
-                placeholder="Search in this chat"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
-              />
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                <input
+                  value={threadQuery}
+                  onChange={(event) => setThreadQuery(event.target.value)}
+                  placeholder="Search in this chat"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-3 py-1.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+                />
+              </div>
             </div>
             {identityError && (
               <p className="px-4 py-2 text-xs text-red-400 border-b border-zinc-900">{identityError}</p>
@@ -710,12 +739,13 @@ const MessagesPage = () => {
                 return (
                   <div key={message.id} className="flex flex-col gap-2">
                     {stamp !== previous && (
-                      <p className="self-center text-[11px] text-zinc-500 px-2 py-0.5">
+                      <p className="self-center text-[11px] uppercase tracking-wide text-zinc-500 px-2 py-0.5">
                         {dayLabel(message.createdAt)}
                       </p>
                     )}
                     <Bubble
                       message={message}
+                      other={active}
                       mine={isMine(message)}
                       canChange={
                         isMine(message) &&
@@ -838,7 +868,7 @@ const MessagesPage = () => {
                   <button
                     type="submit"
                     disabled={report.isPending}
-                    className="text-xs font-semibold text-black bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer disabled:opacity-40"
+                    className="text-xs font-semibold text-white bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer disabled:opacity-40"
                   >
                     {report.isPending ? "Sending..." : "Submit report"}
                   </button>
@@ -885,42 +915,50 @@ const MessagesPage = () => {
                 void submitMessage();
               }}
             >
-              <textarea
-                ref={composerRef}
-                value={draft}
-                onChange={(event) => {
-                  setDraft(event.target.value);
-                  if (event.target.value.trim()) notifyTyping();
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    void submitMessage();
+              <div className="relative flex-1">
+                <textarea
+                  ref={composerRef}
+                  value={draft}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    if (event.target.value.trim()) notifyTyping();
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void submitMessage();
+                    }
+                  }}
+                  disabled={!canSend && !editing}
+                  rows={1}
+                  placeholder={
+                    editing
+                      ? "Edit message..."
+                      : canSend
+                      ? "Message..."
+                      : active.otherKind === "page"
+                        ? "This page can't receive messages"
+                        : active.otherUser?.isActive
+                          ? "You can't message this user"
+                          : "This account can't receive messages"
                   }
-                }}
-                disabled={!canSend && !editing}
-                rows={1}
-                placeholder={
-                  editing
-                    ? "Edit message..."
-                    : canSend
-                    ? "Message..."
-                    : active.otherKind === "page"
-                      ? "This page can't receive messages"
-                      : active.otherUser?.isActive
-                        ? "You can't message this user"
-                        : "This account can't receive messages"
-                }
-                className="flex-1 resize-none bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 disabled:opacity-60"
-              />
-              <button
-                type="submit"
-                disabled={(!canSend && !editing) || send.isPending || edit.isPending || draft.trim().length === 0}
-                className="w-10 h-10 rounded-full bg-[#F7C12B] text-black flex items-center justify-center disabled:opacity-40"
-                aria-label="Send message"
-              >
-                <Send size={16} />
-              </button>
+                  className={`w-full resize-none bg-zinc-900 border border-zinc-800 rounded-2xl py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 disabled:opacity-60 ${
+                    draft.trim() ? "pl-4 pr-12" : "px-4"
+                  }`}
+                />
+                <button
+                  type="submit"
+                  disabled={(!canSend && !editing) || send.isPending || edit.isPending || draft.trim().length === 0}
+                  aria-label="Send message"
+                  className={`absolute right-1.5 bottom-1.5 w-8 h-8 rounded-full bg-[#F7C12B] text-white flex items-center justify-center transition duration-200 ${
+                    draft.trim()
+                      ? "opacity-100 scale-100 disabled:opacity-40"
+                      : "opacity-0 scale-75 pointer-events-none"
+                  }`}
+                >
+                  <Send size={15} />
+                </button>
+              </div>
             </form>
             {(send.error || edit.error) && (
               <p className="text-red-400 text-xs px-4 pb-3">{send.error?.message ?? edit.error?.message}</p>
@@ -1003,7 +1041,7 @@ const MessagesPage = () => {
             <button
               type="submit"
               disabled={start.isPending}
-              className="rounded-xl bg-[#F7C12B] text-black text-sm font-semibold py-2 disabled:opacity-50"
+              className="rounded-xl bg-[#F7C12B] text-white text-sm font-semibold py-2 disabled:opacity-50"
             >
               {start.isPending ? "..." : "Start"}
             </button>
@@ -1049,7 +1087,7 @@ const MessagesPage = () => {
             <p className="text-xs text-red-400">{reportConversation.error.message}</p>
           )}
           <div className="flex gap-2">
-            <button type="submit" className="text-xs font-semibold text-black bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer">
+            <button type="submit" className="text-xs font-semibold text-white bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer">
               Submit report
             </button>
             <button type="button" onClick={() => setReportConversationId(null)} className="text-xs text-zinc-400 cursor-pointer">
@@ -1107,7 +1145,7 @@ const QuickReplies = ({
           key={reply.label}
           type="button"
           onClick={() => onPick(reply.text)}
-          className="shrink-0 text-xs font-semibold text-black bg-[#F7C12B] rounded-full px-3 py-1.5 cursor-pointer"
+          className="shrink-0 text-xs font-semibold text-white bg-[#343434] rounded-full px-3 py-1.5 cursor-pointer"
         >
           {reply.label}
         </button>
@@ -1117,15 +1155,119 @@ const QuickReplies = ({
 };
 
 const TypingBubble = () => (
-  <div className="self-start flex items-center gap-1 px-3 py-3 rounded-2xl rounded-bl-md bg-zinc-800" aria-label="Typing">
+  <div className="self-start flex items-center gap-1 px-3 py-3 rounded-2xl bg-zinc-800" aria-label="Typing">
     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-bounce [animation-delay:0ms]" />
     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-bounce [animation-delay:150ms]" />
     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-bounce [animation-delay:300ms]" />
   </div>
 );
 
+const PeerAvatar = ({ conversation }: { conversation: ConversationSummary }) => {
+  const page = conversation.otherKind === "page" ? conversation.otherPage : null;
+  const person = page ? null : conversation.otherUser;
+  const image = page?.avatar ?? person?.avatar;
+  const letter = page?.name?.[0] ?? person?.firstname?.[0] ?? "?";
+  const face = (
+    <span className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 flex">
+      {image ? (
+        <img src={image} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <span className="w-full h-full flex items-center justify-center text-xs font-semibold text-white">
+          {letter}
+        </span>
+      )}
+    </span>
+  );
+  if (page?.slug) {
+    return (
+      <Link to={`/pages/${page.slug}`} aria-label={page.name} className="shrink-0 self-end">
+        {face}
+      </Link>
+    );
+  }
+  return <span className="shrink-0 self-end">{face}</span>;
+};
+
+const ConversationMenu = ({
+  onDelete,
+  onReport,
+}: {
+  onDelete: () => void;
+  onReport: () => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [box, setBox] = useState<{ top: number; right: number } | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (root.current?.contains(target) || menu.current?.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  return (
+    <div ref={root} className="absolute right-2 top-1/2 -translate-y-1/2 z-20">
+      <button
+        type="button"
+        aria-label="Chat options"
+        aria-expanded={open}
+        onClick={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          setBox({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+          setOpen((current) => !current);
+        }}
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-zinc-300 hover:bg-zinc-800 cursor-pointer transition duration-200 ${
+          open
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto"
+        }`}
+      >
+        <MoreHorizontal size={16} />
+      </button>
+      {box && createPortal(
+        <div
+          ref={menu}
+          style={{ top: box.top, right: box.right }}
+          className={`fixed z-50 min-w-36 origin-top-right rounded-xl border border-zinc-800 bg-zinc-950 py-1 shadow-xl transition duration-150 ${
+            open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-zinc-900 cursor-pointer"
+          >
+            Delete
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onReport();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-zinc-900 cursor-pointer"
+          >
+            Report
+          </button>
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+};
+
 const Bubble = ({
   message,
+  other,
   mine,
   canChange,
   confirmDelete,
@@ -1137,6 +1279,7 @@ const Bubble = ({
   onReact,
 }: {
   message: MessageDto;
+  other: ConversationSummary;
   mine: boolean;
   canChange: boolean;
   confirmDelete: boolean;
@@ -1151,140 +1294,183 @@ const Bubble = ({
   const card = message.share;
   const showBody = !message.deleted && (!card || message.body !== card.title);
   return (
-  <div className={`flex flex-col max-w-[78%] ${mine ? "self-end items-end" : "self-start"}`}>
-    <div
-      className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${
-        mine ? "bg-[#F7C12B] text-black rounded-br-md" : "bg-zinc-800 text-white rounded-bl-md"
-      }`}
-    >
-      {!message.deleted && message.reply && (
-        <span
-          className={`block text-xs mb-1 border-l-2 pl-2 ${
-            mine ? "border-black/30 text-black/70" : "border-zinc-500 text-zinc-300"
+  <div className={`flex items-end gap-2 max-w-[88%] ${mine ? "self-end" : "self-start"}`}>
+    {!mine && <PeerAvatar conversation={other} />}
+    <div className={`group flex items-center gap-1 min-w-0 ${mine ? "flex-row-reverse" : ""}`}>
+      <div className="flex flex-col min-w-0">
+        <div
+          className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${
+            mine ? "bg-[#343434] text-white" : "bg-[#181818] text-white"
           }`}
         >
-          {message.reply.body}
-        </span>
-      )}
-      {message.deleted && <span className="italic">This message was deleted</span>}
-      {showBody && <MessageText text={message.body} mine={mine} />}
-      {!message.deleted && message.linkPreview && (
-        <a
-          href={message.linkPreview.url}
-          target="_blank"
-          rel="noreferrer"
-          className={`mt-2 block rounded-xl overflow-hidden border ${
-            mine ? "border-black/10 bg-black/10" : "border-zinc-700 bg-zinc-900"
-          }`}
-        >
-          {message.linkPreview.image && (
-            <img src={message.linkPreview.image} alt="" className="w-full h-28 object-cover" />
+          {!message.deleted && message.reply && (
+            <span
+              className={`block text-xs mb-1 border-l-2 pl-2 ${
+                mine ? "border-white/40 text-white/80" : "border-zinc-500 text-zinc-300"
+              }`}
+            >
+              {message.reply.body}
+            </span>
           )}
-          <span className="block px-2.5 py-2">
-            <span className="block font-semibold text-sm">{message.linkPreview.title ?? message.linkPreview.url}</span>
-            {message.linkPreview.description && (
-              <span className={`block text-xs ${mine ? "text-black/70" : "text-zinc-400"}`}>
-                {message.linkPreview.description}
+          {message.deleted && <span className="italic">This message was deleted</span>}
+          {showBody && <MessageText text={message.body} mine={mine} />}
+          {!message.deleted && message.linkPreview && (
+            <a
+              href={message.linkPreview.url}
+              target="_blank"
+              rel="noreferrer"
+              className={`mt-2 block rounded-xl overflow-hidden border ${
+                mine ? "border-white/20 bg-black/10" : "border-zinc-700 bg-zinc-900"
+              }`}
+            >
+              {message.linkPreview.image && (
+                <img src={message.linkPreview.image} alt="" className="w-full h-28 object-cover" />
+              )}
+              <span className="block px-2.5 py-2">
+                <span className="block font-semibold text-sm">{message.linkPreview.title ?? message.linkPreview.url}</span>
+                {message.linkPreview.description && (
+                  <span className={`block text-xs ${mine ? "text-white/80" : "text-zinc-400"}`}>
+                    {message.linkPreview.description}
+                  </span>
+                )}
               </span>
-            )}
-          </span>
-        </a>
-      )}
-      {!message.deleted && card && (
-        <Link
-          to={card.path}
-          className={`mt-2 block rounded-xl overflow-hidden border ${
-            mine ? "border-black/10 bg-black/10" : "border-zinc-700 bg-zinc-900"
-          }`}
-        >
-          {card.image && (
-            <img src={card.image} alt="" className="w-full h-28 object-cover" />
+            </a>
           )}
-          <span className="block px-2.5 py-2">
-            <span className="block font-semibold text-sm">{card.title}</span>
-            {card.subtitle && (
-              <span className={`block text-xs ${mine ? "text-black/70" : "text-zinc-400"}`}>
-                {card.subtitle}
+          {!message.deleted && card && (
+            <Link
+              to={card.path}
+              className={`mt-2 block rounded-xl overflow-hidden border ${
+                mine ? "border-white/20 bg-black/10" : "border-zinc-700 bg-zinc-900"
+              }`}
+            >
+              {card.image && (
+                <img src={card.image} alt="" className="w-full h-28 object-cover" />
+              )}
+              <span className="block px-2.5 py-2">
+                <span className="block font-semibold text-sm">{card.title}</span>
+                {card.subtitle && (
+                  <span className={`block text-xs ${mine ? "text-white/80" : "text-zinc-400"}`}>
+                    {card.subtitle}
+                  </span>
+                )}
+                {card.price !== undefined && (
+                  <span className="block text-xs font-semibold">${card.price}</span>
+                )}
               </span>
-            )}
-            {card.price !== undefined && (
-              <span className="block text-xs font-semibold">${card.price}</span>
-            )}
-          </span>
-        </Link>
-      )}
-    </div>
-    {!message.deleted && (
-      <span className="mt-1 flex items-center gap-1">
-        {(message.reactions ?? []).map((reaction) => (
-          <button
-            key={reaction.emoji}
-            type="button"
-            onClick={() => onReact(reaction.emoji)}
-            className={`text-xs rounded-full px-1.5 py-0.5 cursor-pointer ${
-              reaction.reacted ? "bg-[#F7C12B] text-black" : "bg-zinc-900 text-white"
-            }`}
-          >
-            {reaction.emoji} {reaction.count}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => setPicker((current) => !current)}
-          className="text-[10px] text-zinc-500 cursor-pointer"
-        >
-          React
-        </button>
-        {picker && (
-          <span className="flex gap-0.5">
-            {REACTIONS.map((emoji) => (
+            </Link>
+          )}
+        </div>
+        {!message.deleted && (message.reactions ?? []).length > 0 && (
+          <span className="mt-1 flex items-center gap-1">
+            {(message.reactions ?? []).map((reaction) => (
               <button
-                key={emoji}
+                key={reaction.emoji}
                 type="button"
-                onClick={() => {
-                  onReact(emoji);
-                  setPicker(false);
-                }}
-                className="text-sm cursor-pointer"
-                aria-label={`React ${emoji}`}
+                onClick={() => onReact(reaction.emoji)}
+                className={`text-xs rounded-full px-1.5 py-0.5 cursor-pointer ${
+                  reaction.reacted ? "bg-[#1e1e1e] text-white" : "bg-zinc-900 text-white"
+                }`}
               >
-                {emoji}
+                {reaction.emoji} {reaction.count}
               </button>
             ))}
           </span>
         )}
-      </span>
-    )}
-    <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
-      <span>{exactTime(message.createdAt)}</span>
-      {message.editedAt && !message.deleted && <span>Edited</span>}
-      {mine && !message.deleted && <span>{message.isRead ? "Read" : "Delivered"}</span>}
-      {!message.deleted && (
-        <button type="button" onClick={onReply} className="cursor-pointer hover:text-zinc-300">
-          Reply
-        </button>
-      )}
-      {canChange && (
-        <button type="button" onClick={onEdit} className="cursor-pointer hover:text-zinc-300">
-          Edit
-        </button>
-      )}
-      {canChange && !confirmDelete && (
-        <button type="button" onClick={onDelete} className="cursor-pointer hover:text-zinc-300">
-          Delete
-        </button>
-      )}
-      {canChange && confirmDelete && (
-        <button type="button" onClick={onConfirmDelete} className="cursor-pointer hover:text-red-400">
-          Confirm
-        </button>
-      )}
-      {onReport && (
-        <button type="button" onClick={onReport} className="cursor-pointer hover:text-zinc-300">
-          Report
-        </button>
-      )}
-    </span>
+
+        {/* i temporarily hide the time and edited status because it of the UI design */}
+        {/* <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
+          <span>{exactTime(message.createdAt)}</span>
+          {message.editedAt && !message.deleted && <span>Edited</span>}
+          {mine && !message.deleted && <span>{message.isRead ? "Seen" : "Delivered"}</span>}
+        </span> */}
+      </div>
+      <div
+        className={`relative pt-1 self-start shrink-0 flex items-center gap-0.5 transition duration-200 ${
+          picker ? "opacity-100" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto"
+        }`}
+      >
+        {!message.deleted && (
+          <div className="relative">
+            <button
+              type="button"
+              aria-label="React"
+              onClick={() => setPicker((current) => !current)}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+            >
+              <SmilePlus size={15} />
+            </button>
+            {picker && (
+              <span className="absolute bottom-full mb-1 left-0 z-20 flex gap-0.5 rounded-xl border border-zinc-800 bg-zinc-950 p-2 shadow-xl">
+                {REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      onReact(emoji);
+                      setPicker(false);
+                    }}
+                    className="text-lg cursor-pointer px-1"
+                    aria-label={`React ${emoji}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </span>
+            )}
+          </div>
+        )}
+        {!message.deleted && (
+          <button
+            type="button"
+            aria-label="Reply"
+            onClick={onReply}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+          >
+            <Reply size={15} />
+          </button>
+        )}
+        {canChange && (
+          <button
+            type="button"
+            aria-label="Edit"
+            onClick={onEdit}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+          >
+            <Pencil size={15} />
+          </button>
+        )}
+        {canChange && !confirmDelete && (
+          <button
+            type="button"
+            aria-label="Delete"
+            onClick={onDelete}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
+        {canChange && confirmDelete && (
+          <button
+            type="button"
+            aria-label="Confirm delete"
+            onClick={onConfirmDelete}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-zinc-800 cursor-pointer"
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
+        {onReport && (
+          <button
+            type="button"
+            aria-label="Report"
+            onClick={onReport}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+          >
+            <Flag size={15} />
+          </button>
+        )}
+      </div>
+    </div>
   </div>
   );
 };

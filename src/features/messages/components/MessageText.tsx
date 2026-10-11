@@ -44,7 +44,7 @@ const MessageText = ({ text, mine }: { text: string; mine: boolean }) => {
   }
   if (last < text.length) parts.push({ key: "tail", value: text.slice(last) });
 
-  const linkClass = mine ? "underline text-black" : "underline text-white";
+  const linkClass = mine ? "underline text-white" : "underline text-white";
 
   return (
     <>
